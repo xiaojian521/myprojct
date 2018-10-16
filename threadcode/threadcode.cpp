@@ -157,3 +157,38 @@ int main()
     t2.join();
     return 0;
 }
+
+//==========================================================
+//六、类内函数使用线程
+#include<iostream>
+#include<string>
+#include<thread>
+using namespace std;
+
+class TT
+{
+public:
+    TT(){}
+    ~TT(){}
+public:
+    void show(string file, int num);
+    void showTwo();
+};
+
+void TT::show(string file, int num)
+{
+    cout<<"thread 1"<<":"<<file<<","<<num<<endl;
+}
+
+void TT::showTwo()
+{
+    thread th1(&TT::show,this,"xiaojian",1);
+    th1.join();
+}
+
+int main()
+{
+    TT a;
+    a.showTwo();
+    return 0;
+}
