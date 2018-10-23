@@ -8,6 +8,8 @@
 
 3.多使用系统函数，简洁易懂
 
+4.能用智能指针的就用智能指针 
+
 //============================================================
 1.函数前面加 ”::“ 指调用的是全局函数
 
@@ -73,4 +75,69 @@ enum class B: unsigned char //每个枚举都是unsigned char类型的
 
 12.C++中的关键字explicit主要是用来修饰类的构造函数，被修饰的构造函数的类，不能发生相应的隐式类型转换，只能以显示的方式进行类型转换。类构造函数默认情况下声明为隐式的即implicit
 explicit关键字只能用于类内部的构造函数声明上，而不能用在类外部的函数定义(函数实现)上，它的作用是不能进行隐式转换；explicit关键字作用于单个参数的构造函数，如果构造函数有多个参数，但是从第二个参数开始，如果各参数均有默认赋值，也可以应用explicit关键字
+
+13.c++ c_str()和data()
+https://blog.csdn.net/u011352234/article/details/51701680
+c_str()和data():生成一个const char*指针，指向一个临时数组
+关于c_str()返回的字符串指针指向的数组，这个数组的数据是临时的，当有一个改变这些数据的成员函数被调用后，其中的数据就会失效，因此要么现用现转换。要么把它的数据复制到用户自己可以管理的内存中
+区别：c_str() 返回一个指向正规C字符串的指针常量，该指针保证指向一个 size() + 1 长度的空间，而且最后一个字符肯定是 \0 ；
+而 data() 返回的指针则保证指向一个size()长度的空间，不保证有没有null-terminate，可能有，可能没有，看库的实现了。
+
+14.dlopen（）是一个计算机函数，功能是以指定模式打开指定的动态链接库文件，并返回一个句柄给dlsym（）的调用进程。使用dlclose（）来卸载打开的库,dlsym()是一个计算机函数，功能是根据动态链接库操作句柄与符号，返回符号对应的地址，不但可以获取函数地址，也可以获取变量地址
+
+15.https://www.cnblogs.com/heartchord/p/5017071.html
+ std::function是一个函数包装器模, 一个std::function类型对象实例可以包装下列这几种可调用元素类型：函数、函数指针、类成员函数指针或任意类型的函数对象.当std::function对象未包裹任何实际的可调用元素，调用该std::function对象将抛出std::bad_function_call异常
+
+ 16.http://lib.csdn.net/article/cplusplus/66969?knId=1168
+ std::future future提供了用来访问异步操作结果的机制。当一个异步操作我们不可能马上获取操作结果时，就可以用同步等待的方式来获取，通过查询future的状态（future_status）来获取异步操作结果。
+
+ 17.const int&& a = 10;
+ 左值和右值的一个最常见的误解是：等号左边的就是左值，等号右边的就是右值。左值和右值都是针对表达式而言的，左值是指表达式结束后依然存在的持久对象，右值是指表达式结束时就不再存在的临时对象。一个区分左值与右值的便捷方法是：看能不能对表达式取地址，如果能，则为左值，否则为右值
+17.1也可以用标准库提供的std::move()来将左值转换成右值引用
+
+18.https://www.cnblogs.com/cauchy007/p/4966485.html
+decltype: 有时我们希望从表达式的类型推断出要定义的变量类型，但是不想用该表达式的值初始化变量（如果要初始化就用auto了）。为了满足这一需求，C++11新标准引入了decltype类型说明符，它的作用是选择并返回操作数的数据类型，在此过程中，编译器分析表达式并得到它的类型，却不实际计算表达式的值。
+
+19.https://blog.csdn.net/qqagsd155451/article/details/53371176
+C++11 并发指南std::condition_variable详解
+
+20.std::bind() 
+https://www.cnblogs.com/qicosmos/p/3723388.html
+https://blog.csdn.net/liukang325/article/details/53668046
+绑定函数，在需要的时候在使用
+
+21.proxy命名类名
+代理类，用来进行事物不想或不能进行的其他操
+
+22.aidl
+https://baike.baidu.com/item/aidl/8535672
+Android系统中的进程之间不能共享内存，因此，需要提供一些机制在不同进程之间进行数据通信。因此，可以将这种可以跨进程访问的服务称为AIDL（Android Interface Definition Language）服务。
+
+23.android::sp<> && android::wp<>
+https://www.cnblogs.com/polo/p/5672856.html
+sp< xxx>、wp< xxx>这样的类型定义，这其实是Android中的智能指针
+
+24.
+
+25.什么是IBinder
+https://blog.csdn.net/yuyi533599/article/details/52425451
+Binder是什么呢？首先要明白，Android的远程调用（就是跨进程调用）就是通过
+IBinder实现的，下面是对android开发文档的翻译。IBinder是远程对象的基本接口，是为高性能而设计的轻量级远程调用机制的核心部分。但它不仅用于远程调用，也用于进程内调用。这个接口定义了与远程对象交互的协议。不要直接实现这个接口，而应该从Binder派生
+
+26.c++11可变模板参数
+https://www.cnblogs.com/qicosmos/p/4325949.html
+template <class... T>
+void f(T... args);
+上面的可变模版参数的定义当中，省略号的作用有两个：
+1.声明一个参数包T... args，这个参数包中可以包含0到任意个模板参数；
+2.在模板定义的右边，可以将参数包展开成一个一个独立的参数
+
+27.逗号表达式会按顺序执行，先执行前面的语句然后在将最后一个逗号后面的值赋值给变量
+
+28.const int&& a;
+https://www.cnblogs.com/davygeek/p/4211566.html
+（1）非const左值引用只能绑定到非const左值；
+（2）const左值引用可绑定到const左值、非const左值、const右值、非const右值；
+（3）非const右值引用只能绑定到非const右值；
+（4）const右值引用可绑定到const右值和非const右值
 //============================================================
