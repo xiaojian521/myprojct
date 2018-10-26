@@ -140,4 +140,15 @@ https://www.cnblogs.com/davygeek/p/4211566.html
 （2）const左值引用可绑定到const左值、非const左值、const右值、非const右值；
 （3）非const右值引用只能绑定到非const右值；
 （4）const右值引用可绑定到const右值和非const右值
+
+29.状态机
+实例：https://blog.csdn.net/shixin_0125/article/details/78771963
+     https://blog.csdn.net/lwbeyond/article/details/7572267
+UML和类图：
+    https://blog.csdn.net/qq_36289559/article/details/73567412
+
+30.远程链接windows桌面：rdesktop
+    rdesktop -f -a 16 192.168.40.126
+    https://blog.csdn.net/richerg85/article/details/40789789
+    
 //============================================================
