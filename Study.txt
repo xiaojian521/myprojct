@@ -105,6 +105,7 @@ C++11 并发指南std::condition_variable详解
 https://www.cnblogs.com/qicosmos/p/3723388.html
 https://blog.csdn.net/liukang325/article/details/53668046
 绑定函数，在需要的时候在使用
+bind用来绑定一个函数，包括全局函数，普通成员函数，静态成员函数，operator函数，虚函数，但不包括函数重载
 
 21.proxy命名类名
 代理类，用来进行事物不想或不能进行的其他操
@@ -150,5 +151,10 @@ UML和类图：
 30.远程链接windows桌面：rdesktop
     rdesktop -f -a 16 192.168.40.126
     https://blog.csdn.net/richerg85/article/details/40789789
-    
+
+31.UML类图关系及画法
+    https://www.cnblogs.com/alex-blog/articles/2704214.html
+
+32.管理者模式，观察者模式
+
 //============================================================
