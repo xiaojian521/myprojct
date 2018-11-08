@@ -51,6 +51,7 @@ public:
         for ( ; iter != m_stateTable.end(); ++iter) {
             //遍历vector改变状态
             if (iter->currState == m_currState && iter->triger == triger) {
+                //guard函数可以在执行action函数之前做一些其他操作
                 if (iter->guard()) {
                     m_currState = iter->nextState;
                     iter->action();

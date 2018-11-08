@@ -10,6 +10,8 @@
 
 4.能用智能指针的就用智能指针 
 
+5.分析时先分析功能，将每一个功能分成一个模块，在画类图，将类之间的关系确定
+
 //============================================================
 1.函数前面加 ”::“ 指调用的是全局函数
 
@@ -156,5 +158,29 @@ UML和类图：
     https://www.cnblogs.com/alex-blog/articles/2704214.html
 
 32.管理者模式，观察者模式
+
+33.unique_ptr不共享它的指针。它无法复制到其他unique_ptr,无法通过值传递到函数，也无法用于需要副本的任何标准模板库。只能易懂unique_ptr。这意味着，内存资源所有权将转移到另一unique_ptr
+
+34.template模板泛型编程一定要在头文件中声明和实现，不能在cpp文件中实现
+
+35.std::promise
+std::promise是C++11并发编程中常用的一个类，常配合std::future使用。其作用是在一个线程t1中保存一个类型typename T的值，可供相绑定的std::future对象在另一线程t2中获取.
+
+36. 使用android studio 播放assets目录的音频文件
+http://blog.sina.com.cn/s/blog_5de73d0b0100zex2.html
+AudioTrack播放音乐
+https://blog.csdn.net/java_android_c/article/details/52678265#
+
+37. java 中的Context详解
+    https://www.cnblogs.com/jingmengxintang/p/7889311.html
+    主要功能:1）启动Activity
+            2）启动和停止Service
+            3）发送广播消息(Intent)
+            4）注册广播消息(Intent)接收者
+            5）可以访问APK中各种资源(如Resources和AssetManager等)
+            6）可以访问Package的相关信息
+            7）APK的各种权限管理
+
+
 
 //============================================================
