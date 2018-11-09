@@ -1,5 +1,5 @@
 #include "VR_Executor.h"
-
+#include "VR_Memory.h"
 
 VR_Executor::VR_Executor() :
         m_taskQueue{std::make_shared<VR_TaskQueue>()},
@@ -12,6 +12,7 @@ VR_Executor::~VR_Executor() {
     shutdown();
 }
 
+//等待已经提交的任务
 void VR_Executor::waitForSubmittedTasks() {
     std::promise<void> flushedPromise;
     auto flushedFuture = flushedPromise.get_future();

@@ -1,1 +1,1 @@
-#check BUILED_CUSTOM_TARGET modul script
+#检查 BUILED_CUSTOM_TARGET 模块脚本

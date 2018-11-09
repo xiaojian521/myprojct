@@ -22,7 +22,9 @@ public:
     auto pushToFront(Task task, Args&&... args) -> std::future<decltype(task(args...))>;
     //弹出任务
     std::unique_ptr<std::function<void()>> pop();
+    //停止
     void shutdown();
+    //判断是否停止
     bool isShutdown();
 
 private:
