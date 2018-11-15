@@ -12,6 +12,10 @@
 
 5.分析时先分析功能，将每一个功能分成一个模块，在画类图，将类之间的关系确定
 
+6.熟悉常用的设计模式，对于理解代码，设计代码框架帮助很大
+
+7.做事情事前，先查阅资料，看有没有可参考，可使用的，高效有省时
+
 //============================================================
 1.函数前面加 ”::“ 指调用的是全局函数
 
@@ -92,6 +96,8 @@ c_str()和data():生成一个const char*指针，指向一个临时数组
 
  16.http://lib.csdn.net/article/cplusplus/66969?knId=1168
  std::future future提供了用来访问异步操作结果的机制。当一个异步操作我们不可能马上获取操作结果时，就可以用同步等待的方式来获取，通过查询future的状态（future_status）来获取异步操作结果。
+    std::future , std::promise实例
+    https://blog.csdn.net/lijinqi1987/article/details/78507623
 
  17.const int&& a = 10;
  左值和右值的一个最常见的误解是：等号左边的就是左值，等号右边的就是右值。左值和右值都是针对表达式而言的，左值是指表达式结束后依然存在的持久对象，右值是指表达式结束时就不再存在的临时对象。一个区分左值与右值的便捷方法是：看能不能对表达式取地址，如果能，则为左值，否则为右值
@@ -99,6 +105,11 @@ c_str()和data():生成一个const char*指针，指向一个临时数组
 
 18.https://www.cnblogs.com/cauchy007/p/4966485.html
 decltype: 有时我们希望从表达式的类型推断出要定义的变量类型，但是不想用该表达式的值初始化变量（如果要初始化就用auto了）。为了满足这一需求，C++11新标准引入了decltype类型说明符，它的作用是选择并返回操作数的数据类型，在此过程中，编译器分析表达式并得到它的类型，却不实际计算表达式的值。
+decltype(expression) 可以获取表达式的类型：
+1，expression 是一个函数时，decltype 返回函数的返回值类型，没有任何问题
+2，expression 是单个变量时，decltype 返回变量的类型，依旧没有任何问题
+2，当expression 是某个表达式时，decltype 返回表达式的值的类型，这里会有一点让人迷惑的地方
+
 
 19.https://blog.csdn.net/qqagsd155451/article/details/53371176
 C++11 并发指南std::condition_variable详解
@@ -208,5 +219,34 @@ https://blog.csdn.net/java_android_c/article/details/52678265#
     8：temp：临时操作或缓存的目录
     9：tools：应用Android平台进行开发所需要的一些开发工具
 
+39.android binder - 客户端(c++层) 调用 服务端(java层)，服务端回调客户端 例子
+    https://blog.csdn.net/lzl_cl/article/details/74614996
 
+40.[C++11]std::packaged_task介绍及使用
+    https://blog.csdn.net/godmaycry/article/details/72868559
+    C++11之std::future和std::promise和std::std::packaged_task区别
+    https://www.cnblogs.com/wangshaowei/p/8875501.html
+
+41.Json使用rapidjson使用文档
+    http://rapidjson.org/zh-cn/classrapidjson_1_1_generic_member_iterator.html
+
+42.pugi解析xml文档
+    https://pugixml.org/docs/manual.html   
+
+43.repo详解
+    //http://www.cnblogs.com/helloworldtoyou/p/6430545.html?utm_source=itdadao&utm_medium=referral
+
+44.github上的alexa源代码
+    https://github.com/alexa/avs-device-sdk
+    alexa sdk congfig
+    https://developer.amazon.com/zh/alexa-voice-service/sdk
+
+45.书籍下载网址
+    https://zhuanlan.zhihu.com/p/23857699
+
+46.extends和implements的区别
+    https://blog.csdn.net/tolcf/article/details/46135645
+
+47.java Dom4j解析xml教程
+    http://www.cnblogs.com/alsf/p/9278816.html
 //============================================================

@@ -68,7 +68,9 @@ inline void forwardPromise<void>(std::shared_ptr<std::promise<void>> promise, st
 }
 
 template <typename Task, typename... Args>
+//push的时候要对参数进行解析
 auto VR_TaskQueue::pushTo(bool front, Task task, Args&&... args) -> std::future<decltype(task(args...))> {
+    //std::forward 常常需要将参数原封不动的转发给另外一个函数
     auto boundTask = std::bind(std::forward<Task>(task), std::forward<Args>(args)...);
 
 
