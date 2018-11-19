@@ -249,4 +249,8 @@ https://blog.csdn.net/java_android_c/article/details/52678265#
 
 47.java Dom4j解析xml教程
     http://www.cnblogs.com/alsf/p/9278816.html
+
+48.安装qt5的qmake不能使用
+    解决：sudo apt-get install qt5-default
+
 //============================================================
