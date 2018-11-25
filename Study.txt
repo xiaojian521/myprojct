@@ -253,4 +253,6 @@ https://blog.csdn.net/java_android_c/article/details/52678265#
 48.安装qt5的qmake不能使用
     解决：sudo apt-get install qt5-default
 
+49.chrome免费主题
+    http://www.themebeta.com/
 //============================================================
