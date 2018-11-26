@@ -2,7 +2,7 @@
 #include <sstream>
 #include <iostream>
 
-VR_JsonToXml::VR_JsonToXml(pugi::xml_document&  xdoc)
+VR_JsonToXml::VR_JsonToXml(pugi::xml_document& xdoc)
     : m_xdoc(xdoc)
 {
 }

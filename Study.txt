@@ -231,7 +231,8 @@ https://blog.csdn.net/java_android_c/article/details/52678265#
     http://rapidjson.org/zh-cn/classrapidjson_1_1_generic_member_iterator.html
 
 42.pugi解析xml文档
-    https://pugixml.org/docs/manual.html   
+    https://pugixml.org/docs/manual.html
+    https://blog.csdn.net/yazi1297/article/details/43372817  实例
 
 43.repo详解
     //http://www.cnblogs.com/helloworldtoyou/p/6430545.html?utm_source=itdadao&utm_medium=referral
