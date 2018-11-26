@@ -122,3 +122,24 @@ int main()
     //system("Pause");
     return 0;
 }
+
+//运行结果
+// 群消息目前没点名
+// this is B
+// Go on : sleeping
+
+// this is C
+// Go on : playing games
+
+// this is D
+// Go on : shopping with girl friend
+
+// 群消息点名了
+// this is B
+// Action: get dressed and run to classroom
+
+// this is C
+// Action: pay the fee and run to classroom
+
+// this is D
+// Action: go back to school and be worried about girl friend's angry

@@ -71,7 +71,7 @@ void ConcreteSubject::Detach(Observer *pObserver)
 {
     m_ObserverList.remove(pObserver);
 }
- 
+
 void ConcreteSubject::Notify()
 {
     std::list<Observer *>::iterator it = m_ObserverList.begin();
@@ -114,3 +114,7 @@ int main(int argc, char const *argv[])
     delete pSubject;
     return 0;
 }
+//运行结果
+// ConcreteObserver get the update. New State:2
+// ConcreteObserver2 get the update. New State:2
+// ConcreteObserver2 get the update. New State:3
