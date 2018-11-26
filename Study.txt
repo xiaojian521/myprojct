@@ -256,4 +256,18 @@ https://blog.csdn.net/java_android_c/article/details/52678265#
 
 49.chrome免费主题
     http://www.themebeta.com/
+
+    48.安装qt5的qmake不能使用
+    解决：sudo apt-get install qt5-default
+
+50.protobuf学习
+    https://developers.google.com/protocol-buffers/docs/cpptutorial
+    https://blog.csdn.net/mynameislu/article/details/78645880    实例
+
+51.java API文档
+    http://tool.oschina.net/apidocs/apidoc?api=jdk-zh
+
+52.安装java8
+    http://tipsonubuntu.com/2016/07/31/install-oracle-java-8-9-ubuntu-16-04-linux-mint-18/
+
 //============================================================
