@@ -276,5 +276,6 @@ https://blog.csdn.net/java_android_c/article/details/52678265#
     3.在调用的地方调用注册函数创建子类并调用
     4.如果子类很多在父类中添加链表来管理子类
 
-54.
+54.java很好的一个学习视频网址
+   https://github.com/open-android/Android
 //============================================================
