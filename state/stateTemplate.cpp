@@ -1,6 +1,6 @@
 #ifndef STATEMACHINE_H
 #define STATEMACHINE_H
- 
+//状态机模板
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 #include <vector>
