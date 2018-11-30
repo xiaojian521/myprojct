@@ -16,6 +16,7 @@
 
 7.做事情事前，先查阅资料，看有没有可参考，可使用的，高效有省时
 
+8.获得任务,尽量多找demo,并且多找工具
 //============================================================
 1.函数前面加 ”::“ 指调用的是全局函数
 
@@ -243,7 +244,7 @@ https://blog.csdn.net/java_android_c/article/details/52678265#
     https://developer.amazon.com/zh/alexa-voice-service/sdk
 
 45.书籍下载网址
-    https://zhuanlan.zhihu.com/p/23857699
+    https://github.com/justjavac/free-programming-books-zh_CN
 
 46.extends和implements的区别
     https://blog.csdn.net/tolcf/article/details/46135645
@@ -275,7 +276,18 @@ https://blog.csdn.net/java_android_c/article/details/52678265#
     2.加一个注册函数,子类添加父类的子类,来实现具体的实现
     3.在调用的地方调用注册函数创建子类并调用
     4.如果子类很多在父类中添加链表来管理子类
-
+    
 54.java很好的一个学习视频网址
    https://github.com/open-android/Android
+
+55.QT API文档
+   http://www.kuqin.com/qtdocument/
+
+56.JNI学习java和C/C++交互
+    https://www.cnblogs.com/xiezie/p/5930032.html
+    https://blog.csdn.net/u013171212/article/details/78316513
+
+57.PocketSphinx语音识别系统的编程
+   https://www.cnblogs.com/woshijpf/articles/3633300.html
+
 //============================================================
