@@ -286,8 +286,11 @@ https://blog.csdn.net/java_android_c/article/details/52678265#
 56.JNI学习java和C/C++交互
     https://www.cnblogs.com/xiezie/p/5930032.html
     https://blog.csdn.net/u013171212/article/details/78316513
+    https://www.cnblogs.com/adm1989/archive/2013/01/07/2849514.html//java调用C++
 
 57.PocketSphinx语音识别系统的编程
    https://www.cnblogs.com/woshijpf/articles/3633300.html
 
+58.java匿名内部类
+   https://www.cnblogs.com/nerxious/archive/2013/01/25/2876489.html
 //============================================================
