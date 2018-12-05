@@ -293,4 +293,9 @@ https://blog.csdn.net/java_android_c/article/details/52678265#
 
 58.java匿名内部类
    https://www.cnblogs.com/nerxious/archive/2013/01/25/2876489.html
+
+59.Android消息处理机制(Handler 与Message)
+   https://www.cnblogs.com/fuck1/p/5513412.html
+   https://blog.csdn.net/zrf1335348191/article/details/50716983//更详细
+
 //============================================================
