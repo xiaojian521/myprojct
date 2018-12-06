@@ -314,4 +314,7 @@ https://blog.csdn.net/java_android_c/article/details/52678265#
 63.Android Bundle详解
    https://blog.csdn.net/suncherrydream/article/details/52974500
 
+64.Android Lifecycle详解
+   https://blog.csdn.net/u011897062/article/details/82107755
+
 //============================================================
