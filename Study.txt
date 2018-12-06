@@ -305,7 +305,13 @@ https://blog.csdn.net/java_android_c/article/details/52678265#
    2）：可以避免java中的单继承的限制
    3）：增加程序的健壮性，代码可以被多个线程共享，代码和数据独立
 
-61.通信之线程间通信-handler
-   https://blog.csdn.net/zrf1335348191/article/details/50716983
+61.Android开发——Intent和Bundle的区别
+   https://blog.csdn.net/na604365019/article/details/8042977
+
+62.Intent与Intentfilter的区别
+   https://blog.csdn.net/zhang1223665986/article/details/80876870
+   
+63.Android Bundle详解
+   https://blog.csdn.net/suncherrydream/article/details/52974500
 
 //============================================================

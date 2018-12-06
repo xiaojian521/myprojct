@@ -1,0 +1,19 @@
+//=======================================================
+vs-code配置
+1.1337 Theme
+2.Beautify
+3.Bracket Pair Colorizer
+4.C/C++
+5.C++ Intellisense
+6.Debugger for Java
+7.Document This
+8.filesize
+9.Identical Sublime Monokai C# theme and colorizer   //当前使用的主题
+10.Java Extension Pack
+11.Java Test Runner
+12.Language Support for Java(TM) by Red Hat
+13.Maven for Java
+14.Project Manager
+15.Python
+16.vscode-icons
+//=======================================================
