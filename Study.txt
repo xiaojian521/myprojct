@@ -251,6 +251,8 @@ https://blog.csdn.net/java_android_c/article/details/52678265#
 
 47.java Dom4j解析xml教程
     http://www.cnblogs.com/alsf/p/9278816.html
+    JAVA中的四种JSON解析方式详解
+    https://blog.csdn.net/xingfei_work/article/details/76572550
 
 48.安装qt5的qmake不能使用
     解决：sudo apt-get install qt5-default
@@ -317,4 +319,13 @@ https://blog.csdn.net/java_android_c/article/details/52678265#
 64.Android Lifecycle详解
    https://blog.csdn.net/u011897062/article/details/82107755
 
+65.IPC、Binder、AIDL与Intent之间区别与联系
+   https://blog.csdn.net/jinxinliu1/article/details/70174591
+   
+66.Android系统分析之AIDL跨进程通信机制的使用和原理分析
+   https://blog.csdn.net/chenliguan/article/details/53576362
+   
+67.Android studio添加jar包的方式
+   https://blog.csdn.net/zhw1551706847/article/details/77709142
+   
 //============================================================
