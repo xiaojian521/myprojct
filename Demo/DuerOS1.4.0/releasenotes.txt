@@ -1,0 +1,50 @@
+DuerOS SDK 1.4.0:
+1.音乐模块接口优化;
+2.电台模块接口优化；
+3.CdConfigManager新增接口：setCmdFeedbackMode，设置控制指令的反馈类型
+4.音乐，多媒体，车控指令模块增加反馈
+5.CdMediaManager.MediaTool强制返回boolean类型
+6.CdBlueToothManager.BlueToothTool强制返回boolean类型
+7.新增空调吹胸模式
+8.支持按照百分比打开天窗
+9.支持指令：打开后排空调／左区空调
+10。修改CdRecordManager的setRecordType接口传参bug
+11 座椅加热支持按照档位调节
+
+DuerOS SDK 1.2.4:
+1.优化车控指令相关接口;
+2.sendRequest接口不对外开放
+3.兼容“温度调高一度”相关指令
+
+
+DuerOS_Auto 1.2.2
+1修复空指针问题
+2修复tip消失的瞬间说小度小度存在不显示问题
+3修改本地音乐不统计的问题
+4对话流关闭时，清理音乐搜索超时
+5修复违章查询界面车联键盘遮住页面的问题
+6优化自定义问候语逻辑
+7修改“是否拉起随心听”功能
+8修复某些场景下的crash
+
+
+DuerOS_BaiduMap 1.2.2
+1修复部分crash
+2优化性能，解决部分场景出现的anr问题
+
+DuerOS_CarRadio 1.2.2
+1添加控制随心听的广播协议
+2修改不能唤醒界面的问题以及重复加载的问题
+3修改reset引起的ANR问题
+4修改一直显示“加载中”，进度条不消失的Bug
+5增加继续播放功能及把是否拉起随心听改为可配置
+6修改“被抢占焦点后暂停，切换音乐时与DuerOS混音”的问题
+
+
+
+
+
+
+
+
+

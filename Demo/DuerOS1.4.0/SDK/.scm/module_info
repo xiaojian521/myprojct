@@ -1,0 +1,10 @@
+
+[build_info]
+enable-ccover = no
+source-with-patch = no
+build-prod-path = buildprod.scm.baidu.com:/temp/data/prod-64/baidu/iov-dueros/customsdk/CITASK/r-9435570
+the-build-args-of-CC = -x hegui -u ssh://hegui@icode.baidu.com:8235/baidu/iov-dueros/customsdk@refs/changes/21/4822921/1 -c cd baidu/iov-dueros/customsdk && bash -x build-ci.sh -e UBUNTU -m baidu/iov-dueros/customsdk
+module = baidu/iov-dueros/customsdk
+revision = 
+git_url = ssh://hegui@icode.baidu.com:8335/baidu/iov-dueros/customsdk
+git_version = 

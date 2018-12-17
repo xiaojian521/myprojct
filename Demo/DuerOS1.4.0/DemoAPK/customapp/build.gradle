@@ -1,0 +1,52 @@
+/*
+ * Copyright (C) 2017 Baidu, Inc. All Rights Reserved.
+ */
+apply plugin: 'com.android.application'
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+                classpath 'com.android.tools.build:gradle:2.3.3'
+    }
+}
+
+android {
+    compileSdkVersion 26
+    buildToolsVersion '26.0.2'
+
+    defaultConfig {
+        applicationId "com.baidu.che.codrivercustom"
+        minSdkVersion 16
+        targetSdkVersion 26
+        versionCode 1
+        versionName "1.0"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    lintOptions {
+        abortOnError false
+    }
+    android.applicationVariants.all { variant ->
+        variant.outputs.each { output ->
+            def outputFile = output.outputFile
+            if (outputFile != null && outputFile.name.endsWith('.apk')) {
+                if (variant.buildType.name.equals('release')) {
+                    def fileName = "customapp_v${defaultConfig.versionName}_Release" + ".apk"
+                    output.outputFile = new File(outputFile.parent, fileName)
+                } else if (variant.buildType.name.equals('debug')) {
+                    def fileName = "customapp_v${defaultConfig.versionName}_Debug" + ".apk"
+                    output.outputFile = new File(outputFile.parent, fileName)
+                }
+            }
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(include: ['*.jar'], dir: 'libs')
+}
