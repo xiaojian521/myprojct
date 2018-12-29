@@ -33,6 +33,7 @@
 5.3.任何不会修改数据成员的函数都应该声明为const类型。如果在编写const成员函数时。不慎修改了数据成员，或者调用了其他非const成员函数，编译器将指出错误。
 5.4.const int* pone;//指向整形常量的指针，它指向的值不能修改
     int* const ptwo;//指向整形的常量指针，它不能在指向别的变量，单指向（变量）的值可以修改
+    https://www.cnblogs.com/azbane/p/7266747.html
 
 6.static修饰符
 6.1.static修饰的变量先于对象存在，所以static修饰的变量要在类外初始化。因为static是所有对象共享的变量，必须要比对象先存在。
@@ -286,8 +287,7 @@ https://blog.csdn.net/java_android_c/article/details/52678265#
    http://www.kuqin.com/qtdocument/
 
 56.JNI学习java和C/C++交互
-    https://www.cnblogs.com/xiezie/p/5930032.html
-    https://blog.csdn.net/u013171212/article/details/78316513
+    https://blog.csdn.net/yuzhou_zang/article/details/78410632
     https://www.cnblogs.com/adm1989/archive/2013/01/07/2849514.html//java调用C++
 
 57.PocketSphinx语音识别系统的编程
@@ -333,4 +333,8 @@ https://blog.csdn.net/java_android_c/article/details/52678265#
 
 69.cmake详解
    https://blog.csdn.net/zhanghm1995/article/details/80902807
+
+70.java设计模式实例
+    https://github.com/JamesZBL/java_design_patterns
+
 //============================================================
