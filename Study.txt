@@ -335,6 +335,8 @@ https://blog.csdn.net/java_android_c/article/details/52678265#
    https://blog.csdn.net/zhanghm1995/article/details/80902807
 
 70.java设计模式实例
-    https://github.com/JamesZBL/java_design_patterns
+   https://github.com/JamesZBL/java_design_patterns
 
+71.C++设计模式
+  https://www.cnblogs.com/jiese/tag/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/
 //============================================================
