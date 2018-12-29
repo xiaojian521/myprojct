@@ -1,5 +1,16 @@
 #include <iostream>
-#include "Adaptee.h"
+
+class Adaptee
+{
+public:
+    Adaptee(){}
+    ~Adaptee(){}
+
+    void specificRequest()
+    {
+       std::cout<<"this is specificRequest"<<std::endl;
+    }
+};
 
 class Target
 {
@@ -23,3 +34,10 @@ public:
 private:
     Adaptee* adptee;
 };
+
+int main(int argc, char const *argv[])
+{
+    Target* tar = new Adapter();
+    tar->request();
+    return 0;
+}

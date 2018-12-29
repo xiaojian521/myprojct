@@ -3,7 +3,9 @@
 #include <string.h>
 #include <iostream>
 #include <memory>
-
+/**
+ * 抽象工厂模式 创建一个工厂类进行对象的创建
+ */
 class Operation {
 private:
     double A, B;

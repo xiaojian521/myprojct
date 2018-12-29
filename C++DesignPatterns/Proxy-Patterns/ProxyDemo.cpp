@@ -1,7 +1,7 @@
 #include <iostream>
 
 /**
- * 统一的抽象借口IFactory
+ * 继承相同的接口,把对象传给代理类进行管理
  */
 class IFactory
 {
@@ -11,14 +11,16 @@ public:
     virtual void makeProduc() = 0;
 };
 
-class PhoneFactory : IFactory {
+class PhoneFactory : public IFactory {
+public:
     PhoneFactory(){}
+    ~PhoneFactory(){}
     void makeProduc() {
         std::cout<<"生产手机"<<std::endl;
     }
 };
 
-class FoxconnProxy : IFactory
+class FoxconnProxy : public IFactory
 {
 public:
     FoxconnProxy(IFactory* factory) {
@@ -34,3 +36,10 @@ private:
 
 };
 
+int main(int argc, char const *argv[])
+{
+    IFactory* factory = new PhoneFactory();
+    FoxconnProxy* proxy = new FoxconnProxy(factory);
+    proxy->makeProduc();
+    return 0;
+}
