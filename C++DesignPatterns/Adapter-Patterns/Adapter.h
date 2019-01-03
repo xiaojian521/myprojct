@@ -14,7 +14,10 @@ class Adaptee {
 public:
     Adaptee();
     ~Adaptee();
-    void SpecificRequest();
+    void SpecificRequest()
+    {
+        std::cout<<"Adaptee::SpecificRequest()"<<std::endl;
+    }
 };
 
 //类模式,适配器类,通过public继承得借口继承的效果,通过private继承获得实现继承的效果
@@ -22,7 +25,12 @@ class Adapter : public Target, private Adaptee {
 public:
     Adapter();
     ~Adapter();
-    virtual void Request();//实现Target定义的Request接口
+    virtual void Request()//实现Target定义的Request接口
+    {
+        std::cout<<"Adapter::Request()" <<std::endl;
+        this->SpecificRequest();
+        std::cout<<"----------------------------"<<std::endl;
+    }
 };
 
 //对象模式,适配器类,继承Target类,采用组合的方式实现Adaptee的复用
@@ -31,7 +39,12 @@ public:
     Adapter1(Adaptee* adaptee);
     Adapter1();
     ~Adapter1();
-    virtual void Request();//实现Target定义的Request接口
+    virtual void Request()//实现Target定义的Request接口
+    {
+        std::cout<<"Adapter1::Request()"<<std::endl;
+        this->_adaptee->SpecificRequest();
+        std::cout<<"----------------------------"<<std::endl;
+    }
 private:
     Adaptee* _adaptee;
 };

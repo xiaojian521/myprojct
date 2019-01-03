@@ -17,6 +17,8 @@
 7.做事情事前，先查阅资料，看有没有可参考，可使用的，高效有省时
 
 8.获得任务,尽量多找demo,并且多找工具
+
+9.不要急着写代码,先把方案和思路理清,然后在编写代码
 //============================================================
 1.函数前面加 ”::“ 指调用的是全局函数
 
@@ -339,4 +341,13 @@ https://blog.csdn.net/java_android_c/article/details/52678265#
 
 71.C++设计模式
   https://www.cnblogs.com/jiese/tag/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/
+
+72.JNI在C代码中添加Android log
+头文件:
+#include <android/log.h>
+示例:
+__android_log_print(ANDROID_LOG_DEBUG, "VrJNI", "JNIHelper::CallBackVrMsg" + 变量);
+.mk文件中添加:
+LOCAL_LDLIBS := -L$(SYSROOT)/usr/lib -llog
+
 //============================================================
