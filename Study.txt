@@ -19,6 +19,8 @@
 8.获得任务,尽量多找demo,并且多找工具
 
 9.不要急着写代码,先把方案和思路理清,然后在编写代码
+
+10.理解好设计模式
 //============================================================
 1.函数前面加 ”::“ 指调用的是全局函数
 
@@ -301,6 +303,7 @@ https://blog.csdn.net/java_android_c/article/details/52678265#
 59.Android消息处理机制(Handler 与Message)
    https://www.cnblogs.com/fuck1/p/5513412.html
    https://blog.csdn.net/zrf1335348191/article/details/50716983//更详细
+   https://www.cnblogs.com/cheneasternsun/p/5467115.html
 
 60.java线程Thread和Runnable的区别
    https://www.cnblogs.com/yangdy/p/5274455.html
