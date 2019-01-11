@@ -305,6 +305,10 @@ https://blog.csdn.net/java_android_c/article/details/52678265#
    https://blog.csdn.net/zrf1335348191/article/details/50716983//更详细
    https://www.cnblogs.com/cheneasternsun/p/5467115.html
 
+60.ThreadLocal
+   https://blog.csdn.net/moakun/article/details/79911989
+   https://www.cnblogs.com/dolphin0520/p/3920407.html
+
 60.java线程Thread和Runnable的区别
    https://www.cnblogs.com/yangdy/p/5274455.html
    实现Runnable接口比继承Thread类所具有的优势：
@@ -353,4 +357,9 @@ __android_log_print(ANDROID_LOG_DEBUG, "VrJNI", "JNIHelper::CallBackVrMsg" + 变
 .mk文件中添加:
 LOCAL_LDLIBS := -L$(SYSROOT)/usr/lib -llog
 
+73.Qt中的signal和slot
+   https://www.cnblogs.com/cheneasternsun/p/5467115.html
+
+74.java反射机制
+   https://www.cnblogs.com/ysocean/p/6516248.html
 //============================================================
