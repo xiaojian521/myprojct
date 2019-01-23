@@ -53,6 +53,8 @@
 7.3.dynamic_casr主要用于类层次结构中父类和子类之间指针和引用的转换，由于具有运行时类型检查，因此可以保证下转换的安全性，何为安全性？即转换成功就返回转换后的正确类型指针，如果转换失败，则返回NULL，之所以说static_cast在下行转换时不安全，是因为即使转换失败，它也不返回NULL，对于上行转换，dynamic_cast和static_cast是一样的
 
 8.智能指针
+   https://www.cnblogs.com/TenosDoIt/p/3456704.html //实例
+   https://blog.csdn.net/shuishanga/article/details/52982102 //详解
 8.1.shared_ptr多个指针指向相同的对象。shared_ptr使用引用计数，每一个shared_ptr的拷贝都指向相同的内存。shared_ptr内部的引用计数是线程安全的，但是对象的读取需要加锁
 8.2.unique_ptr“唯一”拥有其所指对象，同一时刻只能有一个unique_ptr指向给定对象(通过禁止拷贝语义、只有移动语义来实现)。unique_ptr指针本身的生命周期：从unique_ptr指针创建时开始，直到离开作用域。离开作用域时，若其指向对象，则将其所指对象销毁
 8.3.weak_ptr是为了配合shared_ptr而引入的一种智能指针，因为它不具有普通指针的行为，没有重载operator*和->,它的最大作用在于协助shared_ptr工作，像旁观者那样观测资源的使用情况。weak_ptr可以从一个shared_ptr或者另一个weak_ptr对象构造，获得资源的观测全。但weak_ptr没有共享资源，它的构造不会引起指针引用计数的增加
@@ -239,7 +241,8 @@ https://blog.csdn.net/java_android_c/article/details/52678265#
 
 42.pugi解析xml文档
     https://pugixml.org/docs/manual.html
-    https://blog.csdn.net/yazi1297/article/details/43372817  实例
+    http://www.w3school.com.cn/xpath/xpath_syntax.asp  //XPath语法详解
+    https://blog.csdn.net/u013366022/article/details/78581522?utm_source=blogxgwz0
 
 43.repo详解
     //http://www.cnblogs.com/helloworldtoyou/p/6430545.html?utm_source=itdadao&utm_medium=referral
@@ -366,4 +369,12 @@ LOCAL_LDLIBS := -L$(SYSROOT)/usr/lib -llog
 
 75.C++参考手册
    https://zh.cppreference.com/w/%E9%A6%96%E9%A1%B5
+
+76.dlopen参数详解
+   https://blog.csdn.net/u013684730/article/details/73027515
+
+77.cordova原理详解
+   https://www.cnblogs.com/StephenWu/p/6580362.html
+   https://www.cnblogs.com/StephenWu/p/6580632.html
+   https://www.cnblogs.com/cr330326/p/7082821.html //os平台
 //============================================================

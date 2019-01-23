@@ -1,0 +1,10 @@
+//==================================================================
+1.c++ 添加map
+eg:
+static const std::map<VR_CSPott::VR_CSPott_Cmd_Type, std::string>::value_type CMD_INIT_DATA[] = {
+    std::map<VR_CSPott::VR_CSPott_Cmd_Type, std::string>::value_type(VR_CSPott::VR_CSPott_Cmd_Type_Music, "MusicCommand_SP_Adapt_190104"),
+    std::map<VR_CSPott::VR_CSPott_Cmd_Type, std::string>::value_type(VR_CSPott::VR_CSPott_Cmd_Type_Navi, "NaviCommand_SP_Adapt_190104")
+};
+
+static const std::map<VR_CSPott::VR_CSPott_Cmd_Type, std::string> s_cmdFiles(CMD_INIT_DATA, CMD_INIT_DATA + 2);
+//==================================================================
