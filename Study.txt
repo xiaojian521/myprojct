@@ -27,6 +27,13 @@
 2.explict关键字只需用于类内的单参数构造函数前面。由于无参的构造函数总是显示调用，这种情况在构造函数前面加explict无意义
 
 3.override关键子，如果派生类在虚函数声明时使用了override描述符，那么该函数必须重载其基类中的同名函数，否则代码将无法通过编译
+至此总结一下静态绑定和动态绑定的区别：
+1. 静态绑定发生在编译期，动态绑定发生在运行期；
+2. 对象的动态类型可以更改，但是静态类型无法更改；
+3. 要想实现动态，必须使用动态绑定；
+4. 在继承体系中只有虚函数使用的是动态绑定，其他的全部是静态绑定；
+5. 默认参数问题在网址中需要注意
+  https://www.cnblogs.com/xinxue/p/5471708.html
 
 4.注意点：写代码尽量将功能拆分成一个独立的函数，方便管理
 
@@ -269,9 +276,6 @@ https://blog.csdn.net/java_android_c/article/details/52678265#
 49.chrome免费主题
     http://www.themebeta.com/
 
-48.安装qt5的qmake不能使用
-    解决：sudo apt-get install qt5-default
-
 50.protobuf学习
     https://developers.google.com/protocol-buffers/docs/cpptutorial
     https://blog.csdn.net/mynameislu/article/details/78645880    实例
@@ -377,4 +381,8 @@ LOCAL_LDLIBS := -L$(SYSROOT)/usr/lib -llog
    https://www.cnblogs.com/StephenWu/p/6580362.html
    https://www.cnblogs.com/StephenWu/p/6580632.html
    https://www.cnblogs.com/cr330326/p/7082821.html //os平台
+
+78.C++ 静态绑定,动态绑定
+   https://www.cnblogs.com/AndyJee/p/4575670.html
+
 //============================================================
