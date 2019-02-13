@@ -385,4 +385,6 @@ LOCAL_LDLIBS := -L$(SYSROOT)/usr/lib -llog
 78.C++ 静态绑定,动态绑定
    https://www.cnblogs.com/AndyJee/p/4575670.html
 
+79.g++ -g -ls -std=c++11 *.h *.cpp -ldl
+
 //============================================================
