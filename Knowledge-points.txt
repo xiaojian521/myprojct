@@ -8,3 +8,33 @@ static const std::map<VR_CSPott::VR_CSPott_Cmd_Type, std::string>::value_type CM
 
 static const std::map<VR_CSPott::VR_CSPott_Cmd_Type, std::string> s_cmdFiles(CMD_INIT_DATA, CMD_INIT_DATA + 2);
 //==================================================================
+2.jvm之对象在内存中的布局
+https://blog.csdn.net/javazejian/article/details/72828483 //深入理解Java并发之synchronized实现原理
+https://blog.csdn.net/qingguiyu/article/details/79237129 //深入理解Java虚拟机 &GC分代年龄
+
+3.Java中Synchronized的用法
+https://blog.csdn.net/luoweifu/article/details/46613015
+synchronized是Java中的关键字，是一种同步锁。它修饰的对象有以下几种： 
+(1). 修饰一个代码块，被修饰的代码块称为同步语句块，其作用的范围是大括号{}括起来的代码，作用的对象是调用这个代码块的对象； 
+(2). 修饰一个方法，被修饰的方法称为同步方法，其作用的范围是整个方法，作用的对象是调用这个方法的对象； 
+(3). 修改一个静态的方法，其作用的范围是整个静态方法，作用的对象是这个类的所有对象； 
+(4). 修改一个类，其作用的范围是synchronized后面括号括起来的部分，作用主的对象是这个类的所有对象。
+总结:
+A. 无论synchronized关键字加在方法上还是对象上，如果它作用的对象是非静态的，则它取得的锁是对象；如果synchronized作用的对象是一个静态方法或一个类，则它取得的锁是对类，该类所有的对象同一把锁。 
+B. 每个对象只有一个锁（lock）与之相关联，谁拿到这个锁谁就可以运行它所控制的那段代码。 
+C. 实现同步是要很大的系统开销作为代价的，甚至可能造成死锁，所以尽量避免无谓的同步控制
+//==================================================================
+4.Linux环境使用g++编译C++方法总结
+https://www.jb51.net/article/102210.htm
+https://www.jb51.net/article/137075.htm
+
+//==================================================================
+5.编译的整个过程：预编译、编译、汇编、链接
+https://blog.csdn.net/w_y_x_y/article/details/80309416
+//==================================================================
+6.c++类大小问题
+https://www.cnblogs.com/sz-leez/p/7119232.html
+https://www.cnblogs.com/heyonggang/p/3255155.html
+//==================================================================
+
+//==================================================================
