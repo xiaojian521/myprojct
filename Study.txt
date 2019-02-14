@@ -387,4 +387,9 @@ LOCAL_LDLIBS := -L$(SYSROOT)/usr/lib -llog
 
 79.g++ -g -ls -std=c++11 *.h *.cpp -ldl
 
+80. iostream详解
+   https://blog.csdn.net/codedoctor/article/details/78886169
+
+81.字节流与字符流的区别
+   https://www.cnblogs.com/huangliting/p/5746950.html
 //============================================================
