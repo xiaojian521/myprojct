@@ -399,4 +399,7 @@ LOCAL_LDLIBS := -L$(SYSROOT)/usr/lib -llog
 
 83.Linux调试工具之readelf
    https://langzi989.github.io/2017/12/03/Linux%E8%B0%83%E8%AF%95%E5%B7%A5%E5%85%B7%E4%B9%8Breadelf/
+
+84.ELF文件详解—初步认识
+   https://blog.csdn.net/daide2012/article/details/73065204
 //============================================================
