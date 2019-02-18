@@ -65,6 +65,8 @@
 8.1.shared_ptr多个指针指向相同的对象。shared_ptr使用引用计数，每一个shared_ptr的拷贝都指向相同的内存。shared_ptr内部的引用计数是线程安全的，但是对象的读取需要加锁
 8.2.unique_ptr“唯一”拥有其所指对象，同一时刻只能有一个unique_ptr指向给定对象(通过禁止拷贝语义、只有移动语义来实现)。unique_ptr指针本身的生命周期：从unique_ptr指针创建时开始，直到离开作用域。离开作用域时，若其指向对象，则将其所指对象销毁
 8.3.weak_ptr是为了配合shared_ptr而引入的一种智能指针，因为它不具有普通指针的行为，没有重载operator*和->,它的最大作用在于协助shared_ptr工作，像旁观者那样观测资源的使用情况。weak_ptr可以从一个shared_ptr或者另一个weak_ptr对象构造，获得资源的观测全。但weak_ptr没有共享资源，它的构造不会引起指针引用计数的增加
+8.4 std::make_shared有啥用
+https://blog.csdn.net/love_hot_girl/article/details/21161507
 
 9.enum 传统的enum关键字的作用域是全局的，也就是说，如果在enum A 中生命一个枚举类型，无法在enum B 中声明同样的枚举类型
 eg 
@@ -392,4 +394,9 @@ LOCAL_LDLIBS := -L$(SYSROOT)/usr/lib -llog
 
 81.字节流与字符流的区别
    https://www.cnblogs.com/huangliting/p/5746950.html
+
+82.通过使用objdump工具可以把程序中的机器指令进行反汇编（Disassemble），得到其汇编代码
+
+83.Linux调试工具之readelf
+   https://langzi989.github.io/2017/12/03/Linux%E8%B0%83%E8%AF%95%E5%B7%A5%E5%85%B7%E4%B9%8Breadelf/
 //============================================================
