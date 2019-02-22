@@ -436,4 +436,26 @@ static const std::map<VR_CSPott::VR_CSPott_Cmd_Type, std::string>::value_type CM
 static const std::map<VR_CSPott::VR_CSPott_Cmd_Type, std::string> s_cmdFiles(CMD_INIT_DATA, CMD_INIT_DATA + 2);
 
 92.数组的首元素首地址只有当sizeof和&(取地址)时才代表整个数组
+
+93.const修饰函数返回值
+   用const来修饰返回的指针或引用，保护指针指向的内容或引用的内容不被修改，也常用于运算符重载。归根究底就是使得函数调用表达式不能作为左值。
+
+94.左值引用,右值引用
+   https://www.cnblogs.com/cly-blog/p/5980546.html
+
+95.C++ 拷贝构造函数和赋值构造函数
+   http://blog.chinaunix.net/uid-28662931-id-3496326.html
+   
+//============================================================
+代码反思总结:
+写完代码,要想怎么优化,尽可能代码简洁,性能最高
+
+1.if判断变量是否为空,一定要用等号表达式判断
+   eg:if(NULL == 变量) 
+      if(变量) //not Correct
+
+2.加载动态库方式:
+   1.linux下用dlopen
+   2,如果可以加到编译中,尽量加到编译里面(在cmake中添加动态库,然后引用头文件)即可调用库内函数
+
 //============================================================
