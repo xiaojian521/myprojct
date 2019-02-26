@@ -442,10 +442,23 @@ static const std::map<VR_CSPott::VR_CSPott_Cmd_Type, std::string> s_cmdFiles(CMD
 
 94.左值引用,右值引用
    https://www.cnblogs.com/cly-blog/p/5980546.html
+   https://www.cnblogs.com/qicosmos/p/4283455.html
+   输出的结果和右值引用一样，因为常量左值引用是一个“万能”的引用类型，可以接受左值、右值、常量左值和常量右值
 
 95.C++ 拷贝构造函数和赋值构造函数
    http://blog.chinaunix.net/uid-28662931-id-3496326.html
    
+96.像文件中写入数据
+   std::ofstream ofs;
+   ofs.open ("/tmp/baidu_poc.pcm", std::ofstream::out | std::ofstream::app | std::ofstream::binary);
+   ofs.write((char*)inputBuf, sizeof(short)*numSamples);
+   ofs.close();
+
+97.理解Aidl中Stub和Stub.Proxy
+   https://blog.csdn.net/scnuxisan225/article/details/49970217
+
+98.auto关键字
+   https://www.cnblogs.com/QG-whz/p/4951177.html
 //============================================================
 代码反思总结:
 写完代码,要想怎么优化,尽可能代码简洁,性能最高
@@ -454,7 +467,7 @@ static const std::map<VR_CSPott::VR_CSPott_Cmd_Type, std::string> s_cmdFiles(CMD
    eg:if(NULL == 变量) 
       if(变量) //not Correct
 
-2.加载动态库方式:
+2.加载动态库方式: 
    1.linux下用dlopen
    2,如果可以加到编译中,尽量加到编译里面(在cmake中添加动态库,然后引用头文件)即可调用库内函数
 
