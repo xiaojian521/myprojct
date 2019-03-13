@@ -459,6 +459,11 @@ static const std::map<VR_CSPott::VR_CSPott_Cmd_Type, std::string> s_cmdFiles(CMD
 
 98.auto关键字
    https://www.cnblogs.com/QG-whz/p/4951177.html
+
+99.stl中push_back和浅拷贝和深拷贝的问题
+   //执行的是浅拷贝
+   https://blog.csdn.net/u012501459/article/details/44132147
+   
 //============================================================
 代码反思总结:
 写完代码,要想怎么优化,尽可能代码简洁,性能最高
@@ -471,4 +476,15 @@ static const std::map<VR_CSPott::VR_CSPott_Cmd_Type, std::string> s_cmdFiles(CMD
    1.linux下用dlopen
    2,如果可以加到编译中,尽量加到编译里面(在cmake中添加动态库,然后引用头文件)即可调用库内函数
 
+3.先看是否能有可以复用的，不要同一件事写过多代码。
+
+4.一定要根据log找问题，log挂在哪里看哪里。
+
+5.模块和模块之间尽量少耦合，自己的消息，自己的模块处理。
+
+6.拿到任务，先考虑可能出现的情况，已经设计方案
+
+7.IO操作不要重复操作，抛消息到一个线程运行
 //============================================================
+
+
