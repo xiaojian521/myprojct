@@ -304,6 +304,7 @@ https://blog.csdn.net/java_android_c/article/details/52678265#
 56.JNI学习java和C/C++交互
     https://blog.csdn.net/yuzhou_zang/article/details/78410632
     https://www.cnblogs.com/adm1989/archive/2013/01/07/2849514.html//java调用C++
+    https://www.cnblogs.com/wanyuanchun/articles/3594854.html //jni函数接口详解
 
 57.PocketSphinx语音识别系统的编程
    https://www.cnblogs.com/woshijpf/articles/3633300.html
@@ -447,6 +448,7 @@ static const std::map<VR_CSPott::VR_CSPott_Cmd_Type, std::string> s_cmdFiles(CMD
 
 95.C++ 拷贝构造函数和赋值构造函数
    http://blog.chinaunix.net/uid-28662931-id-3496326.html
+   拷贝构造函数是在对象被创建时调用的，而赋值函数只能被已经存在了的对象调用
    
 96.像文件中写入数据
    std::ofstream ofs;
@@ -459,6 +461,36 @@ static const std::map<VR_CSPott::VR_CSPott_Cmd_Type, std::string> s_cmdFiles(CMD
 
 98.auto关键字
    https://www.cnblogs.com/QG-whz/p/4951177.html
+
+99.JNI 静态注册与动态注册
+   https://blog.csdn.net/qq_20404903/article/details/80662316
+
+100.jni 函数默认参数
+   （1）JNIEnv * env：这个env可以看做是Jni接口本身的一个对象，在上一篇中提到的jni.h头文件中存在着大量被封装好的函数，这些函数也是Jni编程中经常被使用到的，要想调用这些函数就需要使用JNIEnv这个对象。例如：env->GetObjectClass()。（详情请查看jni.h）
+　 （2）jobject obj：刚才在Test类的main方法中有这样一段代码:　
+　　　　　　　　　　　Test t=new Test(); t.firstTest();
+　　　　　　　　　　   这个jobject需要两种情况分析。上段代码中firstTest方法是一个非静态方法，在Java中要想调用它必须先实例化对象，然后再用对象调用它，那这个时候jobject就可以看做Java类的一个实例化对象，也就是obj就是t。如果firstTest是一个静态方法，那么在Java中，它不是属于一个对象的，而是属于一个类的，Java中用Test.firstTest()这样的方式来调用，这个时候jobject就可以看做是java类的本身，也就是obj就是Test.class
+
+101.C++11新特性之八——函数对象function
+    https://www.cnblogs.com/yyxt/p/3987717.html
+
+102.我们知道在C++的创建对象是一个费时，费空间的一个操作。有些固然是必不可少，但还有一些对象却在我们不知道的情况下被创建了。通常以下三种情况会产生临时对象：
+  1，以值的方式给函数传参；
+  2，类型转换；
+  3，函数需要返回一个对象时；
+
+103.微软计算器
+    https://github.com/Microsoft/calculator
+
+104.快速理解Java中的五种单例模式(需要注意线程安全)
+    https://www.cnblogs.com/hupp/p/4487521.html
+
+105.C++模式设计-多线程下的单例模式
+    https://www.cnblogs.com/guxuanqing/p/5876873.html
+
+106.linux下使用jni实现c++调用java程序(3)多线程jni使用
+    https://blog.csdn.net/dream2009gd/article/details/8652100
+    http://iamlwl.me/2016/05/23/16052301/
 //============================================================
 代码反思总结:
 写完代码,要想怎么优化,尽可能代码简洁,性能最高
