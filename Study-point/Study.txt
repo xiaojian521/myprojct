@@ -304,7 +304,7 @@ https://blog.csdn.net/java_android_c/article/details/52678265#
 56.JNI学习java和C/C++交互
     https://blog.csdn.net/yuzhou_zang/article/details/78410632
     https://www.cnblogs.com/adm1989/archive/2013/01/07/2849514.html//java调用C++
-    https://www.cnblogs.com/wanyuanchun/articles/3594854.html //jni函数接口详解
+    https://www.cnblogs.com/andyliu1988/p/6041542.html
 
 57.PocketSphinx语音识别系统的编程
    https://www.cnblogs.com/woshijpf/articles/3633300.html
@@ -495,6 +495,13 @@ static const std::map<VR_CSPott::VR_CSPott_Cmd_Type, std::string> s_cmdFiles(CMD
 107.stl中push_back和浅拷贝和深拷贝的问题
    //执行的是浅拷贝
    https://blog.csdn.net/u012501459/article/details/44132147
+
+108.Java synchronized 详解
+   https://www.cnblogs.com/beiyetengqing/p/6213437.html
+
+109.C/C++中#，##，\，__FILE__，__LINE__，__DATA__,__TIME__等的用法
+   https://blog.csdn.net/ailong91/article/details/79390250
+   
 //============================================================
 代码反思总结:
 写完代码,要想怎么优化,尽可能代码简洁,性能最高
