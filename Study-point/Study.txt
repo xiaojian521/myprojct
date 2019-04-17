@@ -502,6 +502,17 @@ static const std::map<VR_CSPott::VR_CSPott_Cmd_Type, std::string> s_cmdFiles(CMD
 109.C/C++中#，##，\，__FILE__，__LINE__，__DATA__,__TIME__等的用法
    https://blog.csdn.net/ailong91/article/details/79390250
    
+110.JavaTM Platform Standard Edition 6 API 规范
+   http://www.yq1012.com/api/overview-summary.html
+
+111.UML类图与类的关系详解
+   https://www.cnblogs.com/pangjianxin/p/7877868.html
+
+112.C++11有序锁实现
+   https://blog.csdn.net/jzkdl/article/details/80536790
+
+113.c++11多线程中的condition_variable（条件变量)
+   https://blog.csdn.net/li1615882553/article/details/86179781
 //============================================================
 代码反思总结:
 写完代码,要想怎么优化,尽可能代码简洁,性能最高
