@@ -213,6 +213,7 @@ https://blog.csdn.net/java_android_c/article/details/52678265#
 
 38.C++中的Lambda表达式
     https://blog.csdn.net/huyisu/article/details/46415837
+    http://blog.sina.com.cn/s/blog_15183f5750102vqkn.html  //捕捉表达式和参数列表的区别
     表达式格式
     [capture](parameters) mutable ->return-type{statement}
     1.[capture]：捕捉列表。捕捉列表总是出现在Lambda函数的开始处。实际上，[]是Lambda引出符。编译器根据该引出符判断接下来的代码是否是Lambda函数。捕捉列表能够捕捉上下文中的变量以供Lambda函数使用;
@@ -224,6 +225,8 @@ https://blog.csdn.net/java_android_c/article/details/52678265#
     4.->return-type：返回类型。用追踪返回类型形式声明函数的返回类型。我们可以在不需要返回值的时候也可以连同符号”->”一起省略。此外，在返回类型明确的情况下，也可以省略该部分，让编译器对返回类型进行推导;
 
     5.{statement}：函数体。内容与普通函数一样，不过除了可以使用参数之外，还可以使用所有捕获的变量。
+
+    Lambda表达式是通过生成一个小class实现的，这个类重载了operater（）函数，所以它的行为非常像一个函数。Lambda函数就是这个class的实例；当这个类构造时，上下文中的任何变量都可以传进Lambda function class，并作为成员变量保存起来。这事实上这有点像一个已经存在的functor（仿函数）。这样就解决了我的问题，Capture用于传递上下文的环境变量，在class的构造函数中使用；Parameter list是operator（）函数的参数列表。
 
 38.什么是SDK和API
     https://blog.csdn.net/qq_41273126/article/details/80315737
@@ -513,6 +516,12 @@ static const std::map<VR_CSPott::VR_CSPott_Cmd_Type, std::string> s_cmdFiles(CMD
 
 113.c++11多线程中的condition_variable（条件变量)
    https://blog.csdn.net/li1615882553/article/details/86179781
+   当条件变量wait()时会先释放锁,调用notify的时候会重新上锁,如果不能上锁则会一直等待
+
+114.线程创建后如果仍是joinable的,这时销毁对象,系统会抛出异常.
+   销毁线程时,先判断是否是joinable,然后让线程退出,join,等待完成,然后在销毁线程
+
+115.stl模板插入元素的时候是进行一次拷贝把之前的对象进行拷贝,变成一份新的数据,所以要看情况添加,拷贝构造函数;
 //============================================================
 代码反思总结:
 写完代码,要想怎么优化,尽可能代码简洁,性能最高
