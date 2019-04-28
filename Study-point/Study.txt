@@ -362,7 +362,7 @@ https://blog.csdn.net/java_android_c/article/details/52678265#
    https://github.com/JamesZBL/java_design_patterns
 
 71.C++设计模式
-  https://www.cnblogs.com/jiese/tag/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/
+   https://www.cnblogs.com/jiese/tag/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/
 
 72.JNI在C代码中添加Android log
 头文件:
@@ -522,6 +522,9 @@ static const std::map<VR_CSPott::VR_CSPott_Cmd_Type, std::string> s_cmdFiles(CMD
    销毁线程时,先判断是否是joinable,然后让线程退出,join,等待完成,然后在销毁线程
 
 115.stl模板插入元素的时候是进行一次拷贝把之前的对象进行拷贝,变成一份新的数据,所以要看情况添加,拷贝构造函数;
+
+116.VsCode 配置Python编译环境
+    https://blog.csdn.net/Marvellor/article/details/80877201
 //============================================================
 代码反思总结:
 写完代码,要想怎么优化,尽可能代码简洁,性能最高
