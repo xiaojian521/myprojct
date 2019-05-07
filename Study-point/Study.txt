@@ -525,6 +525,10 @@ static const std::map<VR_CSPott::VR_CSPott_Cmd_Type, std::string> s_cmdFiles(CMD
 
 116.VsCode 配置Python编译环境
     https://blog.csdn.net/Marvellor/article/details/80877201
+
+117.C++中*&（指针引用）和*（指针）的区别
+    https://www.cnblogs.com/jiasq/p/8637982.html
+    注:传指针,指针本身不能修改,指针指向的值也就是*p可以改,传指针引用,都可以修改
 //============================================================
 代码反思总结:
 写完代码,要想怎么优化,尽可能代码简洁,性能最高

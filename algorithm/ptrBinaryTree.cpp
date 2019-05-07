@@ -48,7 +48,7 @@ public:
 
 
 //=======================================================
-void BinaryTree::InitBiTree(BiTree& T)//构造控二叉树
+void BinaryTree::InitBiTree(BiTree& T)//构造空二叉树
 {
     T = NULL;
 }
@@ -56,7 +56,7 @@ void BinaryTree::InitBiTree(BiTree& T)//构造控二叉树
 void BinaryTree::CreateBiTree(BiTree& T)//生成二叉树
 {
     char ch;
-    cin>>ch;
+    std::cin>>ch;
     if(ch == '0') { //0代表空
         return;
     }else {
@@ -86,7 +86,7 @@ void BinaryTree::PreOrder(BiTree T) //先序递归遍历
 
 void BinaryTree::SqlPreOrder(BiTree T) //先序非递归遍历
 {
-    stack<BiTree> s;
+    std::stack<BiTree> s;
     BiTree p = T;
     while(p || !s.empty()) {
         if(p) {
@@ -111,12 +111,12 @@ void BinaryTree::InOrder(BiTree T) //中序递归遍历
 }
 void BinaryTree::SqInOrder(BiTree T) //中序非递归遍历
 {
-    stack<BiTree> s;
+    std::stack<BiTree> s;
     BiTree p = T;
     while(p || !s.empty()) {
         if(p) {
             s.push(p);
-            p = p->lchlid;
+            p = p->lchild;
         }else {
             p = s.top();
             std::cout<<p->data<<" ";
@@ -141,7 +141,7 @@ void BinaryTree::PostOrder(BiTree T) //后序递归遍历
  */
 void BinaryTree::SqlPostOrder1(BiTree T) //后序非递归遍历1
 {
-    stack<BiTree> s;
+    std::stack<BiTree> s;
     BiTree p=T,r;
     while(p || !s.empty()) {
         if(p) { //走到最左边 
@@ -167,7 +167,7 @@ void BinaryTree::SqlPostOrder1(BiTree T) //后序非递归遍历1
 //思路2：在结点中增加标志域，记录是否已被访问
 void BinaryTree::SqlPostOrder2(BiTree T) //后序非递归遍历2
 {
-    stack<BiTree> s;
+    std::stack<BiTree> s;
     BiTree p=T;
     while(p || !s.empty()) {
         if(p && p->lvisited==0) { //左走，且左子树未被访问
