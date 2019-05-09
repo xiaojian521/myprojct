@@ -77,3 +77,15 @@
    https://www.cnblogs.com/qingchen1984/p/5212755.html
 
 //=====================================================================================
+16.Android.VoiceInteractionService类详解
+   Demo源代码
+   https://github.com/penglu20/RecentTask
+   Bigbang项目
+   https://github.com/penglu20/Bigbang
+
+//=====================================================================================
+17.ANDROID 中UID与PID的作用与区别
+   https://blog.csdn.net/wi__wi/article/details/51078029
+   Pid是进程ID，Uid是用户ID，只是Android和计算机不一样，计算机每个用户都具有一个Uid，哪个用户start的程序，这个程序的Uid就是那个用户，而Android中每个程序都有一个Uid，默认情况下，Android   会给每个程序分配一个普通级别互不相同的 Uid，如果用互相调用，只能是Uid相同才行，这就使得共享数据具有了一定安全性，每个软件之间是不能随意获得数据的。而同一个application 只有一个Uid，所以  application下的Activity之间不存在访问权限的问题。
+
+//=====================================================================================
