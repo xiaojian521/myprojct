@@ -1,3 +1,4 @@
+
 工欲善其事必先利其器
 分配任务后先去分析任务所需，了解所需内容及功能，不要急于直接完成
 
@@ -64,7 +65,7 @@
     2)把空指针转换成目标类型的空指针
     3)把任何类型的表达式类型转换成void类型
     4)用于类层次结构中父类和子类之间指针和引用的转换
-7.3.dynamic_casr主要用于类层次结构中父类和子类之间指针和引用的转换，由于具有运行时类型检查，因此可以保证下转换的安全性，何为安全性？即转换成功就返回转换后的正确类型指针，如果转换失败，则返回NULL，之所以说static_cast在下行转换时不安全，是因为即使转换失败，它也不返回NULL，对于上行转换，dynamic_cast和static_cast是一样的
+7.3.dynamic_cast主要用于类层次结构中父类和子类之间指针和引用的转换，由于具有运行时类型检查，因此可以保证下转换的安全性，何为安全性？即转换成功就返回转换后的正确类型指针，如果转换失败，则返回NULL，之所以说static_cast在下行转换时不安全，是因为即使转换失败，它也不返回NULL，对于上行转换，dynamic_cast和static_cast是一样的
 7.4 只有子类转换成父类，父类不可能转换成子类。在子类转换成父类的时候，也需要注意，只能是指针或者引用，不能是对象
 
 8.智能指针
@@ -97,11 +98,12 @@ enum class B: unsigned char //每个枚举都是unsigned char类型的
 {
     my_enum3 = 0;
 }
-资料https://www.cnblogs.com/JCSU/articles/1299051.html
+资料https://www.c nblogs.com/JCSU/articles/1299051.html
 注意：同一个程序中不能定义同名的枚举类型，不同的枚举类型中也不能存在同名的命名常量。
 
 10.std::ref()函数可以在模板传参的时候传入引用，否则无法传递
-因为thread函数是末班类所以传递引用的时候要加ref()函数
+因为thread函数是模板类所以传递引用的时候要加ref()函数
+https://blog.csdn.net/th_num/article/details/81385917
 
 11.atomic理解https://blog.csdn.net/fengbingchun/article/details/73436710
 
@@ -266,7 +268,7 @@ https://blog.csdn.net/java_android_c/article/details/52678265#
     https://blog.csdn.net/u013366022/article/details/78581522?utm_source=blogxgwz0
 
 43.repo详解
-    //http://www.cnblogs.com/helloworldtoyou/p/6430545.html?utm_source=itdadao&utm_medium=referral
+    http://www.cnblogs.com/helloworldtoyou/p/6430545.html?utm_source=itdadao&utm_medium=referral
 
 44.github上的alexa源代码
     https://github.com/alexa/avs-device-sdk
@@ -579,6 +581,12 @@ static const std::map<VR_CSPott::VR_CSPott_Cmd_Type, std::string> s_cmdFiles(CMD
     隐式转换的风险一般存在于自定义的类构造函数中。
     按照默认规定，只有一个参数的构造函数也定义了一个隐式转换，将该构造函数对应数据类型的数据转换为该类对象。
     (也就是只有一个参数的构造函数,就有一个隐士转换的类型)
+
+121.c++ 之 std::move 原理实现与用法总结
+    https://blog.csdn.net/p942005405/article/details/84644069
+
+122.C++11 锁 lock
+    https://www.cnblogs.com/diegodu/p/7099300.html
 //============================================================
 代码反思总结:
 写完代码,要想怎么优化,尽可能代码简洁,性能最高
