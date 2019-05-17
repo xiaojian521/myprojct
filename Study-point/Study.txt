@@ -587,6 +587,9 @@ static const std::map<VR_CSPott::VR_CSPott_Cmd_Type, std::string> s_cmdFiles(CMD
 
 122.C++11 锁 lock
     https://www.cnblogs.com/diegodu/p/7099300.html
+
+123.使用 C++11 智能指针时要避开的 10 大错误
+    http://blog.jobbole.com/104666/
 //============================================================
 代码反思总结:
 写完代码,要想怎么优化,尽可能代码简洁,性能最高
