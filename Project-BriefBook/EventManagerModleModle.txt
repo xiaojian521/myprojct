@@ -1,0 +1,47 @@
+EventManager模块的
+#==================================================================
+一.目录结构
+├── include
+│   ├── include
+│   │   ├── VR_ActionSenderDef.h
+│   │   ├── VR_EventSenderIF.h
+│   │   ├── VR_ReceiverCb.h
+│   │   ├── VR_TransformProtoToXml.h
+│   │   ├── VR_TransformXmlToProto.h
+│   │   ├── VR_TransformXmlToXml.h
+│   │   └── VR_EngineEventSenderIF.h
+│   └── src
+│       ├── VR_EventSender.h
+│       └── VR_EngineEventSender.h 
+└── src
+    ├── VR_EngineEventSender.cpp
+    ├── VR_EngineEventSenderIF.cpp
+    ├── VR_EventSender.cpp
+    ├── VR_EventSenderIF.cpp
+    ├── VR_ProtoMessageRegerIF.cpp
+    ├── VR_ProtoMessageSenderIF.cpp
+    ├── VR_ReceiverCb.cpp
+    ├── VR_TransformProtoToXml.cpp
+    ├── VR_TransformXmlToProto.cpp
+    └── VR_TransformXmlToXml.cpp
+
+目录分级详解
+1.include目录分为include和src两个子模块.
+  include子模块包含接口类以及具体功能的类
+  src子模块包括对EV_EventSender的封装,都只具有发送消息的功能
+2.src目录包含所有源文件
+#==================================================================
+二.模块详解
+1.VR_ActionSenderDef定义action的一些共通定义
+2.VR_EventSender->VR_EventSenderIF类的功能是对EV_EventSender封装进行线程间通信的类(也可以用其他通信模式只需要继承VR_EventSenderIF类对本地其他代码不需要了修改[开闭原则])
+3.VR_EngineEventSender->VR_EngineEventSenderIF类的功能是经过消息重组从DialogEngine层向DialogManager发送消息
+4.VR_ReceiverCb类和其他模块通信的具体实现类,其他模块(线程)调用通过EV_EventReceiver注册的函数,添加进DialogManager的消息队里中进行处理
+5.VR_Trans*消息重组
+
+#==================================================================
+三.设计模式,分析
+分析:对EV_EventSender功能添加代理类方便以后扩展(开闭原则),对修改关闭,如果使用其他线程间通信重新继承就好(里氏代换原则)
+
+设计模式:代理模式
+
+#==================================================================

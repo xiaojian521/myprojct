@@ -1,0 +1,66 @@
+Audio模块
+#==================================================================
+一.目录结构
+├── include
+│   ├── aec
+│   │   └── VR_AEC_Interface.h
+│   ├── common
+│   │   └── VR_AudioInCommon.h
+│   └── micmanager
+│       └── VR_MicManagerInterface.h
+├── src
+│   ├── aec
+│   │   ├── VR_AEC.cpp
+│   │   ├── VR_AEC.h
+│   │   ├── VR_RingBuf.cpp
+│   │   └── VR_RingBuf.h
+│   ├── audiomanager
+│   │   ├── VR_AudioManager.cpp
+│   │   └── VR_AudioManager.h
+│   ├── audiorecord
+│   │   ├── VR_AudioRecord.cpp
+│   │   └── VR_AudioRecord.h
+│   ├── micmanager
+│   │   ├── VR_MICManager.cpp
+│   │   └── VR_MICManager.h
+│   └── sourcemanager
+│       ├── VR_SourceHandler.cpp
+│       ├── VR_SourceHandler.h
+│       ├── VR_SourcehandlerInterface.h
+│       ├── VR_SourceManager.cpp
+│       ├── VR_SourceManager.h
+│       ├── VR_SourceManager.h.autosave
+│       ├── VR_SourceMessages.cpp
+│       └── VR_SourceMessages.h
+
+目录分级详解
+1.include文件夹下分为分为三个子模块1aec,2common,3micmanager保存的是三个子模块的共通化文件(接口/父类)
+2.src文件夹保存1.aec,2.audiomanager,3.audiorecord,4micmanager,5sourcemanager五个子模块的头文件和源文件
+
+#==================================================================
+二.模块详解
+1.audiorecord模块
+VR_AudioRecord通过引用meidia/AudioRecord.h和动态库配置audio信息并将VR_AudioRecord::AudioRecordCallback录音数据回调函数设置给media组
+在AudioRecordCallback回调函数中调用VR_AudioRecord::writeData继续分发给其他模块(也就是发送给aec模块)
+
+2.aec模块
+VR_AEC->VR_AEC_Interface->VR_AudioDataWriterIF(继承体系)
+通过VR_AudioRecord获得的音频数据进行减噪处理并将减噪处理后的音频数据通过传入的
+VR_AudioDataWriterIF* dataWriter类指针继续向下传递
+
+3.micmanager模块
+VR_MICManager对audiorecord模块和aec模块进行管理创建,因为VR_AudioRecord和
+VR_AEC的创建相互依赖所以放在一起进行管理(解除外部对这两个类的耦合度)
+
+4.sourcemanager模块
+  audio状态的通知如:"audio_in","audio_out","audio_out_off","audio_out_on"等状态切换并通知到其他模块,通过regist的listner来通知状态变更      
+#==================================================================
+三.设计模式,分析
+分析: VR_AudioDataWriterIF接口函数
+     通过类进行传递数据优点: 1意图清晰
+                         2方便传递
+                         3减少类之间的耦合度
+
+使用的设计模式:单例模式
+             观察者模式
+#==================================================================

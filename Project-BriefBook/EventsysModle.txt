@@ -1,0 +1,35 @@
+EventManager模块的(H3平台共通化的代码仅限用于C++代码间通信,Android_Poc中有完整代码)
+#==================================================================
+一.目录结构
+├── include
+│   ├── EV_CoreDefine.h
+│   ├── EV_Define.h
+│   ├── EV_EventContext.h
+│   ├── EV_EventReceiver.h
+│   ├── EV_EventSender.h
+│   ├── EV_EventSystemAPI.h
+│   └── EV_Manager.h
+└── src
+    ├── EV_EventReceiver.cpp
+    ├── EV_EventSender.cpp
+    └── EV_Manager.cpp
+
+#==================================================================
+二.模块详解
+1.EV_Define.h文件宏定义
+2.EV_CoreDefine.h文件使用boost::function定义基本的函数类型
+3.EV_EventContext.h文件
+  EV_EventContext类作为参数传递可以为函数添加一些信息
+  EV_EventContext含有一个boost::shared_ptr<EV_ReplyFuncBase>指针
+  可以在EV_EventContext对象中添加一个回调函数,EV_EventContext.h文件中的其他类就是为了这个实现这个功能所写的.但是该功能在EV_EventContext类中暂时没有实现
+4.EV_EventReceiver类如果想使用EV_EventSender必须要先向EV_EventReceiver类中注册,被调用的函数用boost::bind进行绑定,也就是添加到EV_Manager管理的map中
+5.EV_EventSender类通过获取EV_Manager全局对象以来添加到消息队列进行实际调用,调用者只需要创建EV_EventSender对象并调用SendEvent()函数
+6.EV_Manager类使用单例模式返回static对象只要有人注册并调用则生命周期则一直存在并只有一份,通过成员保存注册map
+  
+#==================================================================
+三.设计模式,分析
+分析:使用boost::function将函数可以添加进map中进行调用,并使用boost::bind()绑定函数进行传递,实现线程间通信
+    
+设计模式:单例模式
+
+#==================================================================
