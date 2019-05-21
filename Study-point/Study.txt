@@ -27,7 +27,7 @@
 
 2.explict关键字只需用于类内的单参数构造函数前面。由于无参的构造函数总是显示调用，这种情况在构造函数前面加explict无意义
 
-3.override关键子，如果派生类在虚函数声明时使用了override描述符，那么该函数必须重载其基类中的同名函数，否则代码将无法通过编译
+3.override关键子，如果派生类在虚函数声明时使用了override描述符，那么该函数必须重写其基类中的同名函数，否则代码将无法通过编译
 至此总结一下静态绑定和动态绑定的区别：
 1. 静态绑定发生在编译期，动态绑定发生在运行期；
 2. 对象的动态类型可以更改，但是静态类型无法更改；
@@ -145,6 +145,7 @@ C++11 并发指南std::condition_variable详解
 20.std::bind() 
 https://www.cnblogs.com/qicosmos/p/3723388.html
 https://blog.csdn.net/liukang325/article/details/53668046
+https://blog.csdn.net/qq_38216239/article/details/81357396
 绑定函数，在需要的时候在使用
 bind用来绑定一个函数，包括全局函数，普通成员函数，静态成员函数，operator函数，虚函数，但不包括函数重载
 
@@ -486,6 +487,7 @@ static const std::map<VR_CSPott::VR_CSPott_Cmd_Type, std::string> s_cmdFiles(CMD
 
 101.C++11新特性之八——函数对象function
     https://www.cnblogs.com/yyxt/p/3987717.html
+    function可以将普通函数，lambda表达式和函数对象类统一起来。它们并不是相同的类型，然而通过function模板类，可以转化为相同类型的对象（function对象），从而放入一个map里
 
 102.我们知道在C++的创建对象是一个费时，费空间的一个操作。有些固然是必不可少，但还有一些对象却在我们不知道的情况下被创建了。通常以下三种情况会产生临时对象：
   1，以值的方式给函数传参；
@@ -590,6 +592,9 @@ static const std::map<VR_CSPott::VR_CSPott_Cmd_Type, std::string> s_cmdFiles(CMD
 
 123.使用 C++11 智能指针时要避开的 10 大错误
     http://blog.jobbole.com/104666/
+   
+124.Android中实现native服务利用binder与应用通信
+    https://blog.csdn.net/qinlei420/article/details/77452872
 //============================================================
 代码反思总结:
 写完代码,要想怎么优化,尽可能代码简洁,性能最高
