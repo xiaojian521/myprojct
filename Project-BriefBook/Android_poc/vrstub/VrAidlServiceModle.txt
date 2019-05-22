@@ -1,0 +1,69 @@
+Audio模块
+#==================================================================
+├── include
+│   ├── common
+│   │   └── VRAidlCommon.h
+│   ├── vraidlservicemanager
+│   │   ├── VRAidlServiceManager.h
+│   │   ├── VRAidlServiceManagerInterface.h
+│   │   └── VRProxyCallbackImp.h
+│   ├── vraidlservices
+│   │   ├── VRAidlServiceBase.h
+│   │   ├── VRAidlServiceImp.h
+│   │   ├── VR_AidlServiceMsgTransfer.h
+│   │   ├── VR_EventHandlerBase.h
+│   │   ├── VR_EventHandlerISuggestion.h
+│   │   ├── VR_EventHandlerLPNInfo.h
+│   │   ├── VR_EventHandlerManager.h
+│   │   ├── VR_EventHandlerPosInfo.h
+│   │   ├── VR_EventHandlerWeChatContactList.h
+│   │   ├── VR_EvnetListener.h
+│   │   ├── VR_JsonToXml.h
+│   │   └── VR_StubSessionManager.h
+│   └── vrproxy
+│       ├── VRProxyCallbackInterface.h
+│       ├── VRProxyImp.h
+│       ├── VRProxyInterface.h
+│       └── VR_ProxyMsg.h
+├── main.cpp
+└── src
+    ├── vraidlservicemanager
+    │   ├── VRAidlServiceManager.cpp
+    │   └── VRProxyCallbackImp.cpp
+    ├── vraidlservices
+    │   ├── VRAidlServiceBase.cpp
+    │   ├── VRAidlServiceImp.cpp
+    │   ├── VR_AidlServiceMsgTransfer.cpp
+    │   ├── VR_EventHandlerBase.cpp
+    │   ├── VR_EventHandlerISuggestion.cpp
+    │   ├── VR_EventHandlerLPNInfo.cpp
+    │   ├── VR_EventHandlerManager.cpp
+    │   ├── VR_EventHandlerPosInfo.cpp
+    │   ├── VR_EventHandlerWeChatContactList.cpp
+    │   ├── VR_JsonToXml.cpp
+    │   └── VR_StubSessionManager.cpp
+    └── vrproxy
+        └── VRProxyImp.cpp
+
+目录分级详解
+1.include目录包括common模块,vraidlservicemanager模块,vraidlservices模块,vrproxy模块
+common模块基本定义
+vraidlservicemanager模块service管理者类
+vraidlservices模块service具体功能
+vrproxy模块代理者模块
+
+#==================================================================
+二.模块详解
+main.cpp中main函数创建VRAidlServiceManager类,并添加进线程池中
+VRAidlServiceManager->ServiceBase->ServiceConnection一个c++service和Java中的service通过aidl进行通信
+VRAidlServiceManager类控制启动流程,VRAidlServiceImp,VRProxyCallbackInterface,VRProxyInterface,VR_StubSessionManager的创建
+VRAidlServiceImp类通过aidl和javasservice进行通信然后将消息分发出去
+VRProxyCallbackInterface类通过获取VRAidlServiceImp的实例传递给VRProxyInterface代理类去发送消息
+VRProxyInterface类的功能即代理VRAidlService模块和vrservice的native代码进行相互通信
+
+#==================================================================
+三.设计模式,分析
+分析: 通过VRAidlServiceManager和javaservice建立连接通信,然后具体实现分发消息和javaservice进行aidl通信发生在VRAidlServiceImp类中,然后通过代理类VRProxyInterface代理vrservice的代理者和VRAidlServiceImp进行相互通信
+
+使用的设计模式:单例模式,代理模式
+#==================================================================

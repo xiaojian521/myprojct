@@ -1,0 +1,114 @@
+DialogEngine模块
+#==================================================================
+dialogengine
+├── mixedinclude
+│   ├── VR_EngineFactory.h
+│   ├── VR_EngineListenerIF.h
+│   ├── VR_EnginIF.h
+│   └── VR_SphinxInterface.h
+├── publicinc
+│   ├── VR_DialogEngineFactory.h
+│   ├── VR_DialogEngineIF.h
+│   └── VR_DialogEngineListener.h
+├── suntec
+│   ├── include
+│   │   ├── config.h
+│   │   ├── VR_AlexaImpl.h
+│   │   ├── VR_AlexaInterfaceDef.h
+│   │   ├── VR_AlexaJSonParser.h
+│   │   ├── VR_AlexaObserver.h
+│   │   ├── VR_AsrRequestor.h
+│   │   ├── VR_AudioDataWriter.h
+│   │   ├── VR_BaiduImpl.h
+│   │   ├── VR_BaiduObserver.h
+│   │   ├── VR_CNDialogEngine.h
+│   │   ├── VR_CommuMediation.h
+│   │   ├── VR_ConnectionObserver.h
+│   │   ├── VR_ConsolePrinter.h
+│   │   ├── VR_ControllerBase.h
+│   │   ├── VR_CSPott.h
+│   │   ├── VR_DataProcessor.h
+│   │   ├── VR_DECommon.h
+│   │   ├── VR_DECommonIF.h
+│   │   ├── VR_DEDataManager.h
+│   │   ├── VR_DEMessageBuilder.h
+│   │   ├── VR_DEProcessor.h
+│   │   ├── VR_DialogEngine.h
+│   │   ├── VR_DummyMediaPlayer.h
+│   │   ├── VR_EngineAdapter.h
+│   │   ├── VR_EngineAlexaListener.h
+│   │   ├── VR_EngineBaiduListener.h
+│   │   ├── VR_EngineBaiduPOCListener.h
+│   │   ├── VR_EngineDataAnalysis.h
+│   │   ├── VR_EngineGoogleListener.h
+│   │   ├── VR_EngineManager.h
+│   │   ├── VR_EnginJsonFormat.h
+│   │   ├── VR_EnginRequestFormat.h
+│   │   ├── VR_GoogleImpl.h
+│   │   ├── VR_GoogleObserver.h
+│   │   ├── VR_GuiRenderer.h
+│   │   ├── VR_IntentionParser.h
+│   │   ├── VR_InteractionManager.h
+│   │   ├── VR_Interpreter.h
+│   │   ├── VR_InterpreterImpl.h
+│   │   ├── VR_InterpreterManager.h
+│   │   ├── VR_KeywordObserver.h
+│   │   ├── VR_MonitorForBack.h
+│   │   ├── VR_MsgController.h
+│   │   ├── VR_NCConnectAdaptor.h
+│   │   ├── VR_NCNetworkAccessAdaptor.h
+│   │   ├── VR_PortAudioMicWrapper.h
+│   │   ├── VR_RingBuf.h
+│   │   ├── VR_SphinxListener.h
+│   │   ├── VR_UIManager.h
+│   │   ├── VR_VerboseMonitor.h
+│   │   ├── VR_VoiceBoxXmlBuilder.h
+│   │   └── VR_XmlParser.h
+│   ├── src
+│   │   ├── VR_AlexaJSonParser.cpp
+│   │   ├── VR_AudioDataWriter.cpp
+│   │   ├── VR_CSPott.cpp
+│   │   ├── VR_DialogEngine.cpp
+│   │   ├── VR_EngineAdapter.cpp
+│   │   ├── VR_EngineAlexaListener.cpp
+│   │   ├── VR_EngineBaiduListener.cpp
+│   │   ├── VR_EngineBaiduPOCListener.cpp
+│   │   ├── VR_EngineDataAnalysis.cpp
+│   │   ├── VR_EngineFactory.cpp
+│   │   ├── VR_EngineGoogleListener.cpp
+│   │   ├── VR_EngineManager.cpp
+│   │   ├── VR_EnginRequestFormat.cpp
+│   │   ├── VR_MsgController.cpp
+│   │   ├── VR_RingBuf.cpp
+│   │   ├── VR_SphinxListener.cpp
+│   │   ├── VR_VoiceBoxXmlBuilder.cpp
+│   │   └── VR_XmlParser.cpp
+│   └── vr_dialogengine_suntec_baidu.mk
+├── VR_DialogEngineFactory.cpp
+└── VR_DialogEngineNull.h
+
+目录分级详解
+1.dialogengine文件夹下包括mixedinclude,publicinc,suntec三个子目录,其他子目录与本组内容不相关已从结构中删除
+2.mixedinclude目录是对具体引擎的创建(工厂模式)和接口类
+3.publicinc目录是对dialogengine的创建(工厂模式)和接口类
+4.suntec目录具体的实现和业务代码
+
+#==================================================================
+二.模块详解
+1.mixedinclude模块使用工厂模式创建根据库名创建不同的engine,通过VR_EnginIF,VR_EngineListenerIF等接口类使Engine能够统一创建调用
+2.publicinc模块(与上面同理)将engine层和dialogengine层进行模块化方便扩展与修改
+3.suntec模块
+从最外层说起
+VR_DialogEngine(DE)是对外调用的类(控制启动流程与创建),创建VR_EngineManager,创建消息线程处理消息以及将从dialogManager(DM)创建的VR_DialogEngineListener传递下去,可以从engine层发消息到DM层在通过VR_EngineEventSenderIF进行线程间通信发送给不同的线程
+VR_EngineManager->VR_DEProcessor(ProcessMessage对消息进行处理分发)主要处理engine的创建以及消息转发
+VR_EngineAdapter类是Engine的适配者类应为将不同Engine的不同行为统一为相同的行为(函数)使接口统一,方便维护调用
+VR_EngineListenerIF类(每个Enginelistener都继承于它)注册进Engine,通过listener监听engine的回调消息
+VR_MsgController类消息队列,分发处理消息
+
+#==================================================================
+三.设计模式,分析
+分析: DE层通过对engine使用工厂模式进行管理创建,是扩展性更高.通过适配者模式进行engine的共通化适配使engine具体类和EngineManager的耦合度降低,通过DialogManager的对外接口使内部细节隐藏,不管外面平台变化,engine代码不需要改变,具有迁移性高的特点.
+
+设计模式: 单例模式,适配者模式,工厂模式
+
+#==================================================================

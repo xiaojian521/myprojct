@@ -1,0 +1,95 @@
+DialogManager模块
+#==================================================================
+
+├── include
+│   ├── VR_Common_DeviceDef.h
+│   ├── VR_DataProviderComm.h
+│   ├── VR_DialogManger.h
+│   ├── VR_DM_CommandHandle.h
+│   ├── VR_DP_ListData_Access.h
+│   ├── VR_MessageProcess.h
+│   ├── VR_RunableThread.h
+│   ├── VR_XmlStrParseDEF.h
+│   └── VR_XmlStrParse.h
+└── src
+    ├── action
+    │   ├── VR_ActionBase.cpp
+    │   ├── VR_ActionBase.h
+    │   ├── VR_ActionFactory.cpp
+    │   ├── VR_ActionFactory.h
+    │   ├── VR_ActionFactoryIF.cpp
+    │   ├── VR_ActionFactoryIF.h
+    │   ├── VR_ActionEventSender.cpp
+    │   ├── VR_ActionEventSender.h
+    │   ├── VR_ActionTtsStop.cpp
+    │   └──  VR_ActionTtsStop.h
+    ├── command
+    │   ├── include
+    │   │   ├── VR_CommandFactory.h
+    │   │   ├── VR_Command.h
+    │   │   ├── VR_CommandHandleIF.h
+    │   │   ├── VR_Message.h
+    │   │   └── VR_Request.h
+    │   ├── VR_Command.cpp
+    │   ├── VR_CommandFactory.cpp
+    │   ├── VR_CommandFactory_VrUnitAgent.h
+    │   ├── VR_Message.cpp
+    │   ├── VR_MessageLoopBack.cpp
+    │   ├── VR_MessageLoopBack.h
+    │   ├── VR_MessageNotifyUICrash.cpp
+    │   ├── VR_MessageNotifyUICrash.h
+    │   ├── VR_RespCategorySearchInfo.cpp
+    │   └── VR_RespCategorySearchInfo.h
+    ├── VR_ActionManger.cpp
+    ├── VR_ActionManger.h
+    ├── VR_AudioSourceListener.cpp
+    ├── VR_AudioSourceListener.h
+    ├── VR_CommonTool.cpp
+    ├── VR_CommonTool.h
+    ├── VR_DailogEngineMessageBuilder.cpp
+    ├── VR_DailogEngineMessageBuilder.h
+    ├── VR_DialogManger.cpp
+    ├── VR_DialogManger_Null.cpp
+    ├── VR_DialogManger_Null.h
+    ├── VR_DM_CommandHandle.cpp
+    ├── VR_JsonParse.cpp
+    ├── VR_JsonParse.h
+    ├── VR_MessageProcess.cpp
+    ├── VR_RunableThread.cpp
+    ├── VR_SessionManger.cpp
+    ├── VR_SessionManger.h
+    ├── VR_SessionManger_Mock.cpp
+    ├── VR_StockInfoHelper.cpp
+    ├── VR_StockInfoHelper.h
+    ├── VR_StockInfoManager.cpp
+    ├── VR_StockInfoManager.h
+    ├── VR_UIStartingCondition.cpp
+    ├── VR_UIStartingCondition.h
+    ├── VR_XmlGenerate.cpp
+    ├── VR_XmlGenerate.h
+    └── VR_XmlStrParse.cpp
+
+目录分级详解
+1.include目录包含具体调用类的实现
+2.src目录分为action模块,command模块,以及基本文件
+action模块通过工厂模式创建动作类--功能对消息的分发处理
+command模块通过工厂模式是向消息队列中--调用VR_MessageProcess类的具体处理函数
+
+#==================================================================
+二.模块详解
+从最外层说起
+VR_ModuleImp创建VR_Controller
+VR_Controller创建VR_MessageProcess,VR_ReceiverCb,VR_DM_CommandHandle
+VR_DM_CommandHandle是DM层的消息处理线程
+VR_ReceiverCb类通过EV_EventReceiver注册的函数线程间通信被调用,通过command工厂模式创建动作消息进而通过VR_MessageProcess类进行调用
+VR_MessageProcess类中创建VR_DialogManger和VR_SessionManger(会话流程管理类)和VR_ActionManger动作消息处理类,以及VR_DialogManger和VR_SessionManger的调用 
+VR_DialogManger负责创建像DE等的一些管理者类
+VR_SessionManger功能是当VR启动时的通道打开状态变更等的消息发送和状态切换作用
+
+#==================================================================
+三.设计模式,分析
+分析: 针对具体功能创建针对性功能类(接口隔离)使代码功能清晰
+
+设计模式: 工厂模式,单例模式
+
+#==================================================================

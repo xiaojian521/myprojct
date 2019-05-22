@@ -1,0 +1,138 @@
+Java-Apk模块
+#==================================================================
+
+├── AndroidManifest.xml
+├── Android.mk
+├── assets
+│   ├── endVR.wav
+│   ├── startVR.wav
+│   ├── TtsEngineConfig.xml
+│   └── vocalizer
+│       ├── clm.xmf
+│       ├── lid.xmf
+│       ├── mnc_li-li_embedded-compact_1-0-0.xmf
+│       ├── synth_med_fxd_bet3f22.xmf
+│       ├── sysdct.xmf
+│       └── ve_pipeline_mnc_li-li_22_embedded-compact_1-0-0.jet
+├── gen
+│   └── net
+│       └── suntec
+│           └── merbok
+│               └── ttsnuance
+│                   ├── BuildConfig.java
+│                   ├── Manifest.java
+│                   └── R.java
+├── java
+│   └── net
+│       └── suntec
+│           └── merbok
+│               ├── BeepPlayer
+│               │   ├── BeepDataInfo.java
+│               │   └── BeepPlayerEngineControl.java
+│               ├── DuerOs
+│               │   ├── AppCtl
+│               │   │   ├── VrBTCtl.java
+│               │   │   ├── VrDuerOsAppCtlBase.java
+│               │   │   ├── VrDuerOsCtl.java
+│               │   │   ├── VrDuerOsInitListener.java
+│               │   │   └── VrMediaCtl.java
+│               │   ├── DuerOsDataInfo.java
+│               │   ├── DuerOsServiceEngineControl.java
+│               │   └── util
+│               │       ├── CommonUtils.java
+│               │       ├── LogUtil.java
+│               │       └── ToastUtils.java
+│               ├── KuWoMusic
+│               │   ├── KuWoMusicDataInfo.java
+│               │   └── KuWoMusicEngineControl.java
+│               ├── TtsEngine
+│               │   ├── IflytekEngine.java
+│               │   ├── NuanceEngine.java
+│               │   ├── TtsDataInfo.java
+│               │   ├── TtsEngineBase.java
+│               │   └── TtsEngineControl.java
+│               ├── VrBTManager
+│               │   └── VrBTManager.java
+│               ├── VrDataManager
+│               │   └── VrDataManager.java
+│               ├── VrMediaManager
+│               │   └── VrMediaManager.java
+│               ├── VrMessage
+│               │   ├── VrDataInfoBase.java
+│               │   ├── VrEngineControlBase.java
+│               │   ├── VrMessageControl.java
+│               │   └── VrXMLStrParse.java
+│               └── VrService
+│                   ├── BootCompleteReceiver.java
+│                   ├── VrCommonRequestProxy.java
+│                   ├── VrServiceApplication.java
+│                   ├── VrServiceLogTag.java
+│                   └── VrServiceManager.java
+├── jniLibs
+│   ├── arm64-v8a
+│   │   └── libNuanceVocalizer.so
+│   └── armeabi
+│       └── libNuanceVocalizer.so
+├── libs
+│   ├── arm64-v8a
+│   │   └── vocalizerlib.jar
+│   ├── armeabi
+│   │   └── vocalizerlib.jar
+│   ├── custom-sdk-release-1.4.0.jar
+│   ├── gson-2.2.4.jar
+│   ├── jaxen-1.1.6.jar
+│   ├── kwmusic-autosdk-v1.9.7.jar
+│   └── merbok.sysctl.jar
+└── res
+    ├── drawable-hdpi
+    │   └── icon.png
+    ├── drawable-ldpi
+    │   └── icon.png
+    ├── drawable-mdpi
+    │   └── icon.png
+    ├── layout
+    │   └── main.xml
+    └── values
+        └── strings.xml
+
+目录分级详解
+1.assets外部引用资源目录
+2.java代码目录
+3.jniLibs存放jni调用C++动态库所在目录
+4.libs存放jar包
+5.res存放资源文件
+
+#==================================================================
+二.模块详解
+1.VrService模块
+BootCompleteReceiver类系统启动后自启apk的类
+VrServiceApplication启动后进入这个类的onCreate函数加载资源
+VrServiceManager->Service->LifeCycleListener继承框架生命周期类当框架启动后逐步启动 
+    1.连接stub-service
+    2.创建VrCommonRequestProxy类调用stub端tts()函数回复消息
+    3.创建其它manager类
+2.VrMessage模块
+VrMessageControl类创建各功能Control类将他们添加进set中当收到stub-service的消息进行遍历调用
+VrDataInfoBase各个模块可以添加自己特有信息进行传递
+VrXMLStrParse封装xml解析类
+3.VrMediaManager
+VrMediaManager当启动DuerOs引擎的时候需要向media申请通道以及切换状态
+4.VrDataManager模块
+VrDataManager接收画面setting的状态改变,比如画面点击切换引擎使用了handler消息机制
+5.VrBTManager模块
+VrBTManager类实现蓝牙对接功能
+6.TtsEngine模块
+TtsEngineControl类控制引擎切换以及消息处理
+NuanceEngine类是nuanceTTS播放引擎
+IflytekEngine类是科大讯飞TTS播放引擎
+7.KuWoMusic模块
+KuWoMusicEngineControl类调用酷我音乐App及消息处理
+8.DuerOs模块
+引入DuerOs引擎不过多解释
+
+#==================================================================
+三.设计模式,分析
+分析: 因为项目中有些功能是引用android平台所以创建了这个service进行和本地native代码进行交互和调用一些android原声接口,在VrServiceManager只是进行启动流程和manager的创建真正的消息分发处理是在VrMessageControl类中进行创建处理的,管理者类中不要有太复杂的逻辑关系和太多的创建过程只要基本的创建流程比如init,uninit,onstart,onstop等基本功能
+
+设计模式: 单例模式
+#==================================================================
