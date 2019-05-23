@@ -76,6 +76,8 @@
 8.3.weak_ptr是为了配合shared_ptr而引入的一种智能指针，因为它不具有普通指针的行为，没有重载operator*和->,它的最大作用在于协助shared_ptr工作，像旁观者那样观测资源的使用情况。weak_ptr可以从一个shared_ptr或者另一个weak_ptr对象构造，获得资源的观测全。但weak_ptr没有共享资源，它的构造不会引起指针引用计数的增加
 8.4 std::make_shared有啥用
 https://blog.csdn.net/love_hot_girl/article/details/21161507
+8.5 std::shared_ptr及std::unique_ptr使用数组
+https://www.cnblogs.com/darkknightzh/p/5462363.html
 
 9.enum 传统的enum关键字的作用域是全局的，也就是说，如果在enum A 中生命一个枚举类型，无法在enum B 中声明同样的枚举类型
 eg 
@@ -595,6 +597,13 @@ static const std::map<VR_CSPott::VR_CSPott_Cmd_Type, std::string> s_cmdFiles(CMD
    
 124.Android中实现native服务利用binder与应用通信
     https://blog.csdn.net/qinlei420/article/details/77452872
+
+125.__declspec(dllexport)与__declspec(dllimport)
+    https://blog.csdn.net/huangyimo/article/details/81748939
+
+126.C++11范围for循环
+    https://www.cnblogs.com/LuckCoder/p/8467640.html
+    https://www.cnblogs.com/dapeng-bupt/p/7932067.html
 //============================================================
 代码反思总结:
 写完代码,要想怎么优化,尽可能代码简洁,性能最高
