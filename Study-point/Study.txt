@@ -604,6 +604,9 @@ static const std::map<VR_CSPott::VR_CSPott_Cmd_Type, std::string> s_cmdFiles(CMD
 126.C++11范围for循环
     https://www.cnblogs.com/LuckCoder/p/8467640.html
     https://www.cnblogs.com/dapeng-bupt/p/7932067.html
+
+127.c++类的大小计算
+    https://blog.csdn.net/fengxinlinux/article/details/72836199
 //============================================================
 代码反思总结:
 写完代码,要想怎么优化,尽可能代码简洁,性能最高

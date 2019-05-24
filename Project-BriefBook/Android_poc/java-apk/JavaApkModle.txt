@@ -105,8 +105,8 @@ Java-Apk模块
 #==================================================================
 二.模块详解
 1.VrService模块
-BootCompleteReceiver类系统启动后自启apk的类
-VrServiceApplication启动后进入这个类的onCreate函数加载资源
+BootCompleteReceiver类收到广播消息后启动javaservice的类
+VrServiceApplication类APK启动后进入这个类的onCreate函数加载资源
 VrServiceManager->Service->LifeCycleListener继承框架生命周期类当框架启动后逐步启动 
     1.连接stub-service
     2.创建VrCommonRequestProxy类调用stub端tts()函数回复消息
