@@ -51,6 +51,7 @@
     2.const对象的成员是不可修改的,然而const对象通过指针维护的对象却是可以修改的.
     3.const成员函数不可以修改对象的数据,不管对象是否具有const性质.它在编译时,以是否修改成员数据为依据,进行检查.
     4.然而加上mutable修饰符的数据成员,对于任何情况下通过任何手段都可修改,自然此时的const成员函数是可以修改它的
+    5.const修饰的成员函数传入的是const类型的this指针所以不能修该类成员变量
     
 6.static修饰符
 6.1.static修饰的变量先于对象存在，所以static修饰的变量要在类外初始化。因为static是所有对象共享的变量，必须要比对象先存在。
@@ -107,7 +108,8 @@ enum class B: unsigned char //每个枚举都是unsigned char类型的
 因为thread函数是模板类所以传递引用的时候要加ref()函数
 https://blog.csdn.net/th_num/article/details/81385917
 
-11.atomic理解https://blog.csdn.net/fengbingchun/article/details/73436710
+11.atomic理解
+   https://blog.csdn.net/fengbingchun/article/details/73436710
 
 12.C++中的关键字explicit主要是用来修饰类的构造函数，被修饰的构造函数的类，不能发生相应的隐式类型转换，只能以显示的方式进行类型转换。类构造函数默认情况下声明为隐式的即implicit
 explicit关键字只能用于类内部的构造函数声明上，而不能用在类外部的函数定义(函数实现)上，它的作用是不能进行隐式转换；explicit关键字作用于单个参数的构造函数，如果构造函数有多个参数，但是从第二个参数开始，如果各参数均有默认赋值，也可以应用explicit关键字
@@ -607,6 +609,45 @@ static const std::map<VR_CSPott::VR_CSPott_Cmd_Type, std::string> s_cmdFiles(CMD
 
 127.c++类的大小计算
     https://blog.csdn.net/fengxinlinux/article/details/72836199
+
+128.automic不安全详解（转）
+    https://www.cnblogs.com/zhangmaliang/p/7794167.html
+atomic 实际上相当于一个引用计数器，这个大家很熟悉，如果被标记了atomic，那么被标记了的内存本身就有了一个引用计数器，第一个占用这块内存的线程，会给这个计数器+1，在这个线程操作这块内存期间，其他线程在访问这个内存的时候，如果发现“引用计数器”不为0，则阻塞,如果一个数据占的内存特别大, 那么读写这块内存数据需要的时间也就越长, 如果这个时间长度远远超过线程调度的轮询片, 那么就有极大可能出现并发问题.(一块内存在被一条线程读写的时间, 快到其他线程来到的时候就已经结束, 那么就不会出现线程安全问题, 反之, 就会出现线程安全的问题)
+
+129.c++ 添加map
+eg:
+static const std::map<VR_CSPott::VR_CSPott_Cmd_Type, std::string>::value_type CMD_INIT_DATA[] = {
+    std::map<VR_CSPott::VR_CSPott_Cmd_Type, std::string>::value_type(VR_CSPott::VR_CSPott_Cmd_Type_Music, "MusicCommand_SP_Adapt_190104"),
+    std::map<VR_CSPott::VR_CSPott_Cmd_Type, std::string>::value_type(VR_CSPott::VR_CSPott_Cmd_Type_Navi, "NaviCommand_SP_Adapt_190104")
+};
+
+static const std::map<VR_CSPott::VR_CSPott_Cmd_Type, std::string> s_cmdFiles(CMD_INIT_DATA, CMD_INIT_DATA + 2);
+//==================================================================
+130.jvm之对象在内存中的布局
+https://blog.csdn.net/u014229215/article/details/78584371
+https://blog.csdn.net/qingguiyu/article/details/79237129 //深入理解Java虚拟机 &GC分代年龄
+
+131.Java中Synchronized的用法
+https://blog.csdn.net/javazejian/article/details/72828483 //深入理解Java并发之synchronized实现原理
+https://blog.csdn.net/luoweifu/article/details/46613015
+synchronized是Java中的关键字，是一种同步锁。它修饰的对象有以下几种： 
+(1). 修饰一个代码块，被修饰的代码块称为同步语句块，其作用的范围是大括号{}括起来的代码，作用的对象是调用这个代码块的对象； 
+(2). 修饰一个方法，被修饰的方法称为同步方法，其作用的范围是整个方法，作用的对象是调用这个方法的对象； 
+(3). 修改一个静态的方法，其作用的范围是整个静态方法，作用的对象是这个类的所有对象； 
+(4). 修改一个类，其作用的范围是synchronized后面括号括起来的部分，作用主的对象是这个类的所有对象。
+总结:
+A. 无论synchronized关键字加在方法上还是对象上，如果它作用的对象是非静态的，则它取得的锁是对象；如果synchronized作用的对象是一个静态方法或一个类，则它取得的锁是对类，该类所有的对象同一把锁。 
+B. 每个对象只有一个锁（lock）与之相关联，谁拿到这个锁谁就可以运行它所控制的那段代码。 
+C. 实现同步是要很大的系统开销作为代价的，甚至可能造成死锁，所以尽量避免无谓的同步控制
+
+132.Linux环境使用g++编译C++方法总结
+https://www.jb51.net/article/102210.htm
+https://www.jb51.net/article/137075.htm
+
+133.介绍预定义宏"__cplusplus"
+    (1)__cplusplus的值是为了表示C++的版本
+    (2)一.3 __cplusplus的类型是"long int"
+    (3)目前标准中规定的值只有一个——199711L
 //============================================================
 代码反思总结:
 写完代码,要想怎么优化,尽可能代码简洁,性能最高
