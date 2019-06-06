@@ -107,7 +107,8 @@ enum class B: unsigned char //每个枚举都是unsigned char类型的
 
 10.std::ref()函数可以在模板传参的时候传入引用，否则无法传递
 因为thread函数是模板类所以传递引用的时候要加ref()函数
-https://blog.csdn.net/th_num/article/details/81385917
+或用于bind函数
+https://www.cnblogs.com/yi-mu-xi/p/9896461.html
 
 11.atomic理解
    https://blog.csdn.net/fengbingchun/article/details/73436710
@@ -537,6 +538,11 @@ static const std::map<VR_CSPott::VR_CSPott_Cmd_Type, std::string> s_cmdFiles(CMD
 
 114.线程创建后如果仍是joinable的,这时销毁对象,系统会抛出异常.
    销毁线程时,先判断是否是joinable,然后让线程退出,join,等待完成,然后在销毁线程
+   下列任一情况都是非joinable
+   1.默认构造器构造的。
+   2.通过移动构造获得的
+   3.调用了join或者detach方法的。
+
 
 115.stl模板插入元素的时候是进行一次拷贝把之前的对象进行拷贝,变成一份新的数据,所以要看情况添加,拷贝构造函数;
 
@@ -680,6 +686,30 @@ https://www.jb51.net/article/137075.htm
 
 140.操作符重载浅析（六种情况）
     https://www.cnblogs.com/findumars/p/5811263.html
+
+141.__attribute__((visibility("default")))
+https://blog.csdn.net/mutourenzhang/article/details/47803803
+如果编译的时候用了这个属性，那么动态库的符号都是hidden的，除非强制声明
+“default”：用它定义的符号将被导出，动态库中的函数默认是可见的。”hidden”：用它定义的符号将不被导出，并且不能从其它对象进行使用，动态库中的函数是被隐藏的。default意味着该方法对其它模块是可见的。而hidden表示该方法符号不会被放到动态符号表里，所以其它模块(可执行文件或者动态库)不可以通过符号表访问该方法。
+
+142.gcc中预定义的宏__GNUC__
+https://www.cnblogs.com/Cccarl/p/7215515.html?utm_source=itdadao&utm_medium=referral
+__GNUC__ 、__GNUC_MINOR__ 、__GNUC_PATCHLEVEL__分别代表gcc的主版本号，次版本号，修正版本号。
+
+143.C++中使用private修饰的static变量不能通过类名加作用于调用,也不能用对象调用
+
+144.c++11 数值类型和字符串的相互转换
+https://www.cnblogs.com/gtarcoder/p/4925592.html
+
+145."空类"其实并不空,因为C++不允许大小为0的类或对象存在,通常的"空类"会由编译器在里面安插一个类型为char的成员变量,令他有一个确定的大小
+
+146.
+顺序容器包括vector、deque、list、forward_list、array、string，所有顺序容器都提供了快速顺序访问元素的能力。
+关联容器包括set、map
+关联容器和顺序容器有着根本的不同：关联容器中的元素是按关键字来保存和访问的。与之相对，顺序容器中的元素是按它们在容器中的位置来顺序保存和访问的。
+关联容器不支持顺序容器的位置相关的操作。原因是关联容器中元素是根据关键字存储的，这些操作对关联容器没有意义。而且，关联容器也不支持构造函数或插入操作这些接受一个元素值和一个数量值得操作。
+关联容器支持高效的关键字查找和访问。两个主要的关联容器(associative container)类型是map和set。map中的元素是一些关键字----值(key--value)对：关键字起到索引的作用，值则表示与索引相关联的数据。set中每个元素只包含一个关键字：set支持高效的关键字查询操作----检查一个给定关键字是否在set中。
+
 //============================================================
 代码反思总结:
 写完代码,要想怎么优化,尽可能代码简洁,性能最高
