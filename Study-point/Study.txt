@@ -220,6 +220,12 @@ https://blog.csdn.net/java_android_c/article/details/52678265#
 
 37. java 中的Context详解
     https://www.cnblogs.com/jingmengxintang/p/7889311.html
+    1> 创建Application 对象时，即第一次启动app时。 整个App共一个Application对象，所以也只有一个Application 的Context，Application销毁，它也销毁； 
+    2> 创建Activity对象时。Activity销毁，它也销毁; 
+    3> 创建Service对象时。Service销毁，它也销毁。    
+    由此可以得到应用程序App可以创建的Context（Activity和Service没启动就不会创建）个数公式一般为： 
+    总Context实例个数 = Service个数 + Activity个数 + 1（Application对应的Context对象）
+
     主要功能:1）启动Activity
             2）启动和停止Service
             3）发送广播消息(Intent)
@@ -725,6 +731,8 @@ https://blog.csdn.net/u014043213/article/details/80336805
 
 148. Linux、GUN/Linux、GUN、GPL以及各个发行版本详细介绍
 https://blog.csdn.net/baidu_32134295/article/details/52439823
+
+149. new和delete是全局重载操作符 ::operator new 而malloc()和free()是函数
 //============================================================
 代码反思总结:
 写完代码,要想怎么优化,尽可能代码简洁,性能最高

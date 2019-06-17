@@ -44,7 +44,13 @@ bool PostMessage(const std::string& message) {
     m_cv.notify_all();
 }
 
-bool PostFrontMessage(const std::string& message){}
+bool PostFrontMessage(const std::string& message){
+    {
+        std::unique_lock<std::mutex> lck(m_mtx);
+        m_msglist.push_front(message);
+    }
+    m_cv.notify_all();
+}
 
 void Run() {
     while(true) {
