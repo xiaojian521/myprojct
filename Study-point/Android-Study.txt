@@ -1,3 +1,5 @@
+
+Android系统为每一个应用开启一个独立的虚拟机，每个应用都运行在各自进程里（默认情况下），彼此之间相互独立，无法共享内存。当一个应用想要访问另一个应用的数据或调用其方法，就要用到Android系统提供的IPC机制。而AIDL就是Android实现IPC机制的方式之一。
 #==================================================================== 
 1.Android广播机制Broadcast详解
   https://www.cnblogs.com/travellife/p/3944363.html
@@ -353,4 +355,26 @@ https://www.jianshu.com/p/34326751b2c6
 #====================================================================
 65. java外部类可以访问内部类的私有成员变量
 
+#====================================================================
+66. AIDL中RemoteCallbackList的使用及权限验证方式
+https://www.jianshu.com/p/69e5782dd3c3
+
+#====================================================================
+67. Android ContentProvider详解
+https://blog.csdn.net/carson_ho/article/details/76101093
+https://www.jianshu.com/p/ea8bc4aaf057
+注意事项:
+1.application初始化的时候会installProvider
+2.向AMS请求provider的时候如果对端进程不存在则请求的那个线程需要一直等待
+3.当对方的进程启动之后并publish之后，请求provider的线程才可返回，所以尽量不要在主线程请求provider
+4.请求provider分为stable以及unsbale，stable类型链接在server进程挂掉之后，client进程会跟着被株连kill
+5.insert/delete/update默认建立stable链接，query默认建立unstable链接，如果失败会重新建立stable链接
+6.AMS作为一个中间管理员的身份，所有的provider会向它注册
+7.向AMS请求到provider之后，就可以在client和server之间自行binder通信，不需要再经过systemserver
+
+#====================================================================
+68. 图文详解 Android Binder跨进程通信的原理
+https://www.jianshu.com/p/4ee3fd07da14
+
+注：传统的跨进程通信需拷贝数据2次，但Binder机制只需1次，主要是使用到了内存映射
 #====================================================================
