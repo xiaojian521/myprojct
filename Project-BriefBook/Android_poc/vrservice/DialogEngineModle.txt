@@ -100,14 +100,15 @@ dialogengine
 3.suntec模块
 从最外层说起
 VR_DialogEngine(DE)是对外调用的类(控制启动流程与创建),创建VR_EngineManager,创建消息线程处理消息以及将从dialogManager(DM)创建的VR_DialogEngineListener传递下去,可以从engine层发消息到DM层在通过VR_EngineEventSenderIF进行线程间通信发送给不同的线程
-VR_EngineManager->VR_DEProcessor(ProcessMessage对消息进行处理分发)主要处理engine的创建以及消息转发
-VR_EngineAdapter类是Engine的适配者类应为将不同Engine的不同行为统一为相同的行为(函数)使接口统一,方便维护调用
+VR_EngineManager->VR_DEProcessor(ProcessMessage对消息进行处理分发)主要处理engine的创建以及消息转发,调用VR_EngineAdapter中的各个Engine接口
+VR_EngineAdapter类是Engine的适配者类应为将不同Engine的行为统一为相同的行为(函数)使接口统一,方便维护调用
 VR_EngineListenerIF类(每个Enginelistener都继承于它)注册进Engine,通过listener监听engine的回调消息
-VR_MsgController类消息队列,分发处理消息
+VR_MsgController类消息队列,分发处理消息engine层的消息
 
 #==================================================================
 三.设计模式,分析
-分析: DE层通过对engine使用工厂模式进行管理创建,是扩展性更高.通过适配者模式进行engine的共通化适配使engine具体类和EngineManager的耦合度降低,通过DialogManager的对外接口使内部细节隐藏,不管外面平台变化,engine代码不需要改变,具有迁移性高的特点.
+分析: DE层通过对engine使用工厂模式进行管理创建,是扩展性更高.通过适配者模式进行engine的共通化适配使engine具体类和EngineManager的耦合度降低,通过DialogManager的对外接口使内部细节隐藏,具有迁移性高的特点.只有VR_EngineManager中存在消息传递对象,engine层只能通过调用接口来回调消息,如果有变动不需要修改底下的代码
+(我认为将Engine的创建都提取到adapter类中,EngineManager类中只是调用adapter类,以及消息的分发与回复,会更好)
 
 设计模式: 单例模式,适配者模式,工厂模式
 

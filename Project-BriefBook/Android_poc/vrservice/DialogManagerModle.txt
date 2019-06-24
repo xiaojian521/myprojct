@@ -72,32 +72,33 @@ DialogManager模块
 目录分级详解
 1.include目录包含具体调用类的实现
 2.src目录分为action模块,command模块,以及基本文件
-action模块通过工厂模式创建动作类--功能对消息的分发处理
+action模块通过工厂模式创建动作类--功能对内部消息的分发处理
 command模块通过工厂模式是向消息队列中--调用VR_MessageProcess类的具体处理函数
 
 #==================================================================
 二.模块详解
 从最外层说起
 VR_ModuleImp创建VR_Controller
-#===================消息分发层===========================
+#===================外部消息处理层=========================
 VR_Controller创建VR_ReceiverCb(消息接收器),VR_MessageProcess(消息处理器管理),VR_DM_CommandHandle(消息队列线程),VR_CommandFactory(命令工厂)
 VR_DM_CommandHandle是DM层的消息处理线程
 VR_ReceiverCb类通过EV_EventReceiver注册的函数线程间通信被调用,通过command工厂模式创建动作消息进而通过VR_MessageProcess类进行调用
 VR_CommandFactory将消息转化为对象通过VR_MessageProcess类进消息分发,并添加VR_DM_CommandHandle消息队列中进行处理
 VR_MessageProcess类中创建VR_DialogManger和VR_SessionManger(会话流程管理类)和VR_ActionManger动作消息处理类,以及VR_DialogManger和VR_SessionManger的调用
+#===================内部消息处理层=========================
 VR_ActionManger类包括VR_RequestQueue本地消息缓存(一个map键值是action-id全局的递增id)
 VR_ActionFactoryIF根据传入的消息创建不同的继承于VR_ActionBase的消息类
 VR_ActionEventSender包含有向各个模块发送消息的函数(包括因参数类型不同的重载函数)
 VR_ActionManger的作用是在MessageProcess层转发消息,可以本地化持久保存一些消息比如说message的一些信息,在适当的时机调用
-#===================业务逻辑层===========================
+#===================业务逻辑层(对消息的处理)=================
 VR_DialogManger负责创建像DE等的一些管理者类,开始处理业务和平台相关内容
-#===================会话流程层===========================
+#===================会话流程层=============================
 VR_SessionManger功能是当VR启动时的通道打开状态变更等的消息发送和状态切换作用
 
 #==================================================================
 三.设计模式,分析
 分析: 针对具体功能创建针对性功能类(接口隔离)使代码功能清晰
 
-设计模式: 工厂模式,单例模式,命令设计模式
+设计模式: 工厂模式,单例模式,命令模式
 
 #==================================================================

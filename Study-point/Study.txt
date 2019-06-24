@@ -538,7 +538,7 @@ static const std::map<VR_CSPott::VR_CSPott_Cmd_Type, std::string> s_cmdFiles(CMD
 112.C++11有序锁实现
    https://blog.csdn.net/jzkdl/article/details/80536790
 
-113.c++11多线程中的condition_variable（条件变量)
+113.c++11多线程中的condition_variable(条件变量)
    https://blog.csdn.net/li1615882553/article/details/86179781
    当条件变量wait()时会先释放锁,调用notify的时候会重新上锁,如果不能上锁则会一直等待
 
@@ -733,6 +733,11 @@ https://blog.csdn.net/u014043213/article/details/80336805
 https://blog.csdn.net/baidu_32134295/article/details/52439823
 
 149. new和delete是全局重载操作符 ::operator new 而malloc()和free()是函数
+
+150. C++11 std::function和std::bind绑定器
+https://blog.csdn.net/m_buddy/article/details/74389409
+实际上std::bind的返回类型是一个stl内部定义的仿函数类型，在这里就只需要知道它是一个仿函数，可以赋值给一个std::function，这里直接用std::function类型来保存std::bind的返回值也是可以的。
+其中std::placeholders::_1是一个占位符，代表这个文职将在函数调用时，被传入的第一个参数代替。
 //============================================================
 代码反思总结:
 写完代码,要想怎么优化,尽可能代码简洁,性能最高

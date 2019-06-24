@@ -59,11 +59,11 @@ VRAidlServiceManager->ServiceBase->ServiceConnection一个c++service和Java中�
 VRAidlServiceManager类控制启动流程,VRAidlServiceImp,VRProxyCallbackInterface,VRProxyInterface,VR_StubSessionManager的创建
 VRAidlServiceImp类通过aidl和javasservice进行通信然后将消息分发出去
 VRProxyCallbackInterface类通过获取VRAidlServiceImp的实例传递给VRProxyInterface代理类去发送消息
-VRProxyInterface类的功能即代理VRAidlService模块和vrservice的native代码进行相互通信
+VRProxyInterface类的功能即代理vrservice的native代码和VRAidlService模块进行相互通信
 
 #==================================================================
 三.设计模式,分析
-分析: 通过VRAidlServiceManager和javaservice建立连接通信,然后具体实现分发消息和javaservice进行aidl通信发生在VRAidlServiceImp类中,然后通过代理类VRProxyInterface代理vrservice的代理者和VRAidlServiceImp进行相互通信
+分析: 通过VRAidlServiceManager和javaservice建立连接通信,然后具体实现分发消息和javaservice进行aidl通信发生在VRAidlServiceImp类中,通过代理类VRProxyInterface代理vrservice的代理者和VRAidlServiceImp进行相互通信
 
 使用的设计模式:单例模式,代理模式
 #==================================================================

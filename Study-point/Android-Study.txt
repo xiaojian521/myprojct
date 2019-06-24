@@ -320,7 +320,7 @@ https://blog.csdn.net/jaycee110905/article/details/8990449
 情况2：跨进程通讯，使用AIDL;
 总结
 内核空间内存在一个binder映射表
-再来梳理总结一下：当Client进程向ServiceManager查询Server进程（我要调用你的某个对象的某个方法了），这个过程也是一个跨进程通信的过程，也经过了Binder驱动，这时Binder驱动发挥它的作用，来了个狸猫换太子，将Server进程中的真实对象转换成代理对象，返回这个代理对象给Client进程。 
+再来梳理总结一下：当Client进程向ServiceManager查询Server进程（我要调用你的某个对象的某个方法了），这个过程也是一个跨进程通信的过程，也经过了Binder驱动，这时Binder驱动发挥它的作用，来了个狸猫换太子，将Server进程中的真实对象转换成代理对象，返回这个代理对象给Client进程.
 Client进程拿到了这个代理对象，然后调用这个代理对象的方法，Binder驱动继续发挥他的使命，它会通知Server进程执行计算工作，将Server进程中的真实对象执行的结果返回给了Client进程，这样Client进程还是如愿的得到了自己想要。跨进程通信完毕！
 
 #====================================================================
@@ -334,7 +334,7 @@ https://blog.csdn.net/michael1112/article/details/78675520
 我们可以看到Stub中的常量，其中两个int常量是用来标识我们在接口中定义的方法的，DESCRIPTOR常量是 Binder的唯一标识。
 asInterface 方法用于将服务端的Binder对象转换为客户端所需要的接口对象，该过程区分进程，如果进程一样，就返回服务端Stub对象本身，否则呢就返回封装后的Stub.Proxy对象。
 onTransact 方法是运行在服务端的Binder线程中的，当客户端发起远程请求后，在底层封装后会交由此方法来处理。通过code来区分客户端请求的方法，注意一点的是，如果该方法返回false的换，客户端的请求就会失败。一般可以用来做权限控制。
-4.代理类中我们主要看一下getName和getOtherName方法就可以了，这两个方法都是运行在客户端，当客户端发起远程请求时，_data会写入参数，当然这边的例子并没有（啦啦啦...），然后调用transact方法发起RPC(远程过程调用)请求，同时挂起当前线程，然后服务端的onTransact方法就会被 调起，直到RPC过程返回后，当前线程继续执行，并从_reply取出返回值（如果有的话），并返回结果。
+4.代理类中我们主要看一下getName和getOtherName方法就可以了，这两个方法都是运行在客户端，当客户端发起远程请求时，_data会写入参数，当然这边的例子并没有（啦啦啦...），然后调用transact方法发起RPC(远程过程调用)请求，同时挂起当前线程，然后服务端的onTransact方法就会被调起，直到RPC过程返回后，当前线程继续执行，并从_reply取出返回值（如果有的话），并返回结果。
 5.最后
 分析完sutido生成的Binder之后，我们就大概知道AIDL的工作原理，定义好AIDL文件只是方便sutido帮我生成所需的Binder类，AIDL并不是必须的文件，因为这个Binder类我们也可以手写出来（当然，你闲的没事的话），所以这边最重要的还是Binder的知识点，其他一些IPC方式其实都是通过Binder来实现的，比如说Messager，Bundle，ContentProvider，只是它们的封装方式不一样而已。总的来说，从应用层来说，Binder是客户端和服务端之间通信的媒介。从FrameWork层来说，Binder是ServiceManager连接各种Manager和ManagerService的桥梁。Android系统中充斥着大量的CS模型，而Binder作为独有的IPC方式，如果我们能更好的理解它，对我们的开发工作就会带来更多的帮助。
 

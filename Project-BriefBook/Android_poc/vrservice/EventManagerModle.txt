@@ -33,8 +33,8 @@ EventManager模块的
 #==================================================================
 二.模块详解
 1.VR_ActionSenderDef定义action的一些共通定义
-2.VR_EventSender->VR_EventSenderIF类的功能是对EV_EventSender封装进行线程间通信的类(也可以用其他通信模式只需要继承VR_EventSenderIF类对本地其他代码不需要了修改[开闭原则])
-3.VR_EngineEventSender->VR_EngineEventSenderIF类的功能是经过消息重组从DialogEngine层向DialogManager发送消息
+2.VR_EventSender->VR_EventSenderIF类的功能是对EV_EventSender封装进行进程间通信的类(也可以用其他通信模式只需要继承VR_EventSenderIF类对本地其他代码不需要了修改[开闭原则])(存在于DialogManager层所有和其他模块(进程)通信的类调用的都是这个类对象)
+3.VR_EngineEventSender->VR_EngineEventSenderIF类的功能是从DialogEngine层向DialogManager发送消息,在通过EV_EventSender经过消息重组成proto消息(进程间通信)发送到其他模块
 4.VR_ReceiverCb类和其他模块通信的具体实现类,其他模块(线程)调用通过EV_EventReceiver注册的函数,添加进DialogManager的消息队里中进行处理
 5.VR_Trans*消息重组
 
