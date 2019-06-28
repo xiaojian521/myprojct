@@ -141,7 +141,7 @@ https://www.cnblogs.com/senior-engineer/p/5562794.html
 
 #====================================================================
 20.Listview详解
-https://www.cnblogs.com/huangjie123/p/5990737.html
+  
 ListView 控件的设计正好遵循MVC 设计模式
 ArrayAdapter的使用
 ArrayAdapter通常用于显示较为简单的数组和集合数据，界面较为简单，直接向ArrayAdapter添加相关的参数即可。
@@ -377,4 +377,12 @@ https://www.jianshu.com/p/ea8bc4aaf057
 https://www.jianshu.com/p/4ee3fd07da14
 
 注：传统的跨进程通信需拷贝数据2次，但Binder机制只需1次，主要是使用到了内存映射
+#====================================================================
+69. 安卓丢log的问题，以下方法是网上查的，遇到问题可以试下是否能够解决丢log的问题？
+原因：每个TAG的缓存上限是256K（property中设置），超过这个上限，会有擦除规则。
+        缓存区有一个总的大小，默认是1M，可以修改。
+logcat -g 可以查看log缓存的大小
+logcat -G <size> 可以设置Log缓存的大小
+例子： logcat -G 4096K
+
 #====================================================================

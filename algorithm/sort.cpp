@@ -183,3 +183,206 @@ bool cmp(int a,int b){
 sort(a,a+n); //a为数组，n为数组的长度，默认是从小到大排序
 sort(a,a+n,cmp);//cmp即为自定义比较函数，此处是从大到小排序。
 //=====================================================
+//==================自己从新写的===================================
+
+//冒泡排序
+void MPSort(int* aary, int lenght) {
+    if(nullptr == aary || 0 >= lenght )
+        return ;
+    for(int i = 1; i < lenght; i++) {
+        for(int j = lenght-1; j >= i; --j) {
+            if(aary[j-1] > aary[j]) {
+                int tmp = aary[j];
+                aary[j] = aary[j-1];
+                aary[j-1] = tmp;
+            }
+        }
+    }
+}
+
+//选择排序
+void XZSort(int* aary, int lenght) {
+    if(nullptr == aary || 0 >= lenght )
+        return ;
+    for(int i = 0; i < lenght-1; ++i) {
+        int min = i;
+        for(int j = i+1; j < lenght; j++) {
+            if(aary[min] > aary[j]) {
+                min = j;
+            }
+        }
+        if(min != i) {
+            int tmp = aary[i];
+            aary[i] = aary[min];
+            aary[min] = tmp;
+        }
+    }
+}
+
+//插入排序
+void CRSort(int* aar, int lenght) {
+    if(nullptr == aar || 0 >= lenght )
+        return ;
+    int i; //有序数组的最后一个
+    int j; //无序数组的第一个
+    //遍历无序数组
+    for(j = 1; j < lenght; ++j) {
+        int temp = aar[j];
+        i = j - 1;
+        while(i>=0 && temp < aar[i]) {
+            aar[i+1] = aar[i];
+            --i;
+        }
+        aar[i+1] = temp;
+    }
+}
+
+//希尔排序
+void ShellSort(int* aar, int lenght) {
+    if(nullptr == aar || lenght <= 0) return;
+    //分段
+    for(int Gap = lenght/2; Gap >= 1; Gap/=2) {
+        //对分段数组进行遍历
+        for(int i = 0; i < Gap; i++) {
+            //插入排序
+            //遍历无序数组
+            for(int j = i+Gap; j < lenght; j += Gap) {
+                int temp = aar[j]; //记录无序数组的第一个
+                int k = j- Gap;//有序数组的最后一个
+                while(k >= i && temp < aar[k]) {
+                    //插入进去
+                    aar[k+Gap] = aar[k];
+                    k -= Gap;
+                }
+                aar[k+Gap] = temp;
+            }
+        }
+    }
+}
+
+//堆排序
+#define LEFT 2*(rootNode)+1
+#define RIGHT 2*(rootNode)+2
+
+void Adjust(int* aar, int lenght, int rootNode) {
+    if(nullptr == aar || lenght <=0 || rootNode > lenght/2-1) return ;
+
+    //向下循环
+    for(int MAX = LEFT; MAX < lenght; MAX = LEFT) {
+        //先判断左右子树的大小取最大的
+        if(RIGHT < lenght) {
+            if(aar[MAX] < aar[RIGHT]) {
+                MAX = RIGHT;
+            }
+        }
+
+        //将大值赋给父节点
+        if(aar[MAX] > aar[rootNode]) {
+            aar[MAX] = aar[rootNode] ^ aar[MAX];
+            aar[rootNode] = aar[rootNode] ^ aar[MAX];
+            aar[MAX] = aar[rootNode] ^ aar[MAX];
+            rootNode = MAX;
+        } else {
+            break;
+        }
+    }
+
+}
+
+void HeapSort(int* aar, int lenght) {
+    //从最后一个父节点开始调整
+    //将数组调整为堆排序
+    for(int i = lenght/2-1; i >= 0; --i) {
+        Adjust(aar,lenght,i);
+    }
+
+    for(int j = lenght - 1; j > 0; --j) {
+        aar[j] = aar[j] ^ aar[0];
+        aar[0] = aar[j] ^ aar[0];
+        aar[j] = aar[j] ^ aar[0];
+        Adjust(aar,j,0);
+    }
+}
+
+//归并排序
+
+void Merge(int* aar, int low, int high) {
+    int begin1 = low;
+    int end1 = (low+high)/2;
+    int begin2 = end1 + 1;
+    int end2 = high;
+    //创建一个数组保存临时结果
+    int* ptemp = new int[high-low+1];
+    int i = 0;
+    //谁小把谁放进去
+    while(begin1 <= end1 && begin2 <= end2) {
+        if(aar[begin1] < aar[begin2]) {
+            ptemp[i] = aar[begin1];
+            begin1++;
+            i++;
+        } else {
+            ptemp[i] = aar[begin2];
+            begin2++;
+            i++;
+        }
+    }
+    //将剩余的元素放进数组
+    while(begin1 <= end1) {
+        ptemp[i] = aar[begin1];
+        begin1++;
+        i++;
+    }
+    while(begin2 <= end2) {
+        ptemp[i] = aar[begin2];
+        begin2++;
+        i++;
+    }
+
+    //将临时数组中的元素全部拷贝到aar数组中
+    for(int i = low ;i < high-low+1; i++) {
+        aar[i] = ptemp[i];
+    }
+    delete[] ptemp;
+    ptemp= nullptr;
+
+}
+
+void MergeSort(int* aar, int low, int high) {
+    if(nullptr == aar || low >= high) return ;
+    int mid = (low + high)/2;
+    MergeSort(aar, low, mid);
+    MergeSort(aar, mid+1, high);
+
+    //合并
+    Merge(aar,low,high);
+}
+
+//快速排序
+int Sort(int* aar, int low, int high) {
+    //指向小区域最后的指针
+    int small = low -1;
+    //遍历数组
+    for(low; low < high; ++low) {
+        if(aar[low] < aar[high]) {
+            if(++small != low) {
+                aar[small] = aar[small] ^ aar[low];
+                aar[low] = aar[small] ^ aar[low];
+                aar[small] = aar[small] ^ aar[low];
+            }
+        }
+    }
+    //将标准值放在合适的位置
+    if(++small != high) {
+        aar[high] = aar[high] ^ aar[small];
+        aar[small] = aar[high] ^ aar[small];
+        aar[high] = aar[high] ^ aar[small];
+    }
+    return small;
+}
+
+void QuickSort(int* aar, int low, int high) {
+    if(nullptr == aar || low >= high) return;
+    int standard = Sort(aar, low, high);
+    QuickSort(aar, low, standard-1);
+    QuickSort(aar, standard+1, high);
+}
