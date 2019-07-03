@@ -251,7 +251,7 @@ https://blog.csdn.net/java_android_c/article/details/52678265#
 
     Lambda表达式是通过生成一个小class实现的，这个类重载了operater（）函数，所以它的行为非常像一个函数。Lambda函数就是这个class的实例；当这个类构造时，上下文中的任何变量都可以传进Lambda function class，并作为成员变量保存起来。这事实上这有点像一个已经存在的functor（仿函数）。这样就解决了我的问题，Capture用于传递上下文的环境变量，在class的构造函数中使用；Parameter list是operator（）函数的参数列表。
 
-38.什么是SDK和API
+38.Android SDK包说明
     https://blog.csdn.net/qq_41273126/article/details/80315737
     SDK下包的说明：
     1：add-ons：Android开发需要的第三方文件和软件库

@@ -386,3 +386,13 @@ logcat -G <size> 可以设置Log缓存的大小
 例子： logcat -G 4096K
 
 #====================================================================
+70. 理解Java中的弱引用（Weak Reference）
+https://www.cnblogs.com/android-blogs/p/5566277.html
+
+#====================================================================
+71 【个人笔记一】ART系统类的编译解析加载探究
+https://blog.csdn.net/zhu929033262/article/details/76999996
+首先AndroidRuntime::start函数中会进行jni的初始化，实际上就是加载虚拟机的so库，并从中导出三个函数，其中JNI_CreateJavaVM用来启动虚拟机。Android 5.0之后默认加载的就是libart.so。
+JNI_CreateJavaVM主要负责创建ART虚拟机实例，并且启动ART虚拟机，然后给app_process返回JNIEnv和JavaVM。有了JNIEnv，app_process中才能使用JNI中的FindClass等函数。
+创建虚拟机实例中，最主要的是Runtime::init函数，负责创建虚拟机堆空间，绑定Thread，创建和初始化classLinker。
+利用gc::Heap创建堆空间时，主要有两件事情，加载boot.ar和boot.oat初始化imgae空间，另外就是与垃圾回收机制相关的东东
