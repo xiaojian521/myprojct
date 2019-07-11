@@ -81,7 +81,7 @@ https://blog.csdn.net/love_hot_girl/article/details/21161507
 https://www.cnblogs.com/darkknightzh/p/5462363.html
 8.6 补充:unique_ptr也可以使用指定删除器
 
-9.enum 传统的enum关键字的作用域是全局的，也就是说，如果在enum A 中生命一个枚举类型，无法在enum B 中声明同样的枚举类型
+9.enum 传统的enum关键字的作用域是全局的，也就是说，如果在enum A 中声明一个枚举类型，无法在enum B 中声明同样的枚举类型
 eg 
 enum A {my_enum3 = 0};
 enum B {my_enum3 = 0};//是错误的
@@ -603,6 +603,11 @@ static const std::map<VR_CSPott::VR_CSPott_Cmd_Type, std::string> s_cmdFiles(CMD
 
 121.c++ 之 std::move 原理实现与用法总结
     https://blog.csdn.net/p942005405/article/details/84644069
+    协助使用者进行浅拷贝，前提条件是拷贝对象需要支持移动赋值（move-assignment）重载等号操作符、移动构造（move-constructor）构造函数。
+    深拷贝：A先申请出一片新的空间，完全复制B的内容到新空间中；
+    浅拷贝：A复制B指针，将自己的指针指向B的内容地址，A、B公用一块内存地址；
+    所以对于深拷贝，A的修改与B没有关系；对于浅拷贝，A的修改也会在B对象也会被改变。
+   
 
 122.C++11 锁 lock
     https://www.cnblogs.com/diegodu/p/7099300.html
@@ -702,7 +707,7 @@ https://blog.csdn.net/mutourenzhang/article/details/47803803
 https://www.cnblogs.com/Cccarl/p/7215515.html?utm_source=itdadao&utm_medium=referral
 __GNUC__ 、__GNUC_MINOR__ 、__GNUC_PATCHLEVEL__分别代表gcc的主版本号，次版本号，修正版本号。
 
-143.C++中使用private修饰的static变量不能通过类名加作用于调用,也不能用对象调用
+143.C++中使用private修饰的static变量不能通过类名加作用域调用,也不能用对象调用
 
 144.c++11 数值类型和字符串的相互转换
 https://www.cnblogs.com/gtarcoder/p/4925592.html
@@ -736,6 +741,7 @@ https://blog.csdn.net/baidu_32134295/article/details/52439823
 
 150. C++11 std::function和std::bind绑定器
 https://blog.csdn.net/m_buddy/article/details/74389409
+std::function是可调用对象的包装器。它是一个类模板
 实际上std::bind的返回类型是一个stl内部定义的仿函数类型，在这里就只需要知道它是一个仿函数，可以赋值给一个std::function，这里直接用std::function类型来保存std::bind的返回值也是可以的。
 其中std::placeholders::_1是一个占位符，代表这个文职将在函数调用时，被传入的第一个参数代替。
 
@@ -787,6 +793,24 @@ C++编译系统在实例化D类时，只会将虚基类的构造函数调用一�
 
 155 虚继承
 虚继承计算大小是子类会比父类多一个虚类指针，也是四个字节；还要包括类a的字节数
+
+156 C++11中基于范围的for循环
+http://c.biancheng.net/view/3738.html
+
+157 C++11 新特性一增加了 __func__宏
+在C11的新特性中，新增加了宏定义 __func__ 用来描述直接得到当函数的名称。
+如：
+const char* hello() {return __func__;} //返回hello.
+
+158 i++ 与 ++i 的主要区别有两个：
+1、 i++ 返回原来的值，++i 返回加1后的值。
+2、 i++ 不能作为左值，而++i 可以。
+C++中++i与i++效率比较
+由此说明，考虑内建数据类型时，它们的效率差别不大（去除编译器优化的影响）。所以在这种情况下我们大可不必关心。 
+现在让我们再考虑自定义数据类型（主要是指类）的情况。此时我们不需要再做很多汇编代码的分析了，因为前缀式（++i）可以返回对象的引用，而后缀式（i++）必须产生一个临时对象保存更改前对象的值并返回(实现过自定义类型++运算符定义的就知道)，所以导致在大对象的时候产生了较大的复制开销，引起效率降低，因此处理使用者自定义类型（注意不是指内建类型）的时候，应该尽可能的使用前缀式地增/递减，因为他天生体质较佳。 
+
+159【C++标准库】STL算法
+https://www.cnblogs.com/larry-xia/p/9497340.html
 //============================================================
 代码反思总结:
 写完代码,要想怎么优化,尽可能代码简洁,性能最高

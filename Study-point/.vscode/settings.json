@@ -45,6 +45,7 @@
         "thread": "cpp",
         "algorithm": "cpp",
         "cstdarg": "cpp",
-        "queue": "cpp"
+        "queue": "cpp",
+        "mutex": "cpp"
     }
 }
