@@ -396,3 +396,42 @@ https://blog.csdn.net/zhu929033262/article/details/76999996
 JNI_CreateJavaVM主要负责创建ART虚拟机实例，并且启动ART虚拟机，然后给app_process返回JNIEnv和JavaVM。有了JNIEnv，app_process中才能使用JNI中的FindClass等函数。
 创建虚拟机实例中，最主要的是Runtime::init函数，负责创建虚拟机堆空间，绑定Thread，创建和初始化classLinker。
 利用gc::Heap创建堆空间时，主要有两件事情，加载boot.ar和boot.oat初始化imgae空间，另外就是与垃圾回收机制相关的东东
+
+#====================================================================
+72 Android手势分发和嵌套滚动机制
+    https://www.jianshu.com/p/490659fae773
+    Android:30分钟弄明白Touch事件分发机制
+    https://www.cnblogs.com/linjzong/p/4191891.html
+    Android手势处理看这一篇就够了
+    https://www.jianshu.com/p/2d7232f3f42e
+    View与ViewGroup的概念
+    https://www.runoob.com/w3cnote/and处理方法有两种：重写onTouchEvent来自己识别各种手势，也可以直接使用Android提供的各种手势监听器。
+
+    Android手势监听器
+    GestureDetector.OnGestureListenerroid-tutorial-view-viewgroup-intro.html
+    处理方法有两种：重写onTouchEvent来自己识别各种手势，也可以直接使用Android提供的各种手势监听器。
+    Android手势监听器 (GestureDetector.OnGestureListener)
+    基础概念：	
+    MotionEvent：手势对象，包含有action（事件类型）、坐标等信息。	
+    View：安卓的所有视图都是View的子类。为了方便描述，本文用View指代视图单元，是整个视图树的叶子节点，比如TextView、Button等。	
+    ViewGroup：视图容器，里面可以包含其他视图，也是View的子类。一般在整个视图树作为非叶节点，比如Scrollview、LinearLayout等。	
+    Activity：你就理解为是电影中的一个场景吧，一个安卓APP是由一个或多个Activity组成的。	
+    安卓的手势事件类型包括（部分）:	
+    ACTION_DOWN：手指按下;	
+    ACTION_MOVE：手指移动；	
+    ACTION_UP：手指抬起；	
+    ACTION_CANCEL：手势终止，比如手势在中途被其他View拦截消费、手势滑出屏幕（非抬起），大部分场景下可视为ACTION_UP；	
+    在多指手势中还有：	
+    ACTION_PONINTER_DOWN：其他手指按下；	
+    ACTION_POINTER_UP：其他手指抬起；	
+    关键方法	
+    1 Activity中有两个方法dispatchTouchEvent和onTouchEvent，整个手势分发从这个dispatchTouchEvent开始，将手势传递到整个View树的根节点，
+       通过深度遍历的方式分发下去，如果没有任何View消费掉的话手势分发将从这个onTouchEvent结束。
+    2 View中恰好也有这两个方法dispatchTouchEvent和onTouchEvent，其中dispatchTouchEvent如其名是分发手势的，而onTouchEvent是意味事件传到它这了，
+       可以在这里执行一些手势处理的操作。而View默认的dispatchTouchEvent实现非常简单，就是直接交给自己的onTouchEvent
+    3 ViewGroup在继承了View的dispatchTouchEvent和onTouchEvent方法外,还加了onInterceptTouchEvent和requestDisallowInterceptTouchEvent方法。
+       onInterceptTouchEvent使得ViewGroup有机会直接拦截手势给自己的onTouchEvent，而不必再向下传播。
+       requestDisallowInterceptTouchEvent是允许下层的某个View阻止其拦截的,一物降一物。
+    
+#====================================================================
+
