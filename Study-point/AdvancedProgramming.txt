@@ -4,14 +4,14 @@ C++高级编程
 1. C++17允许方便地使用嵌套的名称空间,即将一个名称空间放在另一个人名称空间中.
 eg: namespace MyLibraries::Networking::FTP {
     /** */
-}
+    }
 可以使用名称空间别名,为另一个人名称空间指定一个更简短的新名称
 eg: namespace MyFTP = MyLibraries::Networking::FTP;
 
 #====================================================================
 2. 枚举
 2.1 枚举使用时相当于一种类型,直接声明变量赋值即可
-eg: enum Day {one, two , three} d2;
+eg: enum Day {one, two, three} d2;
     Day d1 = one;
     d2 = two; //d2相当于声明一个枚举变量
 2.2 不能对枚举变量执行算数运算或将其作为整数对待,编译器会给出警告或错误信息
@@ -72,7 +72,7 @@ eg: const std::string message = "Test";
     因为auto去除了引用和const限定符,且f1是string类型,所以建立一个副本,如果希望f1是一个const引用,就可以明确将它建立为一个引用,并标记为const,如下所示
     const auto& f2 = foo();
 8.1 关键字decltype把表达式作为实参,计算出该表达式的类型
-    int x = 123
+    int x = 123;
     decltype(x) y = 456;
     auto与decltype的区别在于,decltype未去除引用和const限定符,在来分析返回const string引用的foo()函数,使用decltype定义f2,导致f2的类型为const string&,从而不生成副本
     decltype(foo()) f2 = foo(); 
@@ -126,13 +126,13 @@ eg: string_to_string(int val);等很多重载函数
 11.2.2 低级数值转换,C++17也提供了许多低级数值转换函数,这些都在<charconv>头文件中定义,这些函数不执行内存分配而使用由调用者分配的缓存区
 eg: to_chars_result to_chars(char* first, char* last, IntegerT value, int base = 10;)
 11.3 std::string_view
-11.3.1 C++17中引入std::string_viewshi std::basic_string_view类模板的实例化,在<string_view>头文件中定义.string_view基本上就是const string&的简单替代品,但不会产生开销.它从         不复制字符串,string_view支持于std::string类似的接口.一个例外是缺少c_str(),data()是可用的.另外,string_view确实添加了remove_prefix(size_t)和remove_suffix(size_t)方         法;前者将起始指针前移给定的偏移量来收缩字符,后者则将结尾指针倒退给定的偏移量来收缩字符.
+11.3.1 C++17中引入std::string_view std::basic_string_view类模板的实例化,在<string_view>头文件中定义.string_view基本上就是const string&的简单替代品,但不会产生开销.它从          不复制字符串,string_view支持于std::string类似的接口.一个例外是缺少c_str(),data()是可用的.另外,string_view确实添加了remove_prefix(size_t)和remove_suffix(size_t)方         法;前者将起始指针前移给定的偏移量来收缩字符,后者则将结尾指针倒退给定的偏移量来收缩字符.
 eg:无法连接一个string和string_view.下面的代码将无法编译:
    string str = "Hello";
    string_view sv = " world";
    auto result = str + sv; //error
    为进行编译,必须将最后一行替代为:
-   auto result = str + sv;
+   auto result = str + sv.data();
 11.3.2 还有一个string_view构造函数,它接收任意原始缓冲区和长度.这可用于从字符串缓冲区(并非以NULL终止)构建string_view.如果确实有一个一NUL终止的字符串缓冲区,但你已经知道字符串长度,构造        函数不必在统计字符数目,这也是有用的.
 11.3.3 无法从string_view隐式构建一个string.要么使用一个显式的string构造函数,要么使用string_view::data()成员,例如,假设有以下接收const string&的函数:
 eg: void handleExtension(const string& extension) {/** */}
@@ -142,6 +142,8 @@ eg: void handleExtension(const string& extension) {/** */}
     handleExtension(extractExtension("my file.ext").data());
     handleExtension(string(extractExtension("my file.ext")));
 注意: 在每当函数或方法需要将只读字符串作为一个参数时,可使用std::string_view替代const std::string&或const char*
+13.3.4 可使用标准的用户定义的字面量sv,将字符串字面量解释为std::string_view 
+eg: auto sv = "My string_view"sv;
 #====================================================================
 第三章 编码风格  (略)
 #====================================================================
@@ -225,6 +227,9 @@ eg : class MyClass() {
      将复制构造函数定义为显式默认或显式删除
      MyClass(const MyClass& src) = default;
      MyClass(const MyClass& src) = delete; //通过删除复制构造函数,将不在复制对象.这可用于禁止按值传递对象
+15.2.1 移动构造
+       默认函数原型: MyClass(MyClass&& src)
+       注: 移动构造函数的形参也不能是 const。此外，作为移动构造函数获取资源来源 的临时对象必须放置到安全状态，使得其析构函数可以正常运行而不会导致出错。
 15.3 赋值操作符
      默认函数原型: MyClass& operator=(const MyClass& src);
      赋值运算符不应该组织自赋值.当类具有动态分配的内存或其他资源时,必须将自赋值考虑在内
@@ -233,6 +238,9 @@ eg : MyClass& operator=(const MyClass& src) {
             return *this;
          }
      }   
+15.3.1 默认函数原型: MyClass& operator=(MyClass&& src)
+       注: 移动赋值的形参不能是 const，这是因为它需要通过修改对象 "移动" 资源
+
 #====================================================================
 第九章 精通类与对象
 #====================================================================
@@ -252,8 +260,8 @@ eg: (1)void handleMessage(std::string& message){}
     如果删除接收左值引用的handlerMessage()函数,使用有名称的变量调用handleMessage()函数(例如handleMessage(b)),会导致编译错误,可以使用std::move()将左值转换为右值,强迫编译器调用handleMessage()函数的右值引用版本
     handleMessage(std::move(b)); //call (2)
     有名称的变量是左值,因此,在handleMessage()函数中,右值引用参数message本身是一个左值,原因是它具有名称,如果希望将这个左值引用参数,作为右值传递给另一个函数,则需要使用std::move(),将左值转换为右值.
-eg: void helper(std::string&& message) {}
-    如果按照如下方式调用,则无法编译:
+    eg: void helper(std::string&& message) {}
+        如果按照如下方式调用,则无法编译:
     void handleMessage(std::string&& message) {
         helper(message);
     }
@@ -447,7 +455,7 @@ eg:  具体示例百度搜索/详见P282页
 
 #====================================================================
 27 条件变量
-   (1)std::condition_variable智能等待unique_loc<mutex>上的条件变量;根据C++标准描述,这个条件变量可在特定平台上达到最高效率
+   (1)std::condition_variable智能等待unique_lock<mutex>上的条件变量;根据C++标准描述,这个条件变量可在特定平台上达到最高效率
    (2)std::condition_variable_any:可等待任何对象的条件变量,包括自定义的锁类型
 27.1 std::condition_variable支持一下方法
      (1)notify_one(): 唤醒等待这个条件变量的线程之一
