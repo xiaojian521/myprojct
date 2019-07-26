@@ -126,7 +126,7 @@ eg: string_to_string(int val);等很多重载函数
 11.2.2 低级数值转换,C++17也提供了许多低级数值转换函数,这些都在<charconv>头文件中定义,这些函数不执行内存分配而使用由调用者分配的缓存区
 eg: to_chars_result to_chars(char* first, char* last, IntegerT value, int base = 10;)
 11.3 std::string_view
-11.3.1 C++17中引入std::string_view std::basic_string_view类模板的实例化,在<string_view>头文件中定义.string_view基本上就是const string&的简单替代品,但不会产生开销.它从          不复制字符串,string_view支持于std::string类似的接口.一个例外是缺少c_str(),data()是可用的.另外,string_view确实添加了remove_prefix(size_t)和remove_suffix(size_t)方         法;前者将起始指针前移给定的偏移量来收缩字符,后者则将结尾指针倒退给定的偏移量来收缩字符.
+11.3.1 C++17中引入std::string_view std::basic_string_view类模板的实例化,在<string_view>头文件中定义.string_view基本上就是const string&的简单替代品,但不会产生开销.它从不复制字符串,string_view支持于std::string类似的接口.一个例外是缺少c_str(),data()是可用的.另外,string_view确实添加了remove_prefix(size_t)和remove_suffix(size_t)方法;前者将起始指针前移给定的偏移量来收缩字符,后者则将结尾指针倒退给定的偏移量来收缩字符.
 eg:无法连接一个string和string_view.下面的代码将无法编译:
    string str = "Hello";
    string_view sv = " world";
@@ -296,7 +296,7 @@ eg: void swapCopy(T& a, T& b) {
 第十一章 理解灵活而奇特的C++
 #====================================================================
 18 引用
-18.1 引用变量.不能创建对未命名值(例如一个整数字面量)的引用,除非这个引用是一个const值,在下例中,unnamedRef1将无法编译,因为这是一个针对常量非const引用.这条语句意味着可改变常量5的值,而这      样做没有意义.由于unnamedRef2是一个const引用,因此可以运行,不能编写"unnamedRef2 = 7"
+18.1 引用变量.不能创建对未命名值(例如一个整数字面量)的引用,除非这个引用是一个const值,在下例中,unnamedRef1将无法编译,因为这是一个针对常量非const引用.这条语句意味着可改变常量5的值,而这样做没有意义.由于unnamedRef2是一个const引用,因此可以运行,不能编写"unnamedRef2 = 7"
 eg: int& unnamedRef1 = 5;         //Does not complie
     const int& unnamedRed2 = 5;   //Works as expected
     临时对象同样如此.不能具有临时对象的非const引用,但可具有const引用.例如,假设以下函数返回一个std::string对象
@@ -318,7 +318,7 @@ eg: int x = 5, y = 6;
 
 #====================================================================
 19 static关键字
-19.1 静态链接,在解释用于链接的static关键字之前,首先要理解C++中链接的概念.C++的每个源文件都是单独编译的,编译得到的目标文件会彼此链接.C++源文件中的每个名称,包括函数和全局变量,都又一个内       部或外部的链接.外部链接意味着这个名称在其他源文件中也有效,内部链接(也称为静态链接)意味着在其他源文件中无效.默认情况下,函数和全局变量都有拥有外部链接,然后可在声明的前面使用关键字          static指定内部(或静态)链接.也就是说添加static关键字就变成了内部链接外部无法使用.示例P233页
+19.1 静态链接,在解释用于链接的static关键字之前,首先要理解C++中链接的概念.C++的每个源文件都是单独编译的,编译得到的目标文件会彼此链接.C++源文件中的每个名称,包括函数和全局变量,都又一个内部或外部的链接.外部链接意味着这个名称在其他源文件中也有效,内部链接(也称为静态链接)意味着在其他源文件中无效.默认情况下,函数和全局变量都有拥有外部链接,然后可在声明的前面使用关键字static指定内部(或静态)链接.也就是说添加static关键字就变成了内部链接外部无法使用.示例P233页
 注:要获取内部链接,建议使用匿名名称空间,而不要使用static关键字
 
 #====================================================================
