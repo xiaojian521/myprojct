@@ -108,6 +108,7 @@ enum class B: unsigned char //每个枚举都是unsigned char类型的
 10.std::ref()函数可以在模板传参的时候传入引用，否则无法传递
 因为thread函数是模板类所以传递引用的时候要加ref()函数
 或用于bind函数
+std::ref只是尝试模拟引用传递，并不能真正变成引用，在非模板情况下，std::ref根本没法实现引用传递，只有模板自动推导类型时，ref能用包装类型reference_wrapper来代替原本会被识别的值类型，而reference_wrapper能隐式转换为被引用的值的引用类型
 https://www.cnblogs.com/yi-mu-xi/p/9896461.html
 
 11.atomic理解
@@ -879,6 +880,21 @@ TCP与UDP区别总结：
 make工具通过调用makefile文件中的命令便可以对大型程序进行编译，而makefile文件中就包含了调用gcc去编译多个源文件的命令。
 但是，很快又出现了一个问题，如果我们的程序是跨平台的，如果换个平台makefile又要重新修改，这会很麻烦，所以就出现了cmake这个工具，通过cmake我们就可以快速创建出不同平台的makefile文件。
 
+165. c++11 之emplace_back 与 push_back的区别
+     https://blog.csdn.net/p942005405/article/details/84764104
+     emplace_back函数原型
+eg: template <class... Args>
+    void emplace_back (Args&&... args);
+注: (1)不能给emplace_back传递vector.back() //当vector重新分配内存的时候会导致引用失效所以不行
+    (2)不能给emplace_back传递引用
+
+166. cin总结附带string输入总结
+     https://blog.csdn.net/qq_35452997/article/details/78760512
+
+167. 什么是交叉编译,为什么要使用交叉编译?
+   https://blog.csdn.net/mars1743/article/details/20492285
+   在一种计算机环境中运行的编译程序，能编译出在另外一种环境下运行的代码，我们就称这种编译器支持交叉编译。这个编译过程就叫交叉编译。简单地说，就是在一个平台上生成另一个平台上的可执行代码。
+   要进行交叉编译，我们需要在主机平台上安装对应的交叉编译工具链（crosscompilation tool chain），然后用这个交叉编译工具链编译我们的源代码，最终生成可在目标平台上运行的代码。
 //============================================================
 代码反思总结:
 写完代码,要想怎么优化,尽可能代码简洁,性能最高
@@ -914,6 +930,5 @@ make工具通过调用makefile文件中的命令便可以对大型程序进行�
 13.考虑情况太少,多考虑,每种情况多考虑(总犯这种错误,一定要用多考虑情况是否符合,做法是否正确,是否有多种可能)
 //============================================================
 
-项目描述，自己在当中做了什么，完成了什么有什么贡献
 
 

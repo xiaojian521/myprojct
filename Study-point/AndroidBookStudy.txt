@@ -41,7 +41,7 @@ Android Studio开发实战
    等(详见P28)
 
 2.1 线性布局LinearLayout
-    LinearLayout是最常用的布局,名字叫线性布局.顾名思义,LinearLayout下面的子视图就像用一根线串了起来,所以Li                                                                                                                                                                                                                           nearLayout内部视图的排列是顺序的,要么从上倒下一次垂直排列,要么从左到右依次水平排列.LinearLayout除了继承View/
+    LinearLayout是最常用的布局,名字叫线性布局.顾名思义,LinearLayout下面的子视图就像用一根线串了起来,所以LinearLayout内部视图的排列是顺序的,要么从上倒下一次垂直排列,要么从左到右依次水平排列.LinearLayout除了继承View/
     ViewGroup类的所有属性和方法外,还有奇特有的XML属性
     (1)orientation: 指定线性布局的方向.horizontal表示水平布局,vertial表示垂直布局.如果不指定该属性,就默认是horizontal.
     (2)gravity: 指定布局内部视图与本线性布局的对齐方式.取值说明同layout_gtavity
@@ -83,13 +83,22 @@ Android Studio开发实战
 6. Android还提供了其他几个布局视图,如绝对布局AbsoluteLayout,表格布局TableLayout等,
 7. 特殊按钮
 7.1 复选框CheckBox
-7.2 单选按钮RadioButton
+    要更换复选框左侧的勾选图像,可将button属性修改为自定义的勾选图形
+7.2 开关switch
+    Switch是开关按钮,Android4.0版本开始支持该空间.其实Swtich是一个高级版本的CheckBox,在选中与取消选中时可展现的界面元素比CheckBox丰富.Switch是升级版的CheckBox,实际开发中用的不多.原因之一是大家觉得Switch的默认界面很丑
+7.3 单选按钮RadioButton
+    单选按钮要在一组按钮中选择其中一项,并且不能多选,这要求有个容器确定这组按钮的范围,这个容器便是RadioGroup.RadioGroup实质上是个布局,同一组RadioButton都要放在同一个RadioGroup节点下
+    *button: 主要用于图标大小要求不高,间隔要求也不高的场合
+    *background: 主要用于能够以较大空间显示图标的场合
+    *drawableLeft: 主要用于对图标与文字之间的间隔有要求的场合
 8. 下拉框Sphiner
    Sphiner是下拉框,用于从一串列表中选择某项,功能类似于单选按钮的组合.下拉列表的展示方式有两种,一种是在当前下拉框的正下方展示列表,此时把sphinerMode属性设置为dropdown;另一种是在页面中部以对话框形式展示列表,此时把sphinnerMode属性设置为dialog,另外,Sphinner还可以在代码中调用下列4个方法
    (1)setPrompt: 设置标题文字
    (2)setAdapter: 设置下拉列表的适配器,适配器可选择ArrayAdapter或SimpleAdapter.
    (3)setSelection: 设置当前选中哪项.注意该方法要在setAdapter方法后调用
    (4)setOnItemSelecteListener:设置下拉列表的选择监听器,该监听器要实现接口OnItemSelectListener.
+8.1 数组适配器ArrayAdapter
+    ArrayAdapter主要用于每行列表只展示文本的情况,有两道工序,第一道工序是构造函数,除了提供一堆原始数据外,还可以指定下拉框当前文本的包装盒即xml配置文件这个布局文件内只有一个TextView,定义了当前选中文本的大小,颜色,对齐方式等属性.第二道工序是定义下拉列表的xml布局文件,定义了对话框列表中每行文本的显式属性
 9. 编辑框
 9.1 文本编辑框EditText
     EditText是文本编辑框,用户可在次输入文本等信息.EditText的常用属性说明如下:
@@ -168,16 +177,83 @@ Android Studio开发实战
      为了方便开发者处理ViewPager的页码显式与切换,Android附带提供了两个控件,分别是PagerTitleStrip和PagerTabStrip.二者都是在ViewPager页面上方展示设定的页面标题,不同之处在于PagerTitleStrip只是单纯的文本标题效果,无法点击进行页面切换,PagerTabStrip类似选项卡效果,文本下面有横线,点击左右选项卡即可切换到对应页面(详见P161)
      应用:ViewPager的应用很广,当用户安装一个新的App时,第一次启动大多出现欢迎页面,这个引导页通常要往右翻好几页,才会进入App的主页面.启动引导页的效果大多是ViewPager做的
 25. 碎片Fragment
-    Fragment是个特别的存在,有点像报纸上的专栏,看起来只占据页面的一小块,但是这一小块有自己的声明周期,可以自行其事;并且这一小块的特性无论在哪个页面,给一个位置就行,添加后不影响宿主页面的其他区域,去除后也不影响宿主页面的其他区域.每个Fragment都有对应的布局文件,依据其使用方式可分为静态注册和动态注册两类.静态注册是布局文件中直接放置Fragment节点,类似于一个普通控件,可被多个布局文件同时引用.静态注册一般用于某个通用的页面部件(如logo条,广告条等)
-
+    Fragment是个特别的存在,有点像报纸上的专栏,看起来只占据页面的一小块,但是这一小块有自己的声明周期,可以自行其事;并且这一小块的特性无论在哪个页面,给一个位置就行,添加后不影响宿主页面的其他区域,去除后也不影响宿主页面的其他区域.每个Fragment都有对应的布局文件,依据其使用方式可分为静态注册和动态注册两类.静态注册是布局文件中直接放置Fragment节点,类似于一个普通控件,可被多个布局文件同时引用.静态注册一般用于某个通用的页面部件(如logo条,广告条等),每个活动页面均可直接引用该部件
+    使用静态注册需要注意一下两点:
+    (1)framment节点必须指定id属性,否则App运行时会报错
+    (2)如果页面代码继承自Activity,Fragment类就必须继承自android.app.Fragment,不能使用android.support.v4.app.Fragment,否则App会报错;如果页面代码继承自AppCompatActivity或FragmentActivity,那么无论是android.app.Fragment还是Android.support.v4.app.Fragment都可以使用
+    动态注册(详见P170)
+26. 广播Broadcast基础
+    广播(Broadcast)用于Android组件之间的灵活通信,与Activity的区别在于:
+    (1)Activity只能一对一通信:Broadcast可以一对多,一人发送广播,多人接收处理.
+    (2)对于发送者来说,广播不需要考虑接收者有没有在工作,接收者在工作就接收广播,不在工作就丢弃广播
+    (3)对于接收者来说,会收到各式各样的广播,所以接收者要自行过滤符合条件的广播,才能进行解包处理
+27. 定时器AlarmManager
+    AlarmManager是Android提供的一个全局定时器,利用系统闹钟定时发送广播.这样做的好处是:如果App提前注册闹钟的广播接收器,即使App退出了,只要定时到达,App就会被唤醒响应广播事件
+    注:为了提高安卓系统的安全性,从9.0开始,系统全面禁止刚才静态注册的广播,凡是静态广播在9.0系统中都不在生效.这里定时器能够完美的实现广播功能,就是AlarmManager和PendingIntent相互配合的成果
+28. 万年历项目详见(P180)
+    小知识:月份选择器MonthPicker详见P181
+29. 日程表项目详见P184
+    小知识:振动器Vibrator
 
 #==================================================================
-
+第六章 自定义控件
 #==================================================================
-
+30. 测量尺寸
+    XML中的尺寸类型
+    match_parent  说明:与上级视图大小一样
+    wrap_parent   说明:按照自身尺寸进行适配
+    **dp          说明:具体的尺寸数值
+31. 自定义视图(详见P189)
+32. 自定义动画
+33. 下拉刷新的动画(P205)
+34. 圆弧进度动画(P207)
+35. 自定义通知栏
+    通知推送Notification使用设置方法时要注意4点
+    (1)setSmallIcon方法必须调用,否则不会显式通知消息
+    (2)setWhen与setUsesChronometer同时只能调用其中一个,即推送时间与计数器无法同时显式,因为他们都位于通知栏右边
+    (3)setSubText与setProgress同时只能调用其中一个,因为附加说明与进度条都位于标题文本的下方
+    (4)setNumber与setContentInfo同时只能调用其中一个,因为计数值与提示都位于通知栏右下方
+    (详见P214)
+36. 远程视图RemoteViews
+    如果说对话框是一个小型页面,远程视图就是一个小型且简化的页面.简化的意思是功能减少了,限制变多了
+37. 服务service基础
+    service与生命周期有关的方法说明
+    (1) onCreate():创建服务
+    (2) onStartCommand(): 开始服务
+    (3) onDestroy(): 销毁服务
+    (4) onBind(): 绑定服务
+    (5) onRebind(): 重新绑定.该方法只有当上次onUnbind返回true的时候才会被调用
+    (6) onUnbind(): 解除绑定.返回值为true表示允许再次绑定,再绑定时调用onRebind方法;返回值为false表示只能绑定一次,不能再次绑定,默认为false
+37.1 推送服务到前台
+     服务没有自己的布局文件,也就意味着无法直接在页面上展示,服务不只能在外部进行启停或绑定,还能在内部模拟启停,当然仅是模拟而已,服务内部的启停方法也有对应的两个函数
+     (1)startForeground:把当前服务切换到前台运行.第一个参数表示通知的编号,第二个参数表示Notification对象,意味着切换到前台就是展示到通知栏
+     (2)stopForeground:停止前台运行,参数为true表示清楚通知,参数为false表示不清除.
+     注:从Android9.0开始,要在服务中正常调用startForeground方法,还需修改AndroidManifest.xml,添加如下所示的前台服务权限配置:
+     <use-permission android:name="android.permission.FOREGROUND_SERVICE">
+38. 手机安全助手(详见P230)
 #==================================================================
-
+第七章 组合空间
 #==================================================================
+39. 标签栏
+    实现底部标签栏的页面切换主要有3种方式:基于TabActivity的标签栏,基于ActivityGroup的标签栏和基于FragmentActivity的标签栏,3种方式各有千秋
+    (1)基于TabActivity的标签栏
+    TabActivity原本就是设计用来做标签页面的,并提供了TabHost和TabWeight两个空间,只不过他们仅用于标签栏,所以无需深入了解,套用固定的框架就行 
+    (2)基于ActivityGroup的标签栏
+    AvtivityGroup就是Activity的组合,允许在内部开启活动页面.从这个意义上来说,ActivityGroup与Activity的关系相当于Activity与Fragment的关系.使用ActivityGroup实现标签栏也有固定的模板.
+    (3)基于FragmentActivity的标签栏
+    前面提到,ActivityGroup方式采用一个ActivityGroup对应多个Activity的做法,那么也可以采取一个Activity对应多个Fragment的做法,基于FragmentActivity的标签栏就是该思路.与前两种凡是一样,FragmentActivity也有固定的使用模板
+40. 导航栏
+    在Android5.0之前,这个顶部导航栏以ActionBar控件的形式出现,但ActionBar存在不灵活,难以扩展的毛病,所以Android5.0之后退出了ToolBar工具栏控件,意在取代ActionBar,不过为了兼容之前的版本,ActionBar控件仍然保留,想要引入Toolbar就得先关闭ActionBar
+41. 溢出菜单OverflowMenu
+    导航栏右边往往有个三点图标,点击后会弹出菜单.这个右上角的弹出菜单名叫溢出菜单OverflowMenu,意指导航栏不够放了,溢出来了.溢出菜单其实就是把选项菜单OptionsMenu搬到了页面右上方
+42. 搜索框SearchView
+    导航栏中间往往有个搜索框,特别是电商App的导航栏,搜索框是标配.在工具栏上添加并使用详见(P250)
+43. 标签布局TabLayout(详见P253)
+44. 横幅条
+    实现横幅轮番Banner:每隔两三秒就轮播下一个广告页.只要结合Handler+Runabel就可以实现轮询播放图片
+45. 增强型列表
+    
+    
 
 #==================================================================
 

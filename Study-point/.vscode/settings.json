@@ -1,5 +1,6 @@
 {
     "files.associations": {
+        "*.aidl": "java",
         "ostream": "cpp",
         "list": "cpp",
         "deque": "cpp",
@@ -46,6 +47,15 @@
         "algorithm": "cpp",
         "cstdarg": "cpp",
         "queue": "cpp",
-        "mutex": "cpp"
-    }
+        "mutex": "cpp",
+        "condition_variable": "cpp",
+        "string": "cpp",
+        "numeric": "cpp",
+        "iterator": "cpp",
+        "memory_resource": "cpp",
+        "random": "cpp",
+        "set": "cpp",
+        "stack": "cpp"
+    },
+    "C_Cpp.dimInactiveRegions": false
 }
