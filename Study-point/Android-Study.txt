@@ -485,3 +485,14 @@ https://blog.csdn.net/quiet_olivier/article/details/84106634
  Android组件可以有一个或多个IntentFilter，每个IntentFilter之间相互独立，只需要其中一个验证通过则可。
 一：检查 Action 尽管一个Intent只可以设置一个Action，但一个Intentfilter可以持有一个或多个Action用于过滤，到达的Intent只需要匹配其中一个Action即可。 深入思考：如果一个Intentfilter没有设置Action的值，那么，任何一个Intent都不会被通过；反之，如果一个Intent对象没有设置Action值，那么它能通过所有的Intentfilter的Action检查。
 二：检查 Data 同Action一样，Intentfilter中的Data部分也可以是一个或者多个，而且可以没有。每个Data包含的内容为URL和数据类型，进行Data检查时主要也是对这两点进行比较，比较规则： 如果一个Intent对象没有设置Data，只有Intentfilter也没有设置Data时才可通过检查。 如果一个Intent对象包含URI，但不包含数据类型：仅当Intentfilter也不指定数据类型，同时它们的URI匹配，才能通过检测。 如果一个Intent对象包含数据类型，但不包含URI：仅当Intentfilter也没指定URL，而只包含数据类型且与Intent相同，才通过检测。 如果一个Intent对象既包含URI，也包含数据类型（或数据类型能够从URI推断出），只有当其数据类型匹配Intentfilter中的数据类型，并且通过了URL检查时，该Intent对象才能通过检查。
+
+#====================================================================
+80. Andorid音频底层调试工具tinymix，tinyplay，tinycap的使用
+https://blog.csdn.net/ly601579033/article/details/85112365
+-D  card          声卡
+-d  device        设备
+-c  channels      通道
+-r  rate          采样率
+-b  bits          pcm 位宽
+-p  period_size   一次中断的帧数
+-n  n_periods     周期数

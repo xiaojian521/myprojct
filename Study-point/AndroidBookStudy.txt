@@ -99,6 +99,8 @@ Android Studio开发实战
    (4)setOnItemSelecteListener:设置下拉列表的选择监听器,该监听器要实现接口OnItemSelectListener.
 8.1 数组适配器ArrayAdapter
     ArrayAdapter主要用于每行列表只展示文本的情况,有两道工序,第一道工序是构造函数,除了提供一堆原始数据外,还可以指定下拉框当前文本的包装盒即xml配置文件这个布局文件内只有一个TextView,定义了当前选中文本的大小,颜色,对齐方式等属性.第二道工序是定义下拉列表的xml布局文件,定义了对话框列表中每行文本的显式属性
+8.2 简单适配器SimpleAdapter
+    ArrayAdapter只能显式文本列表,显然不够美观,有时我们还想给列表加上图标
 9. 编辑框
 9.1 文本编辑框EditText
     EditText是文本编辑框,用户可在次输入文本等信息.EditText的常用属性说明如下:
@@ -136,6 +138,12 @@ Android Studio开发实战
 12.1 显式Intent,直接指定来源类与目标类名,属于精确匹配
 12.2 隐式Intent,没有明确指定要跳转的类名,只给出一个动作让系统匹配拥有相同字串定义的目标,属于模糊匹配
 12.3 向上一个Activity返回参数(详见P86)
+12.4 文本工具TextUtils
+     Android专门提供了文本工具类TextUtils,用于简化字符串的一些常用操作,就刚才的字符串非空判断而言,利用TextUtils则只需调用一个isEmpty方法便成
+     (1) isEmpty:判断字符换是否为空值
+     (2) getTrimmedLenght:获取字符串去除头尾空格之后的长度
+     (3) isDigitsOnly:判断字符串是否全部由数字组成
+     (4) ellipsize:如果字符串超长,则返回按规则截断并添加省略号的字串
 
 #==================================================================
 第四章 数据存储
