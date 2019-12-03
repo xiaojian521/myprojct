@@ -1,28 +1,33 @@
-package com.android.sampleurlhttp;
+package jp.pioneer.ceam.thirdpartyadapter;
 
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
-import com.guozheng.urlhttputils.urlhttp.CallBackUtil;
-import com.guozheng.urlhttputils.urlhttp.UrlHttpUtil;
+import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.HashMap;
 
-public class MainActivity extends AppCompatActivity {
+import jp.pioneer.ceam.thirdpartyadapter.urlhttp.CallBackUtil;
+import jp.pioneer.ceam.thirdpartyadapter.urlhttp.UrlHttpUtil;
 
+public class MainActivity extends AppCompatActivity {
+    private Button mButton;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-    }
+        mButton = (Button) findViewById(R.id.button);
+        mButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                getData();
 
-    public void click(View v){
-        getData();
-
-        //postData();
+                //postData();
+            }
+        });
 
     }
 
@@ -40,7 +45,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onResponse(String response) {
                 Toast.makeText(MainActivity.this,"Success",Toast.LENGTH_SHORT).show();
-                Log.d("kwwl",response);
+                Log.d("xjtest",response);
             }
         });
     }
@@ -56,8 +61,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onResponse(String response) {
                 Toast.makeText(MainActivity.this,"Success",Toast.LENGTH_SHORT).show();
-                Log.d("kwwl",response);
+                Log.d("xjtest",response);
             }
         });
     }
+
 }
