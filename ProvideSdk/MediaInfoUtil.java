@@ -7,6 +7,9 @@ import com.google.gson.reflect.TypeToken;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * mediaInfo序列化解析工具
+ */
 public class MediaInfoUtil {
     private MediaInfoUtil() {
     }

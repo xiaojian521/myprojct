@@ -1,5 +1,8 @@
 package com.android.xj.provide;
 
+/**
+ * 播放状态变更通知
+ */
 public interface PlayStateListener {
     void onStart();
 

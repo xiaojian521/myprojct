@@ -5,6 +5,9 @@ import android.os.Handler;
 import android.os.Message;
 import java.util.List;
 
+/**
+ * 请求回调类,在哪个线程上new的对象,哪个线程消息队列处理
+ */
 public class CallbackHandler extends Handler {
     private static final String TAG = "CallbackHandler";
     private QueryCallback callback;

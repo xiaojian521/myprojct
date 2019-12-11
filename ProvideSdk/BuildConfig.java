@@ -1,5 +1,8 @@
 package com.android.xj.provide;
 
+/**
+ * 版本信息,校验使用
+ */
 public final class BuildConfig {
     public static final boolean DEBUG = false;
     public static final String APPLICATION_ID = "com.android.xj.provide";

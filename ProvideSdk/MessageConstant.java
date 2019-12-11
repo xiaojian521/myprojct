@@ -1,5 +1,8 @@
 package com.android.xj.provide;
 
+/**
+ * 消息定义
+ */
 public class MessageConstant {
     public static final int CONTROL_NEXT = 1001;
     public static final int CONTROL_PRE = 1002;

@@ -2,6 +2,9 @@ package com.android.xj.provide;
 
 import android.util.Log;
 
+/**
+ * 自定义log工具
+ */
 class LogUtils {
     private static final String TAG = "ProvideSdk";
 

@@ -1,5 +1,8 @@
 package com.android.xj.provide;
 
+/**
+ * mediaInfo 变化通知
+ */
 public interface MediaChangeListener {
     void onMediaChange(MediaInfo var1);
 

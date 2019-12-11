@@ -3,6 +3,9 @@ package com.android.xj.provide;
 import android.content.Context;
 import android.content.Intent;
 
+/**
+ * 提供给叮当语音,显式界面
+ */
 public interface IAppView {
     Context getContext();
 

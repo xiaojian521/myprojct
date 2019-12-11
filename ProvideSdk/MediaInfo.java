@@ -5,6 +5,9 @@ import android.os.Parcelable;
 import android.os.Parcelable.Creator;
 import com.google.gson.annotations.SerializedName;
 
+/**
+ * mediaInfo序列化
+ */
 public class MediaInfo implements Parcelable {
     private int itemIndex;
     private String itemUUID;
