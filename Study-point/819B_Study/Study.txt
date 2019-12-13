@@ -296,6 +296,10 @@ http://iautowiki.storm/Group/UnitTest/UnitTestManual
 http://download.huzheng.org/zh_CN/
 
 #=======================================================================
+命令行修改Android系统时间
+https://blog.csdn.net/harry_helei/article/details/49869961
 
-
+cat /data/property/persist.sys.timezone //查看当前时区配置文件
+setprop persist.sys.timezone GMT        //修改属性
+dadate 1230122018.59 set      //2018/12/30/12::20::59
 #=======================================================================
