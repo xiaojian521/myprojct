@@ -11,13 +11,17 @@ logcat | grep "wecarflow"&
 谢志勇 3902 (机器问他)
 王正苏 7021 (烧SOC) 7楼
 曲波   2927 (烧micon) 9楼
-菜雄杰 0743 (主机环境软件安装)
+菜雄杰 7043 (主机环境软件安装)
        1218 (com组4G模块)
-吴迪   1338
+胡旭   1338
 肖健   1340
 游俊国 1341
-1921
-8001
+孟凡兵 1116
+曲波 2927
+李浩 1964
+梁伟邦 1338
+张洋 1336
+江汉 1910
 #=======================================================================
 dumpsys package com.tencent.tai.pal.platformdemo | grep Activity
 am start -n com.tencent.tai.pal.platformdemo/.MainActivity
@@ -58,7 +62,7 @@ Coding票号:     19-202-8-00460
 
 #=======================================================================
 tinycap /extdata/test.pcm -D 0 -d 0 -c 2 -r 44100 -b 16 -p 768 -n 10
-tinycap /data/file.wav -D 3 -d 0 -r 48000
+tinycap /data/file.pcm -D 0 -d 0 -r 48000
 tinyplay /extdata/test.wav -D 1 -d 0
 tinyplay /data/file.wav -D 3 -d 0 -r 48000 -p 192 -n 16
 
@@ -103,7 +107,7 @@ list modules
 run cts -m CtsDisplayTestCases(注module名字) --skip-preconditions --skip-all-system-status-check --dynamic-config-url=""
 run cts -m CtsViewTestCases --skip-preconditions --skip-all-system-status-check --dynamic-config-url=""
 
-logcat -m 0xffffffff -l 15 -e 1
+logcat -u 0xffffffff -l 15 -o 1
 logcat -s "DisplayRefreshRateTest"&
 #=======================================================================
 单apk性能测试工具Emmagee.apk
@@ -156,7 +160,7 @@ https://blog.csdn.net/lin20044140410/article/details/55519026
 
 #=======================================================================
 aapt解析apk AndroidManifest.xml
-aapt dump xmltree TMapAutoMainApp-official_website_20190906112415_3.1.0.1030_rb151a0_701_release.apk AndroidManifest.xml
+aapt dump xmltree *.apk AndroidManifest.xml
 
 #=======================================================================
 Java 集合框架
@@ -302,4 +306,170 @@ https://blog.csdn.net/harry_helei/article/details/49869961
 cat /data/property/persist.sys.timezone //查看当前时区配置文件
 setprop persist.sys.timezone GMT        //修改属性
 dadate 1230122018.59 set      //2018/12/30/12::20::59
+dadate 0302153820.59 set
 #=======================================================================
+819B项目iwiki环境手顺
+http://iautowiki.storm/Group/NaviBase/Android
+#=======================================================================
+Android Binder机制的Native应用—双向通信
+https://blog.csdn.net/tankai19880619/article/details/21224151
+
+#=======================================================================
+Ubuntu下制作windows U盘启动盘
+https://blog.51cto.com/12205781/2060749
+
+GParted可以格式化U盘
+
+#=======================================================================
+Android基础之IntentFilter的匹配规则
+https://blog.csdn.net/chenliguan/article/details/87927588
+
+#=======================================================================
+Android多进程总结一:生成多进程(android:process属性)
+https://blog.csdn.net/lixpjita39/article/details/77435156
+
+#=======================================================================
+抓snapshot
+bsp set -s 1
+reset
+snapshot进入noraml启动
+bsp set -s 0
+reset
+#=======================================================================
+android vold初始化及sd卡挂载流程
+https://blog.csdn.net/fe421504975/article/details/8240190/
+https://www.cnblogs.com/pepsimaxin/p/5193398.html
+
+解析Android内部存储、外部存储的区别
+https://blog.csdn.net/baidu_36385172/article/details/79695308
+
+Linux 设备驱动之字符设备
+https://www.cnblogs.com/linux-xin/p/8086073.html
+
+Android广播工作过程分析
+https://www.jianshu.com/p/a842432a4fc2
+
+Android存储系统之架构篇
+http://gityuan.com/2016/07/23/android-io-arch/
+
+【Android】【Receiver】静态Receiver在APP未启动时监听广播
+https://blog.csdn.net/u013718730/article/details/80611715
+
+#=======================================================================
+查看apk安装路径
+dumpsys package 包名 | grep codePath  
+
+#=======================================================================
+java库生成的是jar包，对应两种类型的库，一个是通过 那么，BUILD_JAVA_LIBRARY 与BUILD_STATIC_JAVA_LIBRARY的区别是什么？
+
+BUILD_JAVA_LIBRARY编译出来的jar包，里面是DEX格式的文件，如果用户想用这个jar包放到Eclipse来做Android APP的开发，Eclipse是不认识这种格式的文件的，通常会报错：Conversion to Dalvik format failed with error 1；
+而BUILD_STATIC_JAVA_LIBRARY编译出来的jar包，里面每个java文件对应的class文件都单独存在，顾名思义，每个java文件里面用到的变量都被静态编译到了class内部，这种格式的jar包可以在Eclipse/AndroidStudio里面导入并正常使用，但是可能存在一定的兼容性隐患。 二者的区别在于静态JAVA库是由.class文件打包而成JAR包，它在任何一个JAVA虚拟机上都可以运行；而共享JAVA库则是在静态库的基础上进一步打包成的.dex文件，众所周知，dex是在android系统上所使用的文件格式。
+
+#=======================================================================
+AuAndroid 音频系统
+https://blog.csdn.net/zyuanyun/article/details/60890534
+
+《深入理解Android 卷III》第三章 深入理解AudioService（完整版)
+https://blog.csdn.net/qq_24451593/article/details/82252890
+https://blog.csdn.net/qq_24451593/category_7633853.html
+https://blog.csdn.net/qq_24451593/article/details/80325908
+
+#=======================================================================
+Android Log开关问题
+logcat -u 0 关掉所有都关掉
+logcat -U LOGID_ANDROID 打开Android系统log的开关
+logcat -b main -s ""  //-b指定缓存区
+logcat -b main -G 6M  //扩大缓存区并且只有main缓存区对应输出流
+logcat -s "AudioFocus" "MediaFocusControl" "AudioManager" "xjtest"&
+logcat |grep -v -e GpsChipsController -e tsrsdk -e NPuCom -e GpsChipsManager //过滤这些tag不输出
+
+
+#======================================================================
+logcat -b perf | grep -e finishResume -e reqSetPALShow -e ThirdPartyService&
+logcat -b perf && logcat
+
+#======================================================================
+Android 中pid与uid的作用与区别
+https://www.cnblogs.com/kings-boke/p/4268930.html
+
+#======================================================================
+Service自动被销毁？
+https://blog.csdn.net/weixin_40876113/article/details/83750212
+
+#======================================================================
+Linux ALSA框架之三:PCM设备的创建
+https://www.cnblogs.com/jason-lu/articles/3123750.html
+
+#======================================================================
+1. 动态jar包	
+(1)生成后可以共享代码	
+(2)生成的是class.dex文件,只能运行在Android平台中	
+注 : 	Android虚拟机Dalvik支持的字节码文件格式Google在新发布的Android平台上使用了自己的Dalvik虚拟机
+	来定义， 这种虚拟机执行的并非Java字节码， 而是另一种字节码： dex格式的字节码
+	Class文件------Java编译后的目标文件
+	不像J2se，java编译成class就可以直接运行，android平台上class文件不能直接在android上运行。 由于Google
+	使用了自己的Dalvik来运行应用， 所以这里的class也肯定不能在AndroidDalvik的java环境中运行， android
+	的class文件实际上只是编译过程中的中间目标文件，需要链接成dex文件后才能在dalvik上运行
+	
+2.静态jar包	
+(1)可以打包进apk,也可以运行在Android平台中,某些情况可能出现问题	
+(2)生成的是.class文件,可以运行在java虚拟机中
+
+#======================================================================
+拉取morley代码
+repo init -u ssh://gerrit.iauto.com:29418/Src/mtk_mt2712/android9.0.0/manifest -b cavendish/func/mtk_android9_piopoc_tai2 -m morley.xml
+repo sync -c --no-tags
+repo start cavendish/func/mtk_android9_piopoc_tai2 --all
+
+#======================================================================
+获取车机输入法
+settings get secure default_input_method 
+
+#======================================================================
+关闭网络防火墙,允许第三方访问网络
+iptables -F                                                        
+iptables -X                                                        
+iptables -L                                                        
+iptables -P INPUT ACCEPT                                           
+iptables -P OUTPUT ACCEPT                                          
+iptables -P FORWARD ACCEPT
+
+#======================================================================
+Android 系统属性SystemProperty分析
+https://www.cnblogs.com/bastard/archive/2012/10/11/2720314.html
+framework访问系统服务流程
+java:\frameworks\base\core\java\android\os\SystemProperties.java
+jni:\frameworks\base\core\jni\android_os_SystemProperties.cpp
+native:\bionic\libc\bionic\system_properties.c
+
+安卓6.0系统属性上层应用监听实现（属性监听）
+https://www.jianshu.com/p/f87dff8d5990
+
+
+#======================================================================
+add_on学习
+https://www.iteye.com/blog/xiamidatou-gmail-com-1720353
+https://sqliu.wordpress.com/2012/12/04/%E5%90%91android-sdk%E4%B8%AD%E6%B7%BB%E5%8A%A0%E8%87%AA%E5%AE%9A%E4%B9%89%E7%9A%84%E5%BA%93-%EF%BC%88addon%EF%BC%89/
+https://www.iteye.com/blog/liujianguangaaa-939058
+
+#======================================================================
+
+
+
+#======================================================================
+
+
+
+#======================================================================
+
+
+#======================================================================
+
+
+#======================================================================
+
+
+#======================================================================
+
+
+#======================================================================

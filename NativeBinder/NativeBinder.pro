@@ -31,3 +31,4 @@ SOURCES += src/client/callback.cpp \
            src/server/main.cpp \
            src/server/testbinder.cpp
 DISTFILES += other/Android.mk \
+             README.txt \

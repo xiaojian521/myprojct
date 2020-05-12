@@ -496,3 +496,164 @@ https://blog.csdn.net/ly601579033/article/details/85112365
 -b  bits          pcm 位宽
 -p  period_size   一次中断的帧数
 -n  n_periods     周期数
+
+#====================================================================
+81.Android签名有什么作用-apk签名可以带来的好处
+https://blog.csdn.net/qq_22120329/article/details/50948891
+给apk 签名可以带来以下好处： 
+1.、应用程序升级：如果你希望用户无缝升级到新的版本，那么你必须用同一个证书进行签名。这是由于只有以同一个证书签名，系统才会允许安装升级的应用程序。 如果你采用了不同的证书，那么系统会要求你的应用程序采用不同的包名称，在这种情况下相当于安装了一个全新的应用程序。如果想升级应用程序，签名证书要相同，包名称要相同！ 
+2.、应用程序模块化：Android 系统可以允许同一个证书签名的多个应用程序在一个进程里运行，系统实际把他们作为一个单个的应用程序，此时就可以把我们的应用程序以模块的方式进行部署，而用户可以独立的升级其中的一个模块 
+3.、代码或者数据共享：Android 提供了基于签名的权限机制，那么一个应用程序就可以为另一个以相同证书签名的应用程序公开自己的功能。以同一个证书对多个应用程序进行签名，利用基于签名的权限检查，你就可以在应用程序间以安全的方式共享代码和数据了。
+ 4.不同的应用程序之间，想共享数据，或者共享代码，那么要让他们运行在同一个进程中，而且要让他们用相同的证书签名。
+
+#====================================================================
+82.Android Framework单独编译调试
+jianshu.com/p/55dbe31efccc
+
+1.取消编译优化:device目录下对应产品的BoardConfig.mk添加
+WITH_DEXPREOPT := false
+2.整个工程make clean清除，不clean的话导入后依然有问题，系统启动崩溃。
+3.make -j32全编译，将所有镜像打入系统。
+
+#====================================================================
+83.RemoteCallbackList 机制分析,binder管理
+https://blog.csdn.net/u012439416/article/details/76402516
+
+
+#====================================================================
+84. try catch详解
+Android开发中，有时候try catch是可以防止崩溃的，但有时候代码加上要catch的异常，但当对应的错误出现时，代码还是会崩溃，比如IndexOutOfBoundsException，NullPointerException这两个异常，即使你做了catch，但依然会程序崩溃，所以像这样的就只能做手动的判断规避
+try catch是一种异常处理机制，但是有两点需要注意。
+1.只有在try块内部的代码所抛出的异常才会被捕获，如果是try块范围外的代码，就不会捕捉异常。
+2.catch需要指定异常类型。只能够捕获指定的异常类型。如果发生崩溃的异常并没有列在catch中，那么也不会捕获该异常。最终导致程序崩溃。
+
+#====================================================================
+85,单体测试详解
+JUnit 5.5.2 API
+https://junit.org/junit5/docs/current/api/
+JUnit 5用户指南
+https://junit.org/junit5/docs/current/user-guide/
+中文手册
+https://cnfn.gitbooks.io/junit5/content/6.2.%20Migration%20Tips.html
+
+junit4资料
+https://blog.csdn.net/qq_34264849/article/details/88243278
+https://www.ibm.com/developerworks/cn/java/j-lo-junit4/
+https://blog.csdn.net/luanlouis/article/details/37560783
+https://www.jianshu.com/p/16077065fe89
+
+Android Junit 单元测试、异步测试方法简介及异步测试框架指南
+https://www.jianshu.com/p/1ca58729bf87
+
+junit 4.10版本
+http://wiki.jikexueyuan.com/project/junit/overview.html
+
+junit4常用注解详细说明
+https://www.cnblogs.com/qlqwjy/p/8441080.html
+
+参考资料:
+https://blog.csdn.net/u013144863/article/details/79959716
+
+Mockito教程
+https://www.cnblogs.com/Ming8006/p/6297333.html
+
+深入浅出Android单元测试（三）详解Mockito
+https://www.jianshu.com/p/600ef8c9df98
+待测试应用：即开发者开发的应用，需要被单元测试代码进行测试
+执行测试逻辑的应用：自动生成的应用，用于执行测试步骤与逻辑
+对于getTargetContext()方法，即获取的是待测试应用的上下文。对于getContext()方法，获取的是执行测试逻辑的应用上下文。
+
+#====================================================================
+86.PackageManagerService启动流程分析(上,下)
+https://blog4jimmy.com/2018/10/636.html
+https://blog4jimmy.com/2018/10/640.html
+
+#====================================================================
+87.Android基础之IntentFilter的匹配规则
+https://blog.csdn.net/chenliguan/article/details/87927588
+
+#====================================================================
+88.Android多进程总结一:生成多进程(android:process属性)
+https://blog.csdn.net/lixpjita39/article/details/77435156
+在AndroidManifest.xml,Activity或Service添加android:process属性Application类的onCreate()函数会调用两次,
+可以通过判断processName来区别是哪个进程进行的调用
+String processName = getProcessName(this, android.os.Process.myPid());
+出现这种情况，是由于即使是通过指定process属性启动新进程的情况下，系统也会新建一个独立的虚拟机，自然需要重新初始化一遍Application
+
+#====================================================================
+88.Android vold初始化及sd卡挂载流程
+https://blog.csdn.net/fe421504975/article/details/8240190/
+https://www.cnblogs.com/pepsimaxin/p/5193398.html
+
+解析Android内部存储、外部存储的区别
+https://blog.csdn.net/baidu_36385172/article/details/79695308
+
+Linux 设备驱动之字符设备
+https://www.cnblogs.com/linux-xin/p/8086073.html
+
+Android广播工作过程分析
+https://www.jianshu.com/p/a842432a4fc2
+
+Android存储系统之架构篇
+http://gityuan.com/2016/07/23/android-io-arch/
+
+【Android】【Receiver】静态Receiver在APP未启动时监听广播
+https://blog.csdn.net/u013718730/article/details/80611715
+
+#====================================================================
+89.AuAndroid 音频系统
+https://blog.csdn.net/zyuanyun/article/details/60890534
+
+《深入理解Android 卷III》第三章 深入理解AudioService（完整版)
+https://blog.csdn.net/qq_24451593/article/details/82252890
+https://blog.csdn.net/qq_24451593/category_7633853.html
+https://blog.csdn.net/qq_24451593/article/details/80325908
+
+#====================================================================
+90.Android 中pid与uid的作用与区别
+https://www.cnblogs.com/kings-boke/p/4268930.html
+
+#====================================================================
+91.Service自动被销毁？
+https://blog.csdn.net/weixin_40876113/article/details/83750212
+
+#====================================================================
+92.Android 系统属性SystemProperty分析
+https://www.cnblogs.com/bastard/archive/2012/10/11/2720314.html
+framework访问系统服务流程
+java:\frameworks\base\core\java\android\os\SystemProperties.java
+jni:\frameworks\base\core\jni\android_os_SystemProperties.cpp
+native:\bionic\libc\bionic\system_properties.c
+
+安卓6.0系统属性上层应用监听实现（属性监听）
+https://www.jianshu.com/p/f87dff8d5990
+
+#====================================================================
+Android中Context详解
+https://blog.csdn.net/lissic_blog/article/details/51520235
+
+#====================================================================
+
+
+#====================================================================
+
+
+
+#====================================================================
+
+
+#====================================================================
+
+
+
+#====================================================================
+
+
+#====================================================================
+
+
+
+#====================================================================
+
+
+#====================================================================

@@ -1,0 +1,344 @@
+Android Framewokd Audio Study
+https://blog.csdn.net/qq_24451593/article/details/80325908
+#====================================================================
+一. 综述
+Audio系统是Android平台的重要组成部分,它主要包括三方面的内容:
+1. AudioRecorder和AudioTrack：这两个类属于Audio系统对外提供的API类，通过它们可以完成Android平台上音频数据的采集和输出任务.
+
+2. AudioFlinger：它是Audio系统的工作引擎，管理着系统中的输入输出音频流，并承担音频数据的混音，以及读写Audio硬件以实现数据的输入输出等工作.
+
+3. AudioPolicyService，它是Audio系统的策略控制中心，具有掌管系统中声音设备的选择和切换、音量控制等功能.
+
+#====================================================================
+二. AudioTrack的破解
+AudioTrack属于Audio系统对外提供的API类，所以它在Java层和Native层均有对应类，先从Java层的用例开始.
+
+#====================================================================
+2.1 [AudioTrackAPI使用例子（Java层）]
+① 根据音频数据的特性来确定所要分配的缓冲区的最小size
+int bufsize = AudioTrack.getMinBufferSize(8000,//采样率：每秒8K个点 
+                    AudioFormat.CHANNEL_CONFIGURATION_STEREO,//声道数：双声道      
+                    AudioFormat.ENCODING_PCM_16BIT//采样精度：一个采样点16比特，相当于2个字节
+                    );
+//按照数字音频的知识这个算出来的是一秒钟buffer大小
+
+② 创建AudioTrack
+AudioTrack trackplayer = new AudioTrack(
+                    AudioManager.STREAM_MUSIC,//音频流类型
+                    8000,//采样率
+                    AudioFormat.CHANNEL_CONFIGURATION_STEREO,//双声道
+                    AudioFormat.ENCODING_PCM_16BIT,//采样精度:一个采样点16比特,相当于2个字节
+                    bufsize,一秒钟buffer的大小
+                    AudioTrack.MODE_STREAM//数据加载模式
+                    );
+
+③ 开始播放
+trackplayer.play();
+
+④ 调用write写数据
+trackplayer.write(bytes_pkg, 0,bytes_pkg.length);//往track中写数据
+
+⑤ 停止播放和释放资源
+trackplayer.stop();//停止播放
+trackplayer.release();//释放底层资源
+
+#====================================================================
+2.2 AudioTrack的数据加载模式
+AudioTrack有两种数据加载模式：MODE_STREAM和MODE_STATIC，它们对应着两种完全不同的使用场景。
+(1) MODE_STREAM：在这种模式下，通过write一次次把音频数据写到AudioTrack中。这和平时通过write系统调用往文件中写数据类似，但这种工作方式每次都需要把数据从用户提供的Buffer中拷贝到AudioTrack内部的Buffer中，这在一定程度上会使引入延时。为解决这一问题，AudioTrack就引入了第二种模式。
+
+(2) MODE_STATIC：这种模式下，在play之前只需要把所有数据通过一次write调用传递到AudioTrack中的内部缓冲区，后续就不必再传递数据了。这种模式适用于像铃声这种内存占用量较小，延时要求较高的文件。但它也有一个缺点，就是一次write的数据不能太多，否则系统无法分配足够的内存来存储全部数据。
+
+注意：如果采用STATIC模式，须先调用write写数据，然后再调用play
+
+#====================================================================
+2.3 音频流的类型
+在AudioTrack构造函数中，会接触到AudioManager.STREAM_MUSIC这个参数。它的含义与Android系统对音频流的管理和分类有关。
+Android将系统的声音分为好几种流类型，下面是几个常见的：
+    · STREAM_ALARM：警告声
+    · STREAM_MUSIC：音乐声，例如music等
+    · STREAM_RING：铃声
+    · STREAM_SYSTEM：系统声音，例如低电提示音，锁屏音等
+    · STREAM_VOCIE_CALL：通话声
+
+注意：上面这些类型的划分和音频数据本身并没有关系。例如MUSIC和RING类型都可以是某首MP3歌曲。另外，声音流类型的选择没有固定的标准，例如，铃声预览中的铃声可以设置为MUSIC类型。音频流类型的划分和Audio系统对音频的管理策略有关。
+
+#====================================================================
+2.4 Buffer分配和Frame的概念
+在用例中碰到的第一个重要函数就是getMinBufferSize。这个函数对于确定应用层分配多大的数据Buffer具有重要指导意义
+
+#====================================================================
+2.5 AudioTrack(Java空间)的分析
+java端创建一个AudioTrack实例,native端也会创建一个native AudioTrack实例
+分析代码
+(1)校验传入参数
+(2)校验成功后会调用native_setup()将参数向下传递
+
+#====================================================================
+2.6 native_setup()函数分析(JNI层)
+(1)获取参数sessionId
+(2)判断是否存在native层AudioTrack对象如果不存在则创建对象,
+   判断传入参数是否正确,
+   创建native AudioTrack对象
+   将AudioAttibutes参数的数值(usage,contenttype,flags,tags)出传入到audio_attributes_t对象中
+(2.1)创建AudioTrackJniStorage对象,可以通过此对象来回调到java端
+   将java端的AudioTrack实例对象和它的弱引用保存到AudioTrackJniStorage成员变量中
+(2.2)初始化native AudioTrack对象,调用AudioTrack.set()
+   如果是MODE_STREAM则不需要创建共享内存
+   如果是MODE_STATIC先创建匿名共享内存,并传入AudioTrack.set()接口中
+   注:Android系统匿名空想内存需要查看MemoryHeapBase和MemoryBase这两个类
+(3)如果已经存在native AudioTrack,则重新创建AudioTrackJniStorage对象并重新将java端AudioTrack对象传入AudioTrackJniStorage对象变量中
+(4)再次检验参数是否正确,并将一些参数设置回java端AudioTrack对象
+(4.1)将native AudioTrack对象传递给java端mNativeTrackInJavaObj变量
+(4.2)将AudioTrackJniStorage对象传递给java端mJniData变量
+(4.3)将native AudioTrack.streamType()返回值传递给java端mStreamType变量
+(5)如果初始化失败销毁对象并将参数置空
+
+#====================================================================
+2.6 AudioTrackJniStorage分析
+AudioTrackJniStorage是一个辅助类，其中有一些有关共享内存方面的较重要的知识
+(1) 共享内存介绍
+共享内存，作为进程间数据传递的一种手段，在AudioTrack和AudioFlinger中被大量使用。先简单了解一下有关共享内存的知识：
+
+·  每个进程的内存空间是4GB，这个4GB是由指针长度决定的，如果指针长度为32位，那么地址的最大编号就是0xFFFFFFFF，为4GB。
+
+·  上面说的内存空间是进程的虚拟地址空间。换言之，在应用程序中使用的指针其实是指向虚拟空间地址的。那么，如何通过这个虚地址找到存储在真实物理内存中的数据呢？
+
+上面的问题，引出了内存映射的概念。内存映射让虚拟空间中的内存地址和真实物理内存地址之间建立了一种对应关系。也就是说，进程中操作的0x12345678这块内存的地址，在经过OS内存管理机制的转换后，它实际对应的物理地址可能会是0x87654321。当然，这一切对进程来说都是透明的，这些活都由操作系统悄悄地完成了。这和我们的共享内存会有什么关系吗？
+
+如何创建和共享内存呢？不同系统会有不同的方法。Linux平台的一般做法是：
+
+·  进程A创建并打开一个文件，得到一个文件描述符fd。
+
+·  通过mmap调用将fd映射成内存映射文件。在mmap调用中指定特定参数表示要创建进程间共享内存。
+
+·  进程B打开同一个文件，也得到一个文件描述符，这样A和B就打开了同一个文件。
+
+·  进程B也要用mmap调用指定参数表示想使用共享内存，并传递打开的fd。这样A和B就通过打开同一个文件并构造内存映射，实现了进程间内存共享。
+
+注意，这个文件也可以是设备文件。一般来说，mmap函数的具体工作由参数中的那个文件描述符所对应的驱动或内核模块来完成。
+
+除上述一般方法外，Linux还有System V的共享内存创建方法，这里就不再介绍了。总之，AT和AF之间的数据传递，就是通过共享内存方式来完成的。这种方式对于跨进程的大数据量传输来说，是非常高效的。
+
+(2) MemoryHeapBase和MemoryBase类介绍
+AudioTrackJniStorage用到了Android对共享内存机制的封装类。
+总结:
+    (2.1)分配了一块共享内存，这样两个进程可以共享这块内存。
+
+    (2.2)基于Binder通信，这样使用这两个类的进程就可以交互了。
+
+#====================================================================
+2.7 AudioTrack(java端) Play()分析
+(1) 判断是否延迟播放,如果不是延迟调用native_start()
+    如果延迟播放则另起线程进行等待延迟时间后进行播放
+(2) jni层调用native AudioTrack.start();
+
+#====================================================================
+2.8 AudioTrack(java端) write()分析
+(1) Java层的write函数有两个
+    ·  一个是用来写PCM16数据的，它对应的一个采样点的数据量是两个字节。
+    ·  另外一个用来写PCM8数据的，它对应的一个采样点的数据量是一个字节
+    我们分析PCM16数据的调用
+(2) 判断参数及状态是否正常
+(3) 调用native_write_short(),返回读取数据字节数
+
+#====================================================================
+2.8.1 AudioTrack(jni) android_media_AudioTrack_writeArray分析
+(1)参数校验,及获取传入数组指针
+(2)调用writeToTrack()
+    (2.1)如果是STREAM模式,sharedBuffer()返回空,则调用Native Track的write函数
+    (2.2)如果是STATIC模式，sharedBuffer()返回不为空,则将java端传入的数据通过memcpy拷贝到共享内存
+注:在STATIC模式下，直接把数据memcpy到共享内存，记住在这种模式下要先调用write,后调用play
+
+#====================================================================
+2.7 AudioTrack(java端) release()分析
+当数据都write完后，需要调用stop停止播放，或者直接调用release来释放相关资源。由于release和stop有一定的相关性，这里只分析release调用.
+(1) 先调用stop
+(2) 调用native_release()
+
+#====================================================================
+2.7.1 AudioTrack(jni) android_media_AudioTrack_release
+(1) 将java端AudioTrack对象中的native参数置空
+(2) 删除AudioTrackJniStorage对象
+android_media_AudioTrack_stop分析
+(1) 调用native AudioTrack.stop();
+
+#====================================================================
+2.8 AudioTrack(Java空间)的分析总结
+(1) new一个AudioTrack,使用无参构造
+(2) 调用set函数,把java层的参数传进去,另外还设置了一个audiocallback回调函数
+(3) 调用了AudioTrack的start函数
+(4) 调用了AudioTrack的write函数
+(5) 工作完毕后,调用stop
+(6) 最后就是Native对象的delete
+
+#====================================================================
+三 AudioTrack(Native空间)的分析
+3.1 AudioTrack和set分析
+status_t AudioTrack::set(
+        audio_stream_type_t streamType,//音频类型
+        uint32_t sampleRate,//采样率
+        audio_format_t format,//采样精度:一个采样点16比特,相当于2个字节
+        audio_channel_mask_t channelMask,
+        size_t frameCount,//由计算得来
+        audio_output_flags_t flags,
+        callback_t cbf,//audiocallback
+        void* user,//java端AudioTrack全局引用
+        int32_t notificationFrames,//0
+        const sp<IMemory>& sharedBuffer,//共享内存
+        bool threadCanCallJava,//线程是否能回调回java端
+        audio_session_t sessionId,//audio session id
+        transfer_type transferType,//同步写
+        const audio_offload_info_t *offloadInfo,
+        uid_t uid,//-1
+        pid_t pid,//-1
+        const audio_attributes_t* pAttributes,//java端AudioAttribute对象属性传递到audio_attributes_t对象中
+        bool doNotReconnect,//false
+        float maxRequiredSpeed,//1.0f
+        audio_port_handle_t selectedDeviceId//AUDIO_PORT_HANDLER_NONE
+        )
+(1)设置参数给本地变量
+(2)校验参数是否正确
+(3)创建AudioTrackThread线程通知回java端
+(4)创建IAudioTrack与AudioFlinger进程交互,调用createTrack_l()函数
+
+3.2 createTrack_l()分析
+(1)获取与AudioFlinger进程交互的binder对象
+(2)将相关参数复制给IAudioFlinger::CreateTrackInput input;对象
+(3)调用createTrack()将input传递过去,放回IAudioTrack binder对象
+(4)此时AudiFlinger
+(5)在STREAM模式下，没有在AT端创建共享内存，但前面提到了AudioTrack和AudioFlinger的数据交互是通过共享内存完成的，这块共享内存最终由AudioFlinger的createTrack创建.
+(6)IMemory的pointer()在此处将返回共享内存的首地址，类型为void*,static_cast直接把这个void*类型转成audio_track_cblk_t，表明这块内存的首部中存在audio_track_cblk_t这个对象
+(7)audio_track_cblk_t.out = 1;//out为1表示输出，out为0表示输入
+(8)audio_track_cblk_t.buffers.buffers指向数据空间，它的起始位置是共享内存的首部加上audio_track_cblk_t的大小
+(9)创建AudioTrackClientProxy,保存audio_track_cblk_t对象,属于这个对象客户端的代理类
+
+#====================================================================
+3.2 IAudioTrack和AudioTrack和AudioFlinger的关系
+通过前面的代码分析,我们发现IAudioTrack中有一块共享内存,其头部是一个audio_track_cblk_t(简称CB)对象,在该对象之后才是数据缓冲,这个CB对象有什么作用呢?
+
+#====================================================================
+3.3 共享内存及其Control Block ,audio_track_cblk_t分析
+MemoryHeapBase和MemoryBase都没有提供同步对象,那么,AudioTrack和AudioFlinger作为典型的数据生产者和消费者,如何正确协调二者生产和消费的步调呢?
+Android为顺应民意，便创造出了这个CB对象，其主要目的就是协调和管理AT和AF二者数据生产和消费的步伐。先来看CB都管理些什么内容。它的声明在AudioTrackShared.h中，而定义却在AudioTrack.cpp中。
+struct audio_track_cblk_t
+{
+    Condition   cv;//这是两个同步变量，初始化的时候会设置为支持跨进程共享
+
+    /*一块数据缓冲同时被生产者和消费者使用，最重要的就是维护它的读写位置了。
+    下面定义的这些变量就和读写的位置有关，虽然它们的名字并不是那么直观。
+    另外，这里提一个扩展问题，读者可以思考一下：
+    volatile支持跨进程吗？要回答这个问题需要理解volatile、CPU Cache机制和共享 内存的本质*/
+    volatile    uint32_t    user;   //当前写位置（即生产者已经写到什么位置 了）
+    volatile    uint32_t   server;  //当前读位置
+    void*       buffers; //指向数据缓冲的首地址
+    uint32_t    frameCount;//数据缓冲的总大小，以Frame为单位
+    uint32_t    loopStart; //设置打点播放（即设置播放的起点和终点）
+    uint32_t    loopEnd;
+    int         loopCount;//循环播放的次数
+    uint8_t     flowControlFlag;//控制标志，见下文分析
+    uint8_t     out; // AudioTrack为1，AudioRecord为0
+
+    volatile    union {
+                    uint16_t    volume[2];
+                    uint32_t    volumeLR;
+
+                };//联合体,和音量有关系，可以不管它
+
+    uint32_t    stepUser(uint32_tframeCount);//更新写位置
+    bool        stepServer(uint32_tframeCount);//更新读位置
+    void*       buffer(uint32_toffset) const;//返回可写空间起始位置
+    uint32_t    framesAvailable();//还剩多少空间可写
+    uint32_t    framesReady();//是否有可读数据
+
+·  对于音频输出来说，flowControlFlag对应着under run状态，under run状态是指生产者提供数据的速度跟不上消费者使用数据的速度。这里的消费者指的是音频输出设备。由于音频输出设备采用环形缓冲方式管理，当生产者没有及时提供新数据时，输出设备就会循环使用缓冲中的数据，这样就会听到一段重复的声音。这种现象一般被称作“machinegun”。对于这种情况，一般的处理方法是暂停输出，等数据准备好后再恢复输出。
+
+·  对于音频输入来说，flowControlFlag对于着overrun状态，它的意思和underrun一样，只是这里的生产者变成了音频输入设备，而消费者变成了Audio系统的AudioRecord。
+
+关于audio_track_cblk_t还有一个神秘的问题
+mCblk =static_cast<audio_track_cblk_t*>(cblk->pointer());
+·  cblk->pointer返回的是共享内存的首地址，怎么把audio_track_cblk_t对象塞到这块内存中呢？
+这个问题将通过对AudioFlinger的分析，得到答案。
+
+#====================================================================
+3.4 数据的Push or Pull
+在JNI层的代码中可以发现，在构造AudioTrack时，传入了一个回调函数audioCallback。由于它的存在，导致了Native的AudioTrack将创建另一个线程AudioTrackThread。它有什么用呢？
+这个线程与外界数据的输入方式有关系，AudioTrack支持两种数据输入方式：
+·  Push方式：用户主动调用write写数据，这相当于数据被push到AudioTrack。MediaPlayerService一般使用这种这方式提供数据。
+·  Pull方式：AudioTrackThread将利用这个回调函数，以EVENT_MORE_DATA为参数主动从用户那pull数据。ToneGenerator使用这种方式为AudioTrack提供数据。
+这两种方式都可以使用，不过回调函数除了EVENT_MORE_DATA外，还能表达其他许多意图，这是通过回调函数的第一个参数来表明的。一起来看：
+[-->AudioTrack.h::event_type]
+
+enum event_type {
+    EVENT_MORE_DATA = 0, //表示AudioTrack需要更多数据
+    EVENT_UNDERRUN = 1,//这是Audio的一个术语，表示Audio硬件处于低负荷状态
+    //AT可以设置打点播放，即设置播放的起点和终点,LOOP_END表示已经到达播放终点
+    EVENT_LOOP_END= 2,
+    /*
+      数据使用警戒通知。该值可通过setMarkerPosition ()设置。
+      当数据使用超过这个值时，AT会且仅通知一次，有点像WaterMarker。
+      这里所说的数据使用，是针对消费者AF消费的数据量而言的
+    */
+    EVENT_MARKER = 3,
+    /*
+      数据使用进度通知。进度通知值由setPositionUpdatePeriod()设置，
+      例如每使用500帧通知一次
+    */
+       EVENT_NEW_POS = 4,
+       EVENT_BUFFER_END = 5   //数据全部被消耗
+    };
+
+
+#====================================================================
+3.5 请看AudioTrackThread的线程函数threadLoop
+(1)调用创建线程的AudioTrack的processAudioBuffer函数
+    (1.1)processAudioBuffer分析
+    (1.2)status_t err = obtainBuffer(&audioBuffer, 1);//得到一块可写的缓冲
+    (1.3)mCbf(EVENT_MORE_DATA, mUserData, &audioBuffer);//从用户那pull数据
+    (1.4)releaseBuffer(&audioBuffer);//读写完毕释放缓冲区
+     用例会调用write函数写数据，AudioTrackThread的回调函数也让我们提供数据。难道我们同时在使用Push和Pull模式？这太奇怪了！来查看这个回调函数的实现，了解一下究竟是怎么回事。该回调函数是通过set调用传入的，对应的函数是audioCallback。audioCallback中并没有进行pull模式
+
+#====================================================================
+3.6 Native 层AuioTrack write输入数据
+write函数涉及Audio系统中最重要的关于数据如何传输的问题，在分析它的时候，不妨先思考一下它会怎么做。回顾一下我们已了解的信息：
+·  有一块共享内存.
+·  有一个控制结构，里边有一些支持跨进程的同步变量.
+有了这些东西，write的工作方式就非常简单了：
+·  通过共享内存传递数据
+·  通过控制结构协调生产者和消费者的步调
+(1)Buffer audioBuffer;是一个辅助性结构
+(2)audioBuffer.frameCount = userSize/frameSize();//以帧为单位
+(3)status_terr = obtainBuffer(&audioBuffer, -1);//obtainBuffer从共享内存中得到一块空闲的数据块
+(4)memcpy(audioBuffer.i8, buffer, toWrite);//地址在audioBuffer.i8中，数据传递通过memcpy完成
+(5)releaseBuffer(&audioBuffer);//releaseBuffer更新写位置，同时会触发消费者
+
+#====================================================================
+3.7 obtainBuffer和releaseBuffer分析
+这两个函数展示了做为声场这AudioTrack和audio_track_cblk_t对象的交互方法
+(1)obtainBuffer的功能，就是从audio_track_cblk_t管理的数据缓冲中得到一块可写空间，
+(2)releaseBuffer，则是在使用完这块空间后更新写指针的位置
+
+#====================================================================
+3.8 delete AudioTrack分析
+AudioTrack::~AudioTrack()
+(1)调用stop()函数
+(2)停止AudioTrackThread线程
+(3)调用IAudioTrack.clear(),调用到AudioFlinger侧的clear()函数
+(4)清空如果是static模式传递过来的共享内存
+
+#====================================================================
+
+
+
+#====================================================================
+
+
+
+#====================================================================
+
+
+#====================================================================
+
+
+
+#====================================================================

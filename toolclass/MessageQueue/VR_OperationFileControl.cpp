@@ -37,7 +37,7 @@ VR_OperationFileControl::~VR_OperationFileControl()
         Stop();
     }
 }
-
+//本例中使用了函数的指针。对于普通的全局函数或者类的静态函数，函数名或者函数名取地址（Fun、SomeClass::Fun或&Fun、&SomeClass::Fun）得到的都是函数的指针。因为不管是否加&符号，获得的都是这个函数的地址（虽然值都是函数的地址，但不带&时类型是函数，带上&则是函数指针）。对于类的实例函数，必须采用&SomeClass::Fun的形式。如果舍去&，得到的不是这个函数的地址。
 bool VR_OperationFileControl::Start()
 {
     if(nullptr == td) {
@@ -169,7 +169,9 @@ bool VR_OperationFileControl::PostMessage(const std::string& message)
     VR_MsgInfo msgInfo;
     msgInfo.strMsg = message;
     {
-        std::unique_lock <std::mutex> lck(m_mtx);
+        //如果不加作用域则lck一直独占m_mtx互斥所.条件变量notify_all(),wait()的地方就需要重新获取锁
+        //但是此时锁的作用域还没结束,无法获取互斥锁,所以此处需要加{}作用域
+        std::unique_lock <std::mutex> lck(m_mtx); 
         m_msglist.push_back(msgInfo);
     }
     m_cv.notify_all();
