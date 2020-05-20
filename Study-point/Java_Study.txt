@@ -119,13 +119,43 @@ String  abc = abcWeakRef.get();
 虚引用主要用来跟踪对象被垃圾回收器回收的活动。虚引用与软引用和弱引用的一个区别在于：虚引用必须和引用队列 （ReferenceQueue）联合使用。当垃圾回收器准备回收一个对象时，如果发现它还有虚引用，就会在回收对象的内存之前，把这个虚引用加入到与之 关联的引用队列中。
 
 #====================================================================
+8.当Android.mk引入jar包时报错
+Exception in thread "main" java.time.DateTimeException: Invalid value for MonthOfYear (valid values 1 - 12): 0
+因为jdk9版本问题,补丁可以参考
+https://bugs.openjdk.java.net/browse/JDK-8184940
 
+#====================================================================
+9.JavaVM对象和JNIEvn对象
+https://www.cnblogs.com/fnlingnzb-learner/p/7366025.html
+https://blog.csdn.net/l_215851356/article/details/74497922
+1.JavaVM结构体.
+在java环境中.定义两个主要的结构体.JavaVM和JavaEvn,在Java环境中.每个进程里可以诞生许多VM实例.每个实例会有一个JavaVM结构体实例和他对应.但是在Android环境中.每个进程只能诞生一个VM实例,所以只有一个JavaVM结构体对实例. 通常在VM加载＊.so程序库时，会先调用JNI_OnLoad()函数,在JNI_OnLoad()函数中会将JavaVM指针对象保存到c层JNI的全局变量中,JavaVM对象是所有线程共享的．
+
+2.JNIEnv结构体
+2.1　 JNIEnv对象，当Java线程调用到C层的JNI函数的时候.一定会进入VM,VM会产生一个相应的JNIEnv对象．这JNIEnv对象和线程是一一对应的关系.
+2.2   在调用JNIEnv中的函数时．多个线程调用的JNIEnv中的本地函数都是独立的．因为VM会为每个线程产生一个JNIEnv对象实体．
+2.3   在调用函数的时候如果不方便传递JNIEnv对象，可以先获取JavaVM对象,再使用GetEnv()函数获取JNIEnv对象．
+2.4   如果c/c++层自己创建的线程，就必须向VM替它诞生相应的JNIEnv对象．并且回传该对象的指针的值．
+2.5 JNIEnv相当于java端的函数地址表
+
+3.jclass, jmethodID和jfieldID
+3.1  功能
+jclass,jmethodID和jfieldID三者都指针．通过这个三个指针，能获取到java中的属性和方法．
+3.2  生命周期
+这个类被载入的时候,这些指针都是有效的.一直到这个类被卸载为止.
+3.3  作用域.
+jmethodID和jfieldID可以直接存储在c获取C++的全局变量中.它不需要NewGlobalRef()函数进行转换 .
+它们是线程和函数之间共享的对象.
+但是jobject的所有子类,必须使用NewGlobalRef()方法转化才能生成一个全局对象的引用.它们默认情况下时局部的.不能函数共享,和多线程共享.另外还有两个对象, GetStringUTFChars()和GetBytesArrayElements()函数所回传的数据是不需要使用NewGlobalRef()转换的.
+
+java端调用jni调用,在jni端创建new native对象复制给全局变量,这个native对象的生命周期是和线程相关连的,线程未结束,没有调用delete则这个对象是一直存在的
+native层的对象生命周期管理还是按照native层自己的声明周期原则处理
 
 
 #====================================================================
-
-
-#====================================================================
+10.解析Java的JNI编程中的对象引用与内存泄漏问题
+https://blog.csdn.net/github_27263697/article/details/79807577
+需要后期在多复习在细看
 
 
 #====================================================================

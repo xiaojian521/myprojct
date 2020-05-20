@@ -321,16 +321,43 @@ write函数涉及Audio系统中最重要的关于数据如何传输的问题，�
 #====================================================================
 3.8 delete AudioTrack分析
 AudioTrack::~AudioTrack()
-(1)调用stop()函数
+(1)调用stop()函数,
+   (1.1)判断isOffloaded_l当前状态是否为退出状态
+   (1.2)调用调用内存代理对象AudioTrackClientProxy.stop()
+   (1.3)调用IAudioTrack.stop()
+   (1.4)使AudioTrackThread线程退出
 (2)停止AudioTrackThread线程
 (3)调用IAudioTrack.clear(),调用到AudioFlinger侧的clear()函数
 (4)清空如果是static模式传递过来的共享内存
+stop的工作比较简单，就是调用IAudioTrack的stop，并且还要求退出回调线程。要重点关注IAudioTrack的stop函数，这个将做为AT和AF交互流程中的一个步骤来分析
 
 #====================================================================
-
-
+四.AudioFlinger的破解
+AudioFlinger是Audio系统的核心,来自AudioTrack的数据,最终在这里得到处理,并被写入AudioHAL层
 
 #====================================================================
+4.1 AudioFlinger的诞生
+AudioFlinger及AudioPolicyService都由audioserver进程中创建并启动
+AudioFlinger::AudioFlinger()
+    : BnAudioFlinger(),
+      mMediaLogNotifier(new AudioFlinger::MediaLogNotifier()),
+      mPrimaryHardwareDev(NULL),//代表Audio硬件的HAL对象,为mAudioHwDevs数组的首元素或者是空
+      mAudioHwDevs(NULL),//代表Audio硬件的HAL对象数组
+      mHardwareStatus(AUDIO_HW_IDLE),//硬件当前状态,只是为了dump命令使用
+      mMasterVolume(1.0f),
+      mMasterMute(false),
+      // mNextUniqueId(AUDIO_UNIQUE_ID_USE_MAX),
+      mMode(AUDIO_MODE_INVALID),
+      mBtNrecIsOff(false),
+      mIsLowRamDevice(true),//是否是低内存设备
+      mIsDeviceTypeKnown(false),//当前设备是否是已知的
+      mTotalMemory(0),//总空间大小
+      mClientSharedHeapSize(kMinimumClientSharedHeapSizeBytes),
+      mGlobalEffectEnableTime(0),
+      mSystemReady(false)//系统是否已经准备完成
+(1)设置mNextUniqueIds数组中元素为AUDIO_UNIQUE_ID_USE_MAX
+(2)
+
 
 
 
