@@ -633,7 +633,8 @@ Android中Context详解
 https://blog.csdn.net/lissic_blog/article/details/51520235
 
 #====================================================================
-
+Android 中的Java跟C/C++的Binder通信
+https://blog.csdn.net/u013357557/article/details/81482729
 
 #====================================================================
 
