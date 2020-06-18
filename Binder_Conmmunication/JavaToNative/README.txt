@@ -1,0 +1,3 @@
+Android Binder机制的java和Native应用—双向通信
+1.aidl_communicate 使用aild文件自动生成cpp和java端文件,进行native和java端双向通信
+2.binder_communicate 不适用aidl文件重写虚函数,进行c++和java端binder通信

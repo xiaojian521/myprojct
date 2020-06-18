@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+		package="com.example.MortalClient"
+		android:versionCode="1"
+        android:versionName="1.0" >
+    <uses-sdk
+        android:minSdkVersion="4"
+        android:targetSdkVersion="7" />
+
+   	<uses-permission android:name="android.permission.INTERNET" />
+  	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+	<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+  	<uses-permission android:name="android.permission.WRITE_SDCARD" />
+    <uses-permission android:name="android.permission.WRITE_SETTINGS" />
+    <uses-permission android:name="android.permission.MOUNT_FORMAT_FILESYSTEMS"/>
+    <uses-permission android:name="android.permission.WRITE_MEDIA_STORAGE" />
+
+    <application android:label="@string/test_app"
+                 android:persistent="true"
+                 android:debuggable="false">
+
+        <!-- An Activity in the application - this is something the user
+             can launch and interact with.  The "name" attribute is the
+             name of the class within your package that implements this
+             activity. -->
+        <activity android:name="MortalActivity"
+	              android:label="@string/test_app">
+
+            <intent-filter>
+                <!-- The MAIN action describes a main entry point into an
+                     activity, without any associated data. -->
+                <action android:name="android.intent.action.MAIN" />
+
+                <!-- This places this activity into the main app list. -->
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+        </activity>
+    </application>
+
+</manifest>

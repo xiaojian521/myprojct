@@ -577,7 +577,7 @@ status_t AudioFlinger::PlaybackThread::Track::start()分析
 (4)参数校验,调用mAudioTrackServerProxy.start()和.obtainBuffer()
 (5)设置当前tack的状态,以及缓冲区状态
 (6)调用onAddNewTrack_l()
-   (6.1)调用boradcast_l()
+   (6.1)调用boradcast_l()广播一个事件,一定会触发MixerThread线程,通知它有活跃数组加入,需要开工干活
 
 
 

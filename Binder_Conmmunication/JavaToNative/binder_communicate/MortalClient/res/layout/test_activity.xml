@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
+
+    <!-- <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_weight="3" > -->
+
+    <Button
+        android:id="@+id/REGISTELISTENER"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/registerListener" />
+    <!-- <Button
+        android:id="@+id/CONNECT"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/connect" /> -->
+
+    <!-- <Button
+        android:id="@+id/STARTACTIVITY"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/startIqtActivity" /> -->
+
+
+<!-- 
+    </LinearLayout> -->
+<!-- 
+    <LinearLayout
+    android:orientation="vertical"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent"
+    android:layout_weight="3" >
+    <Button
+        android:id="@+id/DOPLAY"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/doPlay" />
+    <Button
+        android:id="@+id/DONEXT"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/doNext" />
+    </LinearLayout> -->
+
+    <!-- <LinearLayout
+    android:orientation="vertical"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent"
+    android:layout_weight="3" >
+
+    <Button
+        android:id="@+id/DOPAUSE"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/doPause" />
+
+    <Button
+        android:id="@+id/DPSTOP"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/doStop" />
+
+    </LinearLayout> -->
+
+
+</LinearLayout>
+
