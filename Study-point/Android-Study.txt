@@ -1,5 +1,9 @@
 
 Android系统为每一个应用开启一个独立的虚拟机，每个应用都运行在各自进程里（默认情况下），彼此之间相互独立，无法共享内存。当一个应用想要访问另一个应用的数据或调用其方法，就要用到Android系统提供的IPC机制。而AIDL就是Android实现IPC机制的方式之一。
+
+Android源代码下载
+https://source.android.google.cn/setup/build/downloading
+
 #==================================================================== 
 1.Android广播机制Broadcast详解
   https://www.cnblogs.com/travellife/p/3944363.html
