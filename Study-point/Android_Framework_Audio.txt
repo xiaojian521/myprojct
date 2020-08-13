@@ -1,5 +1,27 @@
 Android Framewokd Audio Study
 https://blog.csdn.net/qq_24451593/article/details/80325908
+https://blog.csdn.net/zyuanyun/article/details/60890534
+https://www.cnblogs.com/yangjies145/p/6883705.html
+#====================================================================
+基本概念详解:
+帧(frame)的概念:帧表示一个完整的声音单元,所谓的声音单元是指一个采样样本;
+如果是双声道,那么一个完整的声音单元就是2个样本,如果是5.1声道,那么一个完整的声音单元就是6个样本了.;帧的大小(一个完整的声音单元的数据量)等于声道数乘以采样深度,即frameSize = channelCount * bytesPerSample.帧的概念非常重要,无论是框架层还是内核层,都是以帧为单位去管理音频数据缓冲区的.
+其次还得了解传输延迟(latency)的概念:传输延迟表示一个周期的音频数据的传输时间.我们再次引入周期(period)的概念:
+Linux ALSA把数据缓冲区划分为若干个快,dma每传输完一个块上的数据即发出一个硬件中断,cpu收到中断信号后,在配置dma去传输下一个块上的数据;一个块即一个周期,周期大小(perodSize)即是一个数据块的帧数.
+在回到传输延迟(latency),传输延迟等于周期大小除以采样率,即latency = periodSize/sampleRate.
+音频重采样:把一个采样率的数据转换为另一个采样率的数据.Android原生系统上,音频硬件设备一般都工作在一个固定的采样率上(如48Hz),因此所有音轨数据都需要重采样
+
+重采样计算:afFrameCount是硬件设备处理单个数据块的帧数,afSampleRate是硬件设备配置的采样率,sampleRate是音轨的采样率.如果把音轨数据重采样到afSampleRate上,那么反推算出应用程序最少传入的帧数为为afFrameCount*sampleRate/afSampleRate,而为了播放流畅,实际上还要大一点,所以在乘以一个系数(可参考framebuffer双缓冲,一个缓冲缓存当前的图像,一个缓冲准备下一副的图像,这样图像切换更流畅,然后就得出一个可以保证播放流畅的最低帧数)
+minFrameCount = (afFameCount*sampleRate/afSampleRate)*minBufCount.
+#====================================================================
+sampleRate采样率:音频的采样频率,每秒钟能够采样的次数,采样率越高,音质越高.给出的实例是44100,22050,11020但不限于这几个参数.例如要采集低质量的音频就可以使用4000,8000等低采样率.
+channelConfig声道设置:android支持双声道立体音和单声道.MONO单声道,STEREO立体声.补充:指声音在录制或播放时在不同空间位置采集或回放的相互独立的音频信号,所以声道数也就是声音录制时的音源数量或回放时相应的扬声器数量.
+audioFormat编码制式和采样大小:采集来的数据当然使用PCM编码(脉冲代码调制编码,即PCM编码.PCM通过采样,量化,编码三个步骤将连续变化的模拟信号转换为数字编码.)android支持的采样大小16bit或者8bit.当然采样大小越大,那么信息量越多,音质也越高,现在主流的采样大小都是16bit,在低质量的语音传输的时候8bit足够了.补充:采集卡(声卡)的位.客观地反映了数字信号对输入声音凶耗描述的准确程度.8位的采集卡,可以将声音分为256(2的8次方)个精度单位处理;16位的采集卡,可以将声音分为64K(2的16次方)个精度单位处理
+bufferSizeInBytes:采集数据需要的缓冲区的大小,如果不知道最小需要的大小可以在getMinBufferSize()查看
+//设置线程的优先级,优先考虑最重要的音频线程.
+android.os.Process
+    .setThreadPriority(android.Process.THREAD_PRIORITY_URGENT_AUDIO)
+
 #====================================================================
 一. 综述
 Audio系统是Android平台的重要组成部分,它主要包括三方面的内容:
@@ -579,28 +601,161 @@ status_t AudioFlinger::PlaybackThread::Track::start()分析
 (6)调用onAddNewTrack_l()
    (6.1)调用boradcast_l()广播一个事件,一定会触发MixerThread线程,通知它有活跃数组加入,需要开工干活
 
+总结:start函数把这个Track加入到活跃数组后,将触发一个同步事件,这个事件会让工作线程动起来.
+(1)mRetryCount表示重试次数,它针对的是这样一个问题.如果一个Track调用了start却没有write数据,该怎么办?如果MixerThread尝试了mRetryCount次后还没有可读数据,工作线程就会把该Track从激活队列中去掉了
+(2)mFillingUpStatus能解决这样的问题:假设分配了1MB的数据缓冲,那么至少需要写多少数据工作线程才会让Track觉得AT是帧的需要它工作呢?这个状态最初为Track::FS_FILLING,表示正在填充数据缓冲区.在这种状态下,除非AT设置了强制读取数据标志(CB对象中的forceReady变量)否则工作线程是不会读取该Track的数据的
+
+#====================================================================5. MixerThread线程
+MixerThread的线程函数大致工作流程是:
+(1)如果有通知信息或配置请求,则先完成这些工作.比如向监听者通知AF的一些信息,或者根据配置请求进行音量控制,声音设备切换等.
+(2)调用prepareTracks_l函数,检查活跃Tracks是否有数据准备好
+(3)调用混音器对象mAudioMixer的process,并传入一个存储结果数据的缓冲区,混音后的结果就存储在这个缓冲区中.
+(4)调用代表音频输出设备的AudioOutoutStream对象的write,把结果数据写入设备
+
+#====================================================================
+6. AudioMixer对象的分析
+AudioMixer为hook准备了多个实现函数，来看
+·  process__validate：根据Track的格式、数量等信息选择其他的处理函数。
+
+·  process__nop：什么都不做。
+
+·  process__genericNoResampling：普通无需重采样。
+
+·  process__genericResampling：普通需重采样。
+
+·  process__OneTrack16BitsStereoNoResampling：一路音频流，双声道，PCM16格式，无需重采样。
+
+·  process__TwoTracks16BitsStereoNoResampling：两路音频流，双声道，PCM16格式，无需重采样。
+
+(1)getNextBuffer通过frameReady得到可读帧数
+(2)getBuffer函数将根据可读帧数等信息得到可读空间的首地址
+(3)releaseBuffer通过stepServer更新读位置
+
+#====================================================================
+7. audio_track_calk_t的分析
+7.1 AT端的流程
+AT端作为数据的生产者,可称它为写着,它在CB对象中用user表示.它的调用流程是:
+(1)调用framesAvailable,看看是否有空余的可写空间.
+(2)调用buffer,获得写空间起始地址
+(3)调用setpUser,更新user的位置
+
+7.2 AF端的流程
+AF端作为数据的消费者,它在CB中的表示是server,可称它为读者.读者的使用流程是:
+(1)调用framesReady看是否有可读数据
+(2)获得可读数据的起始位置,这个和上面的buffer调用基本一样,都是根据offset和serverBase来获得可读数据块的首地址
+(3)调用setpServer更新读位置
+
+#====================================================================
+8.AudioPolicyService的破解
+8.1 AudioPoclicyService的创建,分析AudioPoclicyService的构造函数
+AudioPolicyService和AudioFlinger都驻留于一个进程
+(1)AudioPolicyInterface是Audio系统中的另一种HAL对象
+(2)创建TonePlaybackThread用于播放Tone音，Tone包括按键音等
+(3)AudioCommandThread用于处理控制命令,例如路由切换,音量调节等
+(4)OutputCommandThread处理停止和释放输出线程
+(5)判断是否使用旧版本的音频策略:#ifdef USE_LEGACY_AUDIO_POLICY
+(6)创建AudioPolicyService的client端代理,并创建AudioPolicyManager(使用硬件厂商实现的AudioPolicyInterface),注:项目中使用的就是default的AudioPolicyManager
+为什么在APS中也会存在HAL对象呢?APS主要是用来控制Audio系统的,由于各个硬件厂商的控制策略不可能完全一致,所以Android把这些内容抽象成一个HAL对象.
+
+#====================================================================
+8.2 对AudioPolicyInterface的分析,只简单看几个重点函数
+/**
+ * //设置设备的连接状态,这些设备有耳机,蓝牙等
+ */
+(1)setDeviceConnectionState() 
+/**
+ * //设置系统Phone状态,这些状态包括通话状态,来电状态等
+ */
+(2)setPhoneState() 
+/**
+ * //设置force_use的config策略,例如通话中强制使用扬声器
+ */
+(3)setForceUse() 
+/**
+ * audio_io_handle_t是int类型,这个函数的目的是根据传入的参数类型找到合适的输出句柄.这个句柄,在目前的Audio系统代表AF中的某个工作线程.还记得穿件AudioTrack的时候传入的那个output值吗?它就是通过这个函数得来的
+ */
+(4)virtual audio_io_handle_t getOutput()
+/**
+ * 它们的第二个参数表示使用的音频流类型
+ */
+(5)virtual status_t startOutput()
+(6)virtual status_t stopOutput()
+/**
+ * 音量控制：设置不同音频流的音量级别范围，例如MUSIC有15个级别的音量
+ */
+(7)initStreamVolume()
+/**
+ * 设置某个音频流类型的音量级,例如觉得music声音太小时,可以调用这个函数提高音量级
+ */
+(8)setStreamVolumeIndex
 
 
 #====================================================================
+8.3 AudioSystem的介绍
+AudioSystem是一个Native类,这个类在Java层有对应的Java类,其中定义了一些重要的类型,比如音频流流程,音频设备等,这些都在AudioSystem.中
 
+8.3.1 stream type(音频流类型)
+音频流类型有什么用呢?为什么要做这种区分呢?它主要与两项内容有关
+(1)设备选择:例如,之前在创建AudioTrack时,传入的音频流类型是MUSIC,当插上耳机时,这种类型的声音只会从耳机中出来,但如果音频流类型是RING,则会从耳机和扬声器中同时出来.
+(2)音量控制:不同流类型音量级的个数不同,例如,Music类型有15个级别可供用户调节,而有些类型只有7个级别的音量
+
+8.3.2 audio mode(声音模式)
+audio mode和电话的状态有直接关系
+(1)系统有一个DSP,声音的输入输出都要经过它(不考虑蓝牙的情况).但它处理完的数字信号,需通过D/A(数/模)转换后输出到最终的设备上,这些设备包括扬声器,听筒,耳机等
+注意:所谓的设备切换,是指诸如扬声器切换到听筒的情况,而前面提到的音频输出设备,应该指的是DSP.
+(2)系统有两个核心处理器,一个是应用处理的核心,叫AP(Application Processor),可把它当做台式机上的CPU,在着上面可以运行操作系统.另一个和手机通信相关,一般叫BP(Baseband Porcessor基带处理器),可把它当做台式机上的"猫"
+(3)AP和BP都能向音频DSP发送数据,它们在硬件上通路上互不干扰.于是就出现一个问题,即如果两个P同时往DSP发送数据,而互相之间没有协调,就可能出现通话声和音乐声混杂的情况.
+(5)蓝牙没有像AP那样直接和音频DSP的相连,所以音频数据需要单独发给蓝牙设备.如果某种声音要同时从蓝牙和扬声器发出,亦即一份数据要往两个地方发送,便满足了AudioFlinger中DuplicatingThread出现的现实要求
+注意:蓝牙设备实际上会建立两条数据桐庐:SCO和A2DP.A2DP和高质量立体声有关,切必须由AudioFlinger向它发送数据.所以"音频数据需要单独发送给蓝牙设备",这个设备实际上是指蓝牙的A2DP设备.
+
+8.3.3 force use 和config(强制使用及配置)
+手机通话时可以选择扬声器输出,这就是强制使用的案例.Audio系统对此有很好的支持.它涉及到两个方面:
+(1)强制使用何种设备,例如使用扬声器,听筒,耳机等.它由forced_config控制
+(2)在什么情况下需要强制使用,是通话的强制使用,还是听音乐的强制使用?这需由force_use控制.所以,AudioPolicyInterface的setForceUse函数,就是设置在什么情况下强制使用什么设备
+virtual void setForceUse(AudioSystem::force_useusage,//什么情况
+
+                          AudioSystem::forced_configconfig //什么设备
+
+                         )= 0;
+
+8.3.4 输出设备的定义
+Audio定义了很多输出设备,来看其中几个:
+enum audio_devices {
+    //output devices
+    DEVICE_OUT_EARPIECE = 0x1,  //听筒
+    DEVICE_OUT_SPEAKER = 0x2,   //扬声器
+    DEVICE_OUT_WIRED_HEADSET = 0x4,  //耳机
+    DEVICE_OUT_WIRED_HEADPHONE = 0x8, //另外一种耳机
+    DEVICE_OUT_BLUETOOTH_SCO = 0x10, //蓝牙相关，SCO用于通话的语音传输
+    DEVICE_OUT_BLUETOOTH_SCO_HEADSET = 0x20,
+    DEVICE_OUT_BLUETOOTH_SCO_CARKIT= 0x40,
+    DEVICE_OUT_BLUETOOTH_A2DP = 0x80, //蓝牙相关，A2DP用于立体声传输
+    DEVICE_OUT_BLUETOOTH_A2DP_HEADPHONES = 0x100,
+    DEVICE_OUT_BLUETOOTH_A2DP_SPEAKER = 0x200,
+    DEVICE_OUT_AUX_DIGITAL = 0x400,
+    DEVICE_OUT_DEFAULT= 0x8000,
+   ......
+}
 
 #====================================================================
+8.4 AudioPolicyManagerBase的分析
+先来看它的构造函数:
+(1)将APS创建的AudioPolicyClientInterface对象传入
+(2)清空强制使用配置
+(3)加载audioPolicyconfig文件
+(4)初始化声音曲线
+(5)打开已连接设备的所有输出流
+    (5.1)创建一个AudioOutputDescriptor对象,这个对象用来记录并维护与输出设备(相当于硬件的音频DSP)相关的信息,例如使用该设备的流个数,各个流的音量,该设备所支持的采样率,采样精度等.其中,有一个成员mDevice用来表示目前使用的输出设备,例如耳机,听筒,扬声器等
+    (5.2)还记得MixerThread的来历么?openOutput导致AF创建了一个工作线程.该函数返回的是一个工作线程索引号.AMB维护了一个与设备相关的key/value集合.
+    (5.3)设置输出设备,就是设置DSP的数据流到底从什么设备出去,这里设置的是从扬声器出去
+    (5.4)更新不同策略使用的设备
 
-
-#====================================================================
-
-
-#====================================================================
-
-
-#====================================================================
-
-
-#====================================================================
-
-
-#====================================================================
-
+8.4.1 AudioOutputDescriptor和openOutput
+AudioOutputDescriptor对象,是AMB用来控制和管理音频输出设备的,从硬件上看,它代表的是DSP设备.
+另一个重要点是openOutput函数.该函数的实现由APS来完成.之前曾分析过,它最终会在AF中创建一个混音线程(不考虑DirectOutput的情况),该函数返回的是该线程在AF中的索引号,亦即audio_io_handle_t表示的是AF中一个混音线程的索引号.这里涉及到一个非常重要的设计问题:AudioFlinger到底会创建多少个MixerThread?有两种设计方案:
+(1)一种是一个MixerThread对应一个Track.如果这样,AMB仅使用一个audio_io_handle_t恐怕还不够用
+(2)另一种是用一个MixerThread支持32路Track数据,多路数据通过AudioMixer混音对象在软件层面进行混音.
+这里用的是第二种,当初设计为何不用一个MixerThead
 
 #====================================================================
 

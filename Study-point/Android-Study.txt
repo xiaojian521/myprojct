@@ -794,19 +794,24 @@ java虚拟机和Dalvik虚拟机的区别
 https://www.cnblogs.com/cmusketeer/p/8016489.html
 https://www.jianshu.com/p/93e58a9b7e2d
 
-
 #====================================================================
-
-
-
-#====================================================================
+Android OMX介绍
+https://blog.csdn.net/haigand/article/details/91129526
+一.OpenMax简介(缩写为:OMX)
 
 
 #====================================================================
-
-
+Android 音频调试Tee Sink
+https://source.android.google.cn/devices/audio/debugging
 
 #====================================================================
+ANR解决思路
+https://blog.csdn.net/u010164190/article/details/89968237
+
+#====================================================================
+MediaPlayer 播放器全面剖析(一)
+https://www.jianshu.com/p/db7104daa842
+
 
 
 #====================================================================
