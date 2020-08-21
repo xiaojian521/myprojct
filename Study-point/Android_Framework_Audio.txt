@@ -836,6 +836,270 @@ AudioPolicyManager::startOutput()
 这里在详细说明一下audio_io_handle_t,它是AudioTrack/AudioRecordThread/AudioSystem,AudioFlinger,AudioPolicyManager之间一个重要的链接点.当打开输出流设备及创建PlaybackThread时,系统会分配一个全局唯一的值作为audio_io_handle_t,并把audio_io_handle_t和PlaybackThread添加到键值对向量mPlaybackThreads中,由于audio_io_handle_t和PlaybackThread是一一对应的关系,因此拿到一个audio_io_handle_t,就能遍历键值对向量mPlaybackThreads找到它对应的PlayebackThread,可以简单理解audio_io_handle_t为PlaybackThread的线程索引号或线程id
 
 #====================================================================
+10 什么是AudioEffect?
+https://blog.csdn.net/qidi_huang/article/details/53741788?utm_medium=distribute.pc_relevant.none-task-blog-baidulandingword-1&spm=1001.2101.3001.4242
+它实际上是定义在音频Framework层的一种类(Class).由它派生出了Equalizer,Virtualizer,BassBoost,PresetReverb,AudioEffect对象了,再将其应用到AudioTrack或MediaPlayer实例上进行音效控制.由此课件,AudioEffect实际上是一个上层纯软件的概念,通过纯软件的方法对音效进行控制
+
+(1)Equalizer AudioEffect(均衡器)
+均衡器可以被用来改变特定音源输入的频率响应或经混音后的主要输出音频的频率响应.APP在Framework层创建Equalizer对象并实例化一个Equalizer引擎,通过它们可以对每一个频带的增益进行精确地控制
+(2)BassBoost AudioEffect(低音增强器)
+低音增强器被用于增强音频中的低频部分,相当于一个只能对低频声音进行增益控制的简单均衡器,APP在Framework层创建BassBoost对象并实例化一个低音增强引擎
+(3)PresetReverb AudioEffect(预设混响器)
+一个声音在产生后会往各个方向传播.如果这个声音是在室内产生的,接受方会首先听到音源本身发出的声音,然后听到来自墙壁,天花板和地板的回声.这些回声又会在传播到障碍物上时产生二次回声,三次回声..接收方会持续不断地听到声音,这每一次声音的辨识度越来越低,且响度随时间衰减.混响器(Reverb)对于音频接收者的环境建模非常重要,它可以被用于模拟在不同环境中播放音乐产生的效果,或者在游戏中为玩家生成更加沉浸式的音频体验.APP可以通过预设混响器提前配置全局的混响参数,这种方式在音乐播放添加混响效果时被广泛使用.如果APP需要配置更高级的换进声音混响参数,最好使用环境声混响器来实现.APP 在 Framework 层创建 PresetReverb 对象并实例化一个混响引擎。AudioPolicyConfig
+
+#====================================================================
+11. Android开发之音频配置文件audio_policy.conf解析全过程(基于android7.0分析)
+https://blog.csdn.net/qq_33750826/article/details/82455026
+
+11.1 概念:audio_policy.conf顾名思义audio hw模块配置文件,用于加载音频硬件抽象层动态库.得到系统所支持的输入,输出音频设备.
+
+11.2 系统解析
+audio_policy.conf文件是用于加载音频硬件抽象层动态库,而系统音频是否能够输入输出则取决于这些动态库是否能够加载成功.而是否能够加载自定义的音频库,则取决你是否在配置文件中计入自定义的音频库配置信息
+AudioPolicyConfig对象为封装的audio_policy.conf的对象.AudioPolicyConfig对象包含了audio_policy.conf中所有hw音频模块的集合,可获取的输入,输出设备的集合,默认输出设备的集合
+
+11.3 整个audio_policy.conf总结
+...
+global_configuration {  
+  attached_output_devices AUDIO_DEVICE_OUT_SPEAKER
+   #--->addAvailableOutputDevices --->AudioPolicyConfig
+  default_output_device AUDIO_DEVICE_OUT_SPEAKER
+   # --->setDefaultOutputDevice  --->AudioPolicyConfig
+  attached_input_devices AUDIO_DEVICE_IN_BUILTIN_MIC|AUDIO_DEVICE_IN_REMOTE_SUBMIX|AUDIO_DEVICE_IN_DIA_REMOTE
+   # --->addAvailableInputDevices --->AudioPolicyConfig
+}
+...
+audio_hw_modules {  #  --->HwModuleCollection  --->AudioPolicyConfig.setHwModules(hwModules);
+...
+  primary {#--->HwModule.mName--->HwModule（primary）
+  ...
+    global_configuration {   
+      attached_output_devices AUDIO_DEVICE_OUT_SPEAKER  
+      #--->AudioPolicyConfig.addAvailableOutputDevices 
+      default_output_device AUDIO_DEVICE_OUT_SPEAKER
+     # --->AudioPolicyConfig.setDefaultOutputDevice
+      attached_input_devices AUDIO_DEVICE_IN_BUILTIN_MIC
+     # --->AudioPolicyConfig.addAvailableInputDevices
+      audio_hal_version 3.0
+      #--->setHalVersion --->HwModule.mHalVersion
+    }
+    devices {  
+      speaker {  #--->DeviceDescriptor-->DeviceVector-->HwModule.mDeclaredDevices
+        type AUDIO_DEVICE_OUT_SPEAKER  
+        #-->DeviceDescriptor.mDeviceType
+        gains { 
+          gain_1 { 
+#-->AudioGain——>AudioPort.mGains(AudioGainCollection)-->DeviceDescriptor
+            mode AUDIO_GAIN_MODE_JOINT 
+             #--->AudioGain.mode
+            min_value_mB -8400
+            #--->AudioGain.min_value
+            max_value_mB 4000
+            #--->AudioGain.max_value
+            default_value_mB 0
+            #--->AudioGain.default_value
+            step_value_mB 100
+            #--->AudioGain.step_value
+          }
+        }
+      }
+...
+    }
+    outputs { 
+    #OutputProfile-->IOProfile.AudioPort.mRole=AUDIO_PORT_ROLE_SOURCE
+    ...
+      primary {  #OutputProfile-->IOProfile--->AudioPort.mName
+        sampling_rates 48000
+#SampleRateVector-->AudioProfile-->AudioProfileVector-->IOProfile-->AudioPort.mProfiles
+        channel_masks AUDIO_CHANNEL_OUT_STEREO
+#ChannelsVector-->AudioProfile-->AudioProfileVector-->IOProfile-->AudioPort.mProfiles	
+        formats AUDIO_FORMAT_PCM_16_BIT
+#FormatVector-->AudioProfile-->AudioProfileVector-->IOProfile-->AudioPort.mProfiles	
+        devices speaker|HDMI|SPDIF|wired_headphone|wired_headset|BT_sco|BT_sco_headset
+#IOProfile.mSupportedDevices
+        flags AUDIO_OUTPUT_FLAG_PRIMARY
+#IOProfile.mFlags
+      }
+...
+    }
+    inputs { #InputProfile-->IOProfile.AudioPort.mRole=AUDIO_PORT_ROLE_SINK
+      primary { #InputProfile-->IOProfile--->AudioPort.mName
+        sampling_rates 8000|11025|12000|16000|22050|24000|32000|44100|48000
+#SampleRateVector-->AudioProfile-->AudioProfileVector-->IOProfile-->AudioPort.mProfiles
+        channel_masks AUDIO_CHANNEL_IN_MONO|AUDIO_CHANNEL_IN_STEREO
+#ChannelsVector-->AudioProfile-->AudioProfileVector-->IOProfile-->AudioPort.mProfiles	
+        formats AUDIO_FORMAT_PCM_16_BIT
+#FormatVector-->AudioProfile-->AudioProfileVector-->IOProfile-->AudioPort.mProfiles	   
+        devices AUDIO_DEVICE_IN_BUILTIN_MIC|AUDIO_DEVICE_IN_BLUETOOTH_SCO_HEADSET|AUDIO_DEVICE_IN_WIRED_HEADSET
+#IOProfile.mSupportedDevices
+      }
+    }
+    ...
+  }
+  ...
+}
+
+#====================================================================
+12. Android 开发之音频配置文件audio_policy_configuration.xml解析全过程
+https://blog.csdn.net/qq_33750826/article/details/97757590
+
+12.1 前言
+前面我们已经介绍了audio_policy.conf的解析全过程,但是.conf是一种简单的专有格式,有较大的局限性,无法描述电视和汽车等引用的复杂拓扑.Android7.0增加了对使用XML格式来定义音频拓扑的支持,这种文件格式更通俗易懂,具有多种编辑和解析工具,并且足够灵活,可以描述复杂的音频拓扑.
+注意:Android7.0仍支持使用audio_policy.conf;系统会默认使用这种旧版格式.要使用XML文件格式,需要在设备Makefile中添加构建选项USE_XML_AUDIO_POLICY_CONF:=1
+
+12.2 XML格式的优势
+与在.conf文件中一样,新的XML文件支持定义输出输入流配置文件,可用于播放和捕获的设备以及音频属性的数量和类型.此外,XML格式还提供一下增强功能:
+(1)音频配置文件目前的结构类似于HDMI简单音频描述符,支持每种音频格式使用一组不同的采样率/声道掩码
+(2)设备和流之间所有可能连接的显式定义.以前,借助隐式规则,可以使连接到同一HAL模块的所有设备互连,从而阻止音频政策控制使用音频补丁程序API请求的连接.现在,在XML格式中,拓扑描述定义了连接限制
+(3)对"包含"的支持可避免出现重复的标准A2DP,USB或重新导向提交定义.
+(4)可自定义的音量曲线.以前,音量表采用硬编码格式.在XML格式中,音量表通过描述来定义,并且可自定义
+
+12.3 文件格式和位置
+新的音频政策配置文件是audio_policy_configuration.xml,位于/system/etc
+顶层结构中包含与各个音频HAL硬件模块对应的模块,其中每个模块都有一系列混合端口,设备端口和导向:
+(1)混合端口(<mixPorts>)描述了可以在音频HAL处打开以供播放和捕获的流的可能配置文件
+(2)设备端口(<devicePort>)描述了可以附上其类型(以及(可选)地址和音频属性,如果相关)的设备
+(3)导向(<routes>)现在已从混合端口描述符中分离出来,支持描述从设备到设备或流到设备的导向
+
+12.4 解析
+之前解析audio_policy.conf中我们已经知道通过AudioPolicyConfig类来装载整个音频策略文件数据,这里也是一样,通过AudioPolicyConfig来封装audio_policy_configuration.xml所包含的策略数据
+(1)HwModuleCollection mHwModuls;   .xml中所有module模块的集合
+(2)DeviceVector mAvailiableOutputDevices;   .xml中所有output devices模块的集合
+(3)DeviceVector mAvailableInputDevices;   .xml中所有input devices模块的集合
+(4)sp<DeviceDescription> mDefaultOutputDevices;   .xml中默认output devicePort
+(5)VolumeCurvesCollection mVolumeCurves;   .xml中音量集合
+
+12.5 总结
+
+//AudioPolicyConfig
+<audioPolicyConfiguration version="1.0" xmlns:xi="http://www.w3.org/2001/XInclude">
+
+......
+
+//HwModuleCollection--->AudioPolicyConfig.setHwModules(HwModuleCollection);
+<modules>
+	
+		......
+	
+		<!-- Primary Audio HAL -->
+		/**
+			name="primary" 
+			halVersion="2.0"
+		*/
+		// HwModule(name,version )   -->HwModuleCollection.add(HwModule)
+        <module name="primary" halVersion="2.0">
+
+			......
+        
+            <attachedDevices>
+            // sp<DeviceDescriptor> device=HwModule->getDeclaredDevices().getDeviceFromTagName(Earpiece)
+            //AudioPolicyConfig->addAvailableDevice(device);
+                <item>Earpiece</item>
+                ....
+            </attachedDevices>
+            
+            //sp<DeviceDescriptor> device=HwModule->getDeclaredDevices().getDeviceFromTagName(Speaker)
+            //AudioPolicyConfig->setDefaultOutputDevice(device);
+            <defaultOutputDevice>Speaker</defaultOutputDevice>
+            
+            //IOProfileCollection-->HwModule->setProfiles(IOProfileCollection);
+            <mixPorts>
+            /**
+				name="primary output"
+				 role="source"
+				     audio_port_role_t portRole = role == "source" ? AUDIO_PORT_ROLE_SOURCE : AUDIO_PORT_ROLE_SINK;
+
+			*/
+            //IOProfile(name,portRole) extends AudioPort     -->IOProfileCollection.add(IOProfile ); 
+                <mixPort name="primary output" role="source" flags="AUDIO_OUTPUT_FLAG_PRIMARY">
+                 /**
+				AudioProfile.setDynamicFormat(format)
+				AudioProfile->setDynamicChannels(channelMasks);
+				AudioProfile->setDynamicRate(samplingRates);
+				*/
+                //sp <AudioProfile>  -->AudioProfileVector.add(AudioProfile);  --> IOProfile ->setAudioProfiles(AudioProfileVector);
+                    <profile name="" format="AUDIO_FORMAT_PCM_16_BIT"
+                             samplingRates="48000" channelMasks="AUDIO_CHANNEL_OUT_STEREO"/>
+                             
+                           .....
+                           
+                </mixPort>
+                
+                ......
+                
+            </mixPorts>
+            
+            //DeviceVector   --> HwModule->setDeclaredDevices(DeviceVector)
+            <devicePorts>
+                <!-- Output devices declaration, i.e. Sink DEVICE PORT -->
+                //typeName="AUDIO_DEVICE_OUT_EARPIECE"  role="sink"
+                /**
+				audio_port_role_t portRole = (role == Attributes::roleSource) ?
+                AUDIO_PORT_ROLE_SOURCE : AUDIO_PORT_ROLE_SINK;
+    			audio_devices_t type = AUDIO_DEVICE_NONE;
+   			 	if (!DeviceConverter::fromString(typeName, type) ||
+           	 		(!audio_is_input_device(type) && portRole == AUDIO_PORT_ROLE_SOURCE) ||
+            		(!audio_is_output_devices(type) && portRole == AUDIO_PORT_ROLE_SINK)) {
+        				ALOGW("%s: bad type %08x", __FUNCTION__, type);
+       					 return BAD_VALUE;
+   				 }
+				*/
+                //DeviceDescriptor(type,name)  extends AudioPort,AudioPortConfig   --> DeviceVector.add(DeviceDescriptor)
+                <devicePort tagName="Earpiece" type="AUDIO_DEVICE_OUT_EARPIECE" role="sink">
+                /**
+				AudioProfile.setDynamicFormat(format)
+				AudioProfile->setDynamicChannels(channelMasks);
+				AudioProfile->setDynamicRate(samplingRates);
+				*/
+                //sp <AudioProfile>  -->AudioProfileVector.add(AudioProfile);  --> DeviceDescriptor  ->setAudioProfiles(profiles);
+                   <profile name="" format="AUDIO_FORMAT_PCM_16_BIT"
+                            samplingRates="48000" channelMasks="AUDIO_CHANNEL_IN_MONO"/>
+                            
+                            ......
+                </devicePort>
+
+				......
+
+           </devicePorts>
+           
+            <!-- route declaration, i.e. list all available sources for a given sink -->
+            //AudioRouteVector   --> HwModule->setRoutes(AudioRouteVector)
+            <routes>
+            //type="mix"
+            //AudioRoute(type)  -->  AudioRouteVector.add(AudioRoute);
+            //sink="Earpiece"  --->  sp<AudioPort> sink = AudioPolicyConfig->findPortByTagName(sink);
+            //sink->addRoute(AudioRoute);  -->   AudioRoute->setSink(AudioPort);
+            //sources=""primary output,......"    ->  AudioPortVector.add(sp<AudioPort> source = AudioPolicyConfig->findPortByTagName("primary output");)  -->   AudioRoute  ->setSources(AudioPortVector);
+                <route type="mix" sink="Earpiece"
+                       sources="primary output,low_latency,compressed_offload,voip_rx,BT SCO Headset Mic"/>
+                       
+                       ......
+                       
+            </routes>
+
+			......
+
+        </module>
+        
+        ......
+        
+</modules>
+
+.....
+
+</audioPolicyConfiguration>
+
+#====================================================================
+13. Android AudioPolicyService流程详解
+
+13.1 AudioPolicyClient,它是AudioPolicyService的子类,AudioPolicyClient对象在AudioPolicyService::onFirstRef()被创建,并以指针的形式作为参数去创建AudioPolicyManager.所以在AudioPolicyManager里面看到mpClientInterface的调用就是AudioPolicyClient类的方法.其中有两种方式:
+(1)一种是直接通过AudioSystem::get_AudioSystem_flinger()来获得BpAudioFlinger,然后在调用AudioFlinger代码
+(2)两一种方法就是调用AudioPolicyService的方法,将cmd作为一个node方到AudioPolicyService::AudioCommandThread的队列中,然后一个CommandThread会不断的处理这些cmd node,在处理的时候也是通过第一种凡是call到AudioFlinger
+
+13.2 
+
+
+
+#====================================================================
 
 
 
