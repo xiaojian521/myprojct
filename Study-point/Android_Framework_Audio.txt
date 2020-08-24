@@ -835,6 +835,77 @@ AudioPolicyManager::startOutput()
 9.4 audio_io_handler_t概述
 这里在详细说明一下audio_io_handle_t,它是AudioTrack/AudioRecordThread/AudioSystem,AudioFlinger,AudioPolicyManager之间一个重要的链接点.当打开输出流设备及创建PlaybackThread时,系统会分配一个全局唯一的值作为audio_io_handle_t,并把audio_io_handle_t和PlaybackThread添加到键值对向量mPlaybackThreads中,由于audio_io_handle_t和PlaybackThread是一一对应的关系,因此拿到一个audio_io_handle_t,就能遍历键值对向量mPlaybackThreads找到它对应的PlayebackThread,可以简单理解audio_io_handle_t为PlaybackThread的线程索引号或线程id
 
+9.5 音频数据流向:
+1.客户端将数据写入AudioFlinger创建的共享内存
+类名:AudioTrack.cpp
+函数:ssize_t AudioTrack::write(const void* buffer, size_t userSize, bool blocking)
+
+2.MixerThread构造时创建,申请内存空间赋值给mSinkBuffer
+类名:Threads.cpp
+函数:AudioFlinger::MixerThread::MixerThread(const sp<AudioFlinger>& audioFlinger, AudioStreamOut* output,
+        audio_io_handle_t id, audio_devices_t device, bool systemReady, type_t type)
+函数内部调用:(void)posix_memalign(&mSinkBuffer, 32, sinkBufferSize);
+
+3.创建Track时会将MierThread中申请的内存地址mSinkBuffer赋值给成员变量mMainBuffer
+类名:Tracks.cpp
+函数:AudioFlinger::PlaybackThread::Track::Track(
+            PlaybackThread *thread,const sp<Client>& client,
+            audio_stream_type_t streamType,uint32_t sampleRate,
+            audio_format_t format,audio_channel_mask_t channelMask,
+            size_t frameCount,void *buffer,
+            const sp<IMemory>& sharedBuffer,audio_session_t sessionId,
+            int uid,audio_output_flags_t flags,track_type type)
+函数内部调用:mMainBuffer(thread->mixBuffer()),
+
+4.在prepareTracks_l()的时候将active的track的mMainBuffer赋值到AudioMixer中去,这样混音数据就保存到这个buffer了
+类名:Threads.cpp
+函数:AudioFlinger::PlaybackThread::mixer_state AudioFlinger::MixerThread::prepareTracks_l(
+        Vector< sp<Track> > *tracksToRemove)
+函数内部调用:mAudioMixer->setParameter(
+             name,
+             AudioMixer::TRACK,
+             AudioMixer::MAIN_BUFFER, (void *)track->mainBuffer());
+
+5.AudioMix中调用调用getNextBuffer()可以从共享内存中获取声音数据,在进行混音处理
+类名:Tracks.cpp
+函数:status_t AudioFlinger::PlaybackThread::Track::getNextBuffer(
+        AudioBufferProvider::Buffer* buffer)
+函数内部调用:status_t status = mServerProxy->obtainBuffer(&buf);
+
+6.AudioFlinger工作线程将混音后的数据,传入到MonoPipe.进行保存以供FastMixer进行读取
+类名:Threads.cpp
+函数:bool AudioFlinger::PlaybackThread::threadLoop()
+-->函数:ssize_t AudioFlinger::MixerThread::threadLoop_write()
+-->函数:ssize_t AudioFlinger::PlaybackThread::threadLoop_write()
+函数内部调用:ssize_t framesWritten = mNormalSink->write((char *)mSinkBuffer + offset, count);
+注:在MoniPipe.cpp中ssize_t MonoPipe::write(const void *buffer, size_t count)函数会根据当前写入本地缓存数据量的大小,睡眠不同时间的长短
+
+7.FastMixer工作线程将AudioFlinger混音后的数据,再次进行混音,并写到tinyalsa.
+类名:FastMixer.cpp
+函数:void FastMixer::onWork()
+-->函数内部调用:mMixer->process()
+-->函数内部调用:ssize_t framesWritten = mOutputSink->write(buffer, frameCount)
+注:在onWork函数中获取MonoPipe.cpp中的音频数据,进行再次混音.AudioFlinger线程768的数据分4次写入到下层,一次只处理192个字节其他位补0,写了四次(需要在次验证,还不完全确定)
+注2:在FastThread工作函数中,会根据硬件消耗数据的快慢进行适当的sleep
+
+8.将FastMixer处理后的audio数据继续传到硬件设备
+类名:AudioStreamOutSink.cpp
+函数:ssize_t AudioStreamOutSink::write(const void *buffer, size_t count)
+函数内部调用:ssize_t ret = mStream->write(mStream, buffer, count * mFrameSize);
+
+资料整理:
+Android O(8.0)音频write数据流程变化（HIDL
+https://blog.csdn.net/bberdong/article/details/78346729
+android 音频数据在AudioFlinger中的处理（出入口）
+https://blog.csdn.net/shisi/article/details/40080139
+https://blog.csdn.net/vviccc/article/details/105341277
+
+audiomixer分析
+https://blog.csdn.net/WAN8180192/article/details/50705897?locationNum=5&fps=1
+https://www.cnblogs.com/TaigaCon/p/4844919.html
+https://blog.csdn.net/vviccc/article/details/105341277
+https://msd.misuland.com/pd/3181438578597037046
+
 #====================================================================
 10 什么是AudioEffect?
 https://blog.csdn.net/qidi_huang/article/details/53741788?utm_medium=distribute.pc_relevant.none-task-blog-baidulandingword-1&spm=1001.2101.3001.4242
@@ -937,6 +1008,19 @@ audio_hw_modules {  #  --->HwModuleCollection  --->AudioPolicyConfig.setHwModule
   }
   ...
 }
+
+/*描述多个modules*/
+audio_hw_modules {
+    primary { //一个modules对应一个厂家提供的so文件
+      outputs { //一个modules可以有多个output
+        primary {//一个output表明他的参数（primary代表默认设备）
+          sampling_rates  44100|48000 //采样率
+          channel_masks AUDIO_CHANNEL_OUT_STEREO //通道
+          formats AUDIO_FORMAT_PCM_16_BIT //格式
+          /*有哪些device，如喇叭，耳机等等*/
+          devices  AUDIO_DEVICE_OUT_EARPIECE|AUDIO_DEVICE_OUT_SPEAKER|AUDIO_DEVICE_OUT_WIRED_HEADSET|AUDIO_DEVICE_OUT_WIRED_HEADPHONE|AUDIO_DEVICE_OUT_ALL_SCO|AUDIO_DEVICE_OUT_AUX_DIGITAL|AUDIO_DEVICE_OUT_SPDIF
+          flags AUDIO_OUTPUT_FLAG_PRIMARY
+        }
 
 #====================================================================
 12. Android 开发之音频配置文件audio_policy_configuration.xml解析全过程
@@ -1094,9 +1178,39 @@ https://blog.csdn.net/qq_33750826/article/details/97757590
 13.1 AudioPolicyClient,它是AudioPolicyService的子类,AudioPolicyClient对象在AudioPolicyService::onFirstRef()被创建,并以指针的形式作为参数去创建AudioPolicyManager.所以在AudioPolicyManager里面看到mpClientInterface的调用就是AudioPolicyClient类的方法.其中有两种方式:
 (1)一种是直接通过AudioSystem::get_AudioSystem_flinger()来获得BpAudioFlinger,然后在调用AudioFlinger代码
 (2)两一种方法就是调用AudioPolicyService的方法,将cmd作为一个node方到AudioPolicyService::AudioCommandThread的队列中,然后一个CommandThread会不断的处理这些cmd node,在处理的时候也是通过第一种凡是call到AudioFlinger
+补充:实际AudioPolicyService和AudioFlinger属于同一个进程中,但还是使用Binder通信
 
-13.2 
+13.2 AudioPolicyService启动流程分析
+(1)创建tone音效播放线程
+(2)创建命令播放线程
+(3)创建输出界面线程
+(4)判断是否使用老版本的音频策略创建(#ifdef USE_LEGACY_AUDIO_POLICY),创建音频策略管理者
+(5)创建音效类AudioPolicyEffects
 
+13.3 AudioPolicyManager启动流程分析
+(1)赋值AudioPolicyClientInterface参数给本地环境变量,可以通过此对象调用到直接或转线程调用到AudioFlinger侧.
+(2)根据宏定义判断解析xml或conf文件,来加载平台音频策略,如果xml或conf加载都失败,则设置为默认值
+(3)设置音频流对应的音量调节
+代码:mVolumeCurves->initializeVolumeCurves(speakerDrcEnabled);
+(4)解析策略配置后,检索引擎的实例并对其进行初始化,就是创建Engine类作为实际的工作者AudioPolicyManager作为管理者
+(5)打开访问连接设备的所有输出流(mAvailableOutputDevices和mAvailableInputDevice现在包含所有连接的设备)
+    (5.1)遍历mHwModules->mOutputProfiles,通过名称打开对应的音频接口硬件抽象库base name of the audio hw module(primary, a2dp ...)
+        (5.1.1)打开访问连接设备所需的所有输出流,但是只有在应用程序实际需要时才打开直接输出流
+        (5.1.2)根据outProfile创建一个描述符,并传入mpClientInterface,SwAudioOutputDescriptor代表一个设备并且对应着一个输出线程
+        (5.1.3)调用到AudioFlinger侧根据设备创建一个输出工作线程
+        (5.1.4)代码:addOutput(output, outputDesc);
+                   setOutputDevice(outputDesc,
+                        outputDesc->mDevice,
+                        true,
+                        0,
+                        NULL,
+                        address.string());
+    (5.2)遍历mHwModules->mInputProfiles.配置文件中的所有输入设备
+        (5.2.1)根据inProfile创建AudioInputDescriptor描述符
+        (5.2.2)调用AudioFlinger侧根据设备创建对应一个输入线程
+(6)再次确已经为所有连接的设备分配了唯一ID
+(7)确认默认设备是可以访问的
+(8)更新音频设备对应的线程,调用:void AudioPolicyManager::updateDevicesAndOutputs(),遍历路由策略,然后将每种路由策略对应的设备对应到mDeviceForStrategy数组中,如:a音频策略对应着几种设备
 
 
 #====================================================================
