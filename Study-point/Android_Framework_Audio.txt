@@ -835,7 +835,20 @@ AudioPolicyManager::startOutput()
 9.4 audio_io_handler_t概述
 这里在详细说明一下audio_io_handle_t,它是AudioTrack/AudioRecordThread/AudioSystem,AudioFlinger,AudioPolicyManager之间一个重要的链接点.当打开输出流设备及创建PlaybackThread时,系统会分配一个全局唯一的值作为audio_io_handle_t,并把audio_io_handle_t和PlaybackThread添加到键值对向量mPlaybackThreads中,由于audio_io_handle_t和PlaybackThread是一一对应的关系,因此拿到一个audio_io_handle_t,就能遍历键值对向量mPlaybackThreads找到它对应的PlayebackThread,可以简单理解audio_io_handle_t为PlaybackThread的线程索引号或线程id
 
-9.5 音频数据流向:
+9.5 AudioPolicyService中定义的设备类型
+AUDIO_DEVICE_OUT_BLUETOOTH_A2DP
+AUDIO_DEVICE_OUT_BLUETOOTH_A2DP_HEADPHONES(普通蓝牙耳机)
+AUDIO_DEVICE_OUT_BLUETOOTH_A2DP_SPEAKER(蓝牙小音箱)
+//此处属于setForceUse的强制插队
+(if FORCE_SPEAKER)AUDIO_DEVICE_OUT_SPEAKER(扬声器)
+AUDIO_DEVICE_OUT_WIRED_HEADPHONE(普通耳机，只能听，不能操控播放)
+AUDIO_DEVICE_OUT_LINE
+AUDIO_DEVICE_OUT_WIRED_HEADSET(线控耳机)
+AUDIO_DEVICE_OUT_USB_HEADSET(USB耳机)
+...
+AUDIO_DEVICE_OUT_SPEAKER(扬声器)
+
+9.6 音频数据流向:
 1.客户端将数据写入AudioFlinger创建的共享内存
 类名:AudioTrack.cpp
 函数:ssize_t AudioTrack::write(const void* buffer, size_t userSize, bool blocking)
@@ -1172,6 +1185,44 @@ https://blog.csdn.net/qq_33750826/article/details/97757590
 
 </audioPolicyConfiguration>
 
+
+12.6 补充: audio_policy_configuration.xml解析
+https://blog.csdn.net/u012188065/article/details/84104275
+1.xml的层级如下
+(1)xml中包含<modules>包含了多个<module>成员,每个<module>都是一个audio hal(对应代码中的HwModule类)
+(2)每个<module>中包含了多个层级
+
+解析module时,一次解析Audio Mix Port(对应<mixPort>),Audio Device Ports(Source/Sink)(对应<devucePorts>),Audio Routes(对应<routes>)
+
+2.解析<mixPorts>模块
+<mixPorts>中包含了大量的<mixPort>(对应代码中AudioPort的子类IOProfile),共有两大类role,一类是"source",一类是"sink"
+"source"类<mixPort>共同组成了HwModule中的mOutputProfiles,"sink"类的<mixPort>共同组成了HwModule中的mInputProfiles,mOutProfiles+mInputProfiles共同组成了HwMoudle中的mPorts
+
+3.解析<devicePorts>模块
+<devicePorts>包含了许多<devicePort>(对应代码中AudioPort和AudioPortConfig的子类DeviceDescriptor),共同组成了HwModule中的mDeclaredDevices,里面的各个device成员也会加载到先前HwModule类中的mPort.
+
+4.解析<routes>模块
+<routes>中包含了许多<route>(对应代码中的AudioRoute类),顾名思义,是桐庐的意思,其连接port和device的作用.每个<route>实质上是一个MIX或者MUX,以MIX为例,一个MIX包含一个sink(即AudioRoute的mSink)和多个source(分别add到AudioRoute的mSource),此时已经将sink和source建立了简单的关系
+
+5.在AudioPolicyManager构造中会遍历mInputProfiles中的sink和mOutputProfiles中的source和sink
+5.1 以遍历mInputProfiles(sink)为例
+(1)根据<mixPort>中的role="sink"的name,找到<routes>中name一致的<route>
+(2)此<route>中对应了多种source,根据每个source的name,找到<devicePorts>中,tagName一致的<devicePort>
+(3)分别将<devicePort>添加到此sink(类型为sp<IOProfile>)的mSupportedDevices表示此sink支持的sourceDevice设备(即此线程支持哪些设备)
+(4)继续遍历下一个sink
+最后setSupportedDevices设置此sink支持的devices
+
+5.2 以遍历mOutputProfiles(source)为例
+(1)根据<mixPort>中的role="source"的name,找到<routes>中的多个<route>
+(2)找到所有<route>中source等于<mixPort>name的sink字段值
+(3)添加到此source(类型为sp<IOProfile>)的mSupportedDevices,表示此source支持的sinkDevices设备
+(4)继续遍历下一个source,最后setSupportedDevices设置此source支持的devices
+
+6. 解析<attachedDevices>和<defaultOutputDevice>模块
+<attachedDevices>中获取的设备与<devicePorts>中的设备(mDeclaredDevices)取交集,获得了当前设备默认支持的输入输出设备集,即mAvailableOutputDevices,mAvailableInputDevices,为之后播放各种音乐时,选择特定device做铺垫.之后在拔插usb耳机或者3.5mm耳机时,底层会有上报事件,及时去更新mAvaliableOutputDevices和mAvailableInputDevices
+
+<defaultOutputDevice>设置为此HwModule中的默认的设备,一般为speaker设备
+
 #====================================================================
 13. Android AudioPolicyService流程详解
 
@@ -1182,8 +1233,8 @@ https://blog.csdn.net/qq_33750826/article/details/97757590
 
 13.2 AudioPolicyService启动流程分析
 (1)创建tone音效播放线程
-(2)创建命令播放线程
-(3)创建输出界面线程
+(2)创建用于执行audio的命令
+(3)创建用于执行输出的命令
 (4)判断是否使用老版本的音频策略创建(#ifdef USE_LEGACY_AUDIO_POLICY),创建音频策略管理者
 (5)创建音效类AudioPolicyEffects
 
@@ -1214,7 +1265,30 @@ https://blog.csdn.net/qq_33750826/article/details/97757590
 
 
 #====================================================================
+14.动态路由(即汽车音频路由的常规方式)
+https://www.mscto.com/iot/604315.html
+https://msd.misuland.com/pd/4146263742822225278
+开始介绍之前,还需要重点介绍一下动态路由的初始化,它是汽车路由的核心,所以有必要在开始进行介绍
 
+一. 动态路由的初始化
+//packages/services/Car/service/src/com/android/car/CarAudioService.java
+1. CaeAudioService的init开始
+(1)mUseDynamicRouting变量一般定制会在device overlay目录进行覆盖定制,默认为false,不启用动态路由.我们要使用动态路由则设为true
+
+2. setupDynamicRouting()
+(1)获取路由策略
+(2)向AudioPolicyManager注册路由策略
+
+3. getDynamicAudioPolicy()
+(1)获取所有的device端口
+(2)进行context到bus的匹配
+(3)建立路由,通过context建立usage到bus的路由建立
+(4)通过context获取对应的usage集合
+(5)构造一个AudioMix对象,这个对象包含了所有的usage对应关系和device所需的信息
+(5)设置AudioPolicyVolumeCallback
+
+通过CarAudioService,AudioControl,AudioPolicy(audio_policy_configuration.xml)三者相互配合,最终构成从usage到bus的映射关系.
+这里需要说明的是,usage到context是多对一关系(多个usage可以对应一个context类型,但是反过来不行一个context不能对应多个usage),context到bus也是多对一关系,bus到output还是多对一关系
 
 
 #====================================================================
