@@ -919,6 +919,13 @@ https://www.cnblogs.com/TaigaCon/p/4844919.html
 https://blog.csdn.net/vviccc/article/details/105341277
 https://msd.misuland.com/pd/3181438578597037046
 
+9.7 FadeIn和FadeOut
+donghaocheng: 
+FadeOut按照原生逻辑,pasue之后在继续写一包数据下去,做FadeOut也就是用这一包
+FadeIn在Android8之后AudioTrack中添加了Volumeshaper功能就是用来做fade的.AudioTrack接口createVolumeShaper,c++接口applyVolumeShaper
+
+
+
 #====================================================================
 10 什么是AudioEffect?
 https://blog.csdn.net/qidi_huang/article/details/53741788?utm_medium=distribute.pc_relevant.none-task-blog-baidulandingword-1&spm=1001.2101.3001.4242

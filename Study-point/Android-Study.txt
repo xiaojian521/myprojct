@@ -813,13 +813,28 @@ MediaPlayer 播放器全面剖析(一)
 https://www.jianshu.com/p/db7104daa842
 
 
+#====================================================================
+【Android N兼容问题】Android N上系统预置应用调用第三方库初始化失败
+https://blog.csdn.net/TaylorPotter/article/details/72850804
+描述:当Android平台预安装第三方库的时候
+相关文档(Android官方文档)
+Android 7.0 行为变更#NDK 应用链接至平台库
+https://developer.android.google.cn/about/versions/nougat/android-7.0-changes.html#perm
+Android中adb push和adb install的使用区别:
+http://www.cnblogs.com/permanent2012moira/p/4181317.html
+Framework基础：AndroidN公共so库怎么定义:
+http://www.qingpingshan.com/rjbc/az/247686.html
+Android N加载系统私有库时出现is not accessible for the namespace错误和针对该错误的解决方法:
+http://blog.csdn.net/wjskeepmaking/article/details/70153995
+
+Android预安装第三方App时修改方法:
+1.修改文件:system/core/libnativeloader/native_loader.cpp
+将第三方应用加载库的路径补充到kWhitelistedDirectories此变量下
+如:static constexpr const char* kWhitelistedDirectories = "/data:/mnt/expand:/product/app";
 
 #====================================================================
-
-
-
-#====================================================================
-
+Android.mk官方文档详解
+https://developer.android.google.cn/ndk/guides/android_mk
 
 #====================================================================
 
