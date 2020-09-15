@@ -735,14 +735,14 @@ list.removeIf(e->e==null);
 3.3 变量作用域
 通常,你可能希望能够在lambda表达式中访问外围方法或类中的变量.考虑下面这个例子:
 public static void repeatMessage(String text, int delay) {
-    ActiobListener listener = event -> {
+    ActionListener listener = event -> {
         System.out.println(text);
         Toolkit.getDefaultToolkit().beep();
     }
     new Timer(delay, listener).start();
 }
 //调用,Prints Hello every 1,000 milliseconds
-repeartMessage("Hello",1000);
+repeatMessage("Hello",1000);
 从上述例子看:
 lambda表达式的代码可能会在repeatMessage调用返回很久以后才运行,而那时这个参数变量已经不存在了.如何保留text变量呢?
 lambda表达式有3个部分:
@@ -893,7 +893,6 @@ public class Talking {
     public class TimerPrint implements ActionListener {
         public void actionPerformed() {
             ...
-        }
     }
 }
 注释:TimePrinter类声明为私有的.这样一来,只有TalkingClock的方法才能够构造TimePrinter对象.只有内部类可以是私有的,而常规类值可以具有可见性,或公有可见性
@@ -961,65 +960,476 @@ for(int i = 0; i < dates.lenght; i++) {
     };
 }
 
+6.4 匿名内部类
+加入只创建这个类的一个对象,就不必命名了.这种类被称为匿名内部类(anonymous inner class)
+通常的语法格式为:
+new SuperType(construction parameters) {
+    inner class methods and data
+}
+其中,SuperType可以使ActionListener这样的接口,于是内部类就要实现这个接口.SuperType也可以是一个类,于是内部类就要扩展它.
+
+注释:下面的技巧称为"双括号初始化",这里利用了内部类语法.假设你想构造一个数组列表,并将它传递到一个方法:
+ArrayList<String> friends = new ArrayList<>();
+friends.add("Harry");
+friends.add("Tony");
+invite(friends);
+如果不需要这个数组列表,最好让它作为一个匿名列表.不过作为一个匿名列表,该如何为它添加元素呢?方法如下:
+invite(new ArrayList<String>() {{add("Harry");add("Tony");}});
+
+6.5 静态内部类
+有时候,使用内部类只是为了把一个类隐���在另外一个类的内部,并不需要内部类引用外围类对象.为此,可以将内部类声明为static,以便取消产生的引用.
+静态内部类的对象除了没有对生成它的外围类对象的引用特权外,与其他所有内部类完全一样.在我们列举的示例中,必须使用静态内部类,这是由于内部类对象是在静态方法中构造的:
+public static Pair minmax(double[] d) {
+    ...
+    return new Pair(min,max);
+}
+如果没有将Pair类声明为static,那么编译器将会给出错误报告:没有可用的隐式ArrayAlg类型对象初始化内部类对象
+
+注释:
+(1)在内部类不需要访问外围类对象的时候,应该使用静态内部类.有些程序员用嵌套类表示静态内部类
+(2)与常规内部类不同,静态内部类可以有静态域和方法
+(3)声明在接口中的内部类自动成为static和public类
 
 #====================================================================
-
-
-#====================================================================
-
-#====================================================================
-
+7. 代理
+利用代理可以在运行时创建一个实现了一组给定接口的新类.这种功能只有在编译时无法确定需要实现哪个接口时才有必要使用.
+不做过多解释详见(P259页)
 
 #====================================================================
+第七章 异常,断言和日志
+#====================================================================
+1.异常分类
+所有的异常都是由Throwable继承而来,但在下一层立即分解为两个分之:Error和Exception.Error层次结构描述了Java运行时系统的内部错误和资源耗尽错误.应用程序不应该抛出这种类型的对象.
+在设计Java程序时,需要关注Exception层次结构.这个层次结构又分解为两个分之:一个分之派生于RuntimeException;另一个分之包含其他异常.划分两个分之的规则是:由程序错误导致的异常属于RuntimeException;而程序本身没有问题,但由于像I/O错误这类问题导致的异常属于其他异常.
+派生于RuntimeException的异常包含下面几种情况:
+(1)错误的类型转换
+(2)数组访问越界.
+(3)访问null指针
+不是派生于RuntimeException的异常包括:
+(1)试图在文件尾部后面读取数据;
+(2)试图打开一个不存在的文件
+(3)试图根据指定的字符串查找Class对象,而这个字符串表示的类并不存在
 
+C++注释:如果熟悉标准C++类库中的异常层次结构,就一定会感到有些困惑.C++有两个基本的异常类,一个是runtime_error;另一个是logic_error.logic_error类相当于Java中的RuntimeException,它表示程序中的逻辑错误;runtime_error类是所有由于不可预测的原因所引发的异常的基类.它相当于Java中的非RuntimeException异常. 
 
 #====================================================================
-
-
-#====================================================================
-
-
-#===r================================================================
-
-
-#====================================================================
-
-#====================================================================
-
+2. 声明受查异常
+在自己编写方法时,不必将所有可能抛出的异常都进行声明.以下4种情况时应该抛出异常:
+(1)调用一个抛出受查异常的方法,例如,FileInputStream构造器
+(2)程序运行过程中发现错误,并且利用throw语句抛出一个受查异常
+(3)程序出现错误,例如,a[-1]=0会抛出一个ArrayIndexOutOfBoundsException这样的非受查异常.
+(4)Java虚拟机和运行时库出现的内部错误
+如果没有处理器捕获这个异常,当前执行的线程就会结束.
+注释:如果在子类中覆盖了超类的一个方法,子类方法中声明的受查异常不能比超类方法中声明的异常更通用(也就是说,子类方法中可以抛出更特定的异常,或者根本不抛出任何异常).特别需要说明的是,如果超类方法没有抛出任何受查异常,子类也不能抛出任何受查异常.例如,如果覆盖JComponent.paintComponent方法,由于超类中这个方法没有抛出任何异常,所以自定义的paintComponent也不能排除任何受查异常.
+C++注释:Java中throws说明符与C++中的throw说明符基本类似,但有一点重要的区别.在C++中,throw说明符在运行时执行,而不是在编译时执行.也就是说,C++编译器将不处理任何异常规范.但是,如果函数抛出的异常没有出现在throw列表中,就会调用unexpected函数,这个函数的默认处理方式是终止程序的执行.另外,在C++中,如果没有给出throw说明,函数可能会抛出任何异常.而在Java中,没有throws说明符的方法将不能抛出任何受查异常.
 
 #====================================================================
-
-
-#====================================================================
-
-
-#====================================================================
-
-
-#====================================================================
-
-
-#====================================================================
-
+3. 创建异常类
+我们需要做的只是定义一个派生于Exception的类,或者派生于Exception子类的类.
+示例:
+class FileFormatException extends IOException {
+    public FileFormatException() {}
+    public FileFormatException(String gripe) {
+        super(gripe);
+    }
+}
 
 #====================================================================
+4. 捕获异常
+想要捕获一个异常,必须设置try/catch语句块.
+请记住,编译器严格地执行throws说明符.如果调用了一个抛出受异常的方法,就必须对它进行处理,或者继续传递.
+通常,应该捕获那些知道如何处理的异常,而将那些不知道怎么处理的异常继续进行传递.
+异常对象可能包含与异常本身有关的信息.要想获得对象的更多信息,可以试着使用e.getMessage();
+得到详细的错误信息,或者使用e.getclass().getName();得到异常对象的实际类型.
+
+4.1 捕获多个异常
+在Java SE7中,同一个catch字句中可以捕获多个异常类型.例如,假设对应缺少文件和未知主机异常的动作是一样的,就可以合并catch字句:
+try {
+    catch that might thorw exceptions
+}
+catch(FileNotFoundException | UnknowHostException e) {
+    emergency action for missing files and unknown hosts
+}
+catch(IOException e) {
+    emergency action for all other I/O problems
+}
+注释:捕获多个异常时,异常变量隐含为final变量.例如,不能在一下子句中为e赋不同的值:
+catch(FileNotFoundException | UnknowHostException e) {...}
+
+4.2 再次抛出异常与异常链
+下面给出了捕获异常并将它再次抛出的基本方法:
+try {
+    access the datebase
+} 
+catch(SQLException e) {
+    throw new ServletException("database error: " +　e.getMessage());
+}
+可以有一种更好的处理方法,并且将原始异常设置为新异常的"原因":
+try {
+    access the datebase
+} 
+catch(SQLException e) {
+    Throwable se = new ServletException("database error");
+    se.initCause(e);
+    throw new ServletException("database error: " +　e.getMessage());
+}
+当捕获到异常时,就可以使用下面这条语句重新得到原始异常:
+Throwable e = se.getCause();
+
+4.3 finally子句
+当代码抛出一个异常时,就会终止方法中剩余代码的处理,并退出这个方法的执行.
+不管是否有异常被捕获,finally子句中的代码都被执行.在下面的示例中,程序将在所有情况下关闭文件.
+InputStream in = new FileInputStream(...);
+try {
+    //1
+    code that might throw exceptions
+    //2
+} 
+catch (IOException e) {
+    //3
+    show error message
+    //4
+}
+finally {
+    //5
+    in.close();
+}
+//6
+在上面这段代码中,有下列3种情况会执行finally子句:
+(1)代码没有抛出异常.在这种情况下,程序首先执行try语句块中的全部代码,然后执行finally子句中的代码.随后,继续执行try语句块之后的第一条语句.也就是说,执行标注1,2,5,6处
+(2)抛出一个在catch子句中捕获的异常.在上面的示例中就是IOException异常.在这种情况下,程序将执行try语句块中的所有代码,直到发生异常为止.此时,将跳过try语句块中的剩余代码,转去执行与该异常匹配的catch子句中的代码,最后执行finally子句中的代码.
+   (2.1)如果catch子句没有抛出异常,程序将执行try语句块之后的第一条语句.在这里,执行标注1,3,4,5,6处的语句.
+   (2.2)如果catch子句抛出一个异常,异常将被抛回这个方法的调用者.在这里,执行标注1,3,5处
+(3)代码抛出了一个异常,但这个异常不是由catch子句捕获的.在这种情况下,程序将执行try语句块中的所有语句,直到有异常被抛出为止.此时,将跳过try语句块中的剩余代码,然后执行finally子句的中语句,并将异常抛给这个方法的调用者.在这里,执行标注1,5处的语句.
+try语句可以只有finally子句,而没有catch子句.例如,下面这条try语句:
+InputStream in = ...;
+try {
+    code that might throw exception
+}
+finally{
+    in.close();
+}
+无论在try语句块中是否遇到异常,finally子句中的in.close()语句都会被执行.
+提示:这里,强烈建议解耦合try/catch和try/finally语句块.这样可以提高代码的清晰度.例如:
+InputStream in = ...;
+try {
+    try {
+        code that might throw exception
+    }
+    finally {
+        in.close();
+    }
+}
+catch() {
+    show error message
+}
+内层的try语句块只有一个职责,就是确保关闭输入流.外层的try语句块也只有一个职责,就是确保报告出现的错误.这种设计方式不仅清楚,而且还具有一个功能,就是将会报告finally子句中出现的错误.
+
+警告:当finally子句包含return语句时,将会出现一种意想不到的结果.假设利用return语句从try语句块中退出.在方法返回前,finally子句的内容将被执行.如果finally子句中也有一个return语句,这个返回值将会覆盖原始的返回值.亲看一个复杂的例子:
+public static int f(int n) {
+    try {
+        int r = n * n;
+        return r;
+    }
+    finally {
+        if(n == 2) return 0;
+    }
+}
+如果调用f(2),那么try语句块的计算结果为r = 4,并执行return语句.然而,在方法真正返回前,还要执行finally子句.finally子句将使得方法返回0,这个返回值覆盖了原始的返回值4.
+
+4.4 带资源的try语句
+对于以下代码模式:
+open a resource
+try {
+    work with the resource
+}
+finally {
+    close the resource
+}
+假设资源属于一个实现了AutoCloseable接口的类,Java SE7为这种代码模式提供了一个很有用的快捷方式.AutoCLoseable接口有一个方法:
+void close throws Exception
+带资源的try语句(try-with-resources)的最简形式为:
+try(Resource res = ...) {
+    work with res
+}
+try块退出时,会自动调用res.close().下面给出一个典型的例子,这里要读取一个文件中的所有单词:
+try(Scanner in = new Scanner(new FileInputStream("/usr/share/dict/words"),"UT-8")) {
+    while(in.hasNext()) {
+        System.out.println(in.next());
+    }
+}
+这个块正常退出时,或者存在一个异常时,都会调用in.close()方法,就好像使用了finally块一样.还可以指定多个资源.例如:
+try(Scanner in = new Scanner(new FileInputStream("/usr/share/dict/words"),,"UT-8");
+    PrintWriter out = new PrintWriter("out.txt")) {
+    while(in.hasNext()) {
+        out.println(in.next().toUpperCase());
+    }
+}
+不论这个块如何退出,in和out都会关闭.如果你用常规方式手动编程,就需要两个嵌套的try/finally语句.上一节已经看到如果try块抛出一个异常,而close方法也抛出一个异常,这就会带来一个难题.带资源的try语句可以很好地处理这种情况.原来的异常会重新抛出.而close方法抛出的异常会"被抑制".这些异常将自动捕获,并由addSuppressed方法增加到原来的异常.如果对这些异常感兴趣,可以调用getSuppressed方法,它会得到从close方法抛出并被抑制的异常列表.
+注释:带资源的try语句自身也可以有catch子句和一个finally子句.这些子句会在关闭资源之后执行.不过在实际中,一个try语句中加入这么多内容可能不是一个好主意
 
 #====================================================================
-
+5. 分析堆栈轨迹元素
+堆栈轨迹(stack trace)是一个方法调用过程的列表,它包含了程序执行过程中方法调用的特定位置.
+(1)可以调用Throwable类的printStackTrace方法访问堆栈轨迹的文本描述信息:
+Thowable t = new Throwable();
+StringWriter out = new StringWriter();
+t.printStackTrace(new PrintWriter(out));
+String description = out.toString();
+(2)一种更灵活的方法是使用getStackTrack方法,它会的到StackTraceElement对象的一个数组,可以在你的程序中分析这个对象数组,例如:
+Throwable t = new Throwable();
+StackTraceElement[] frames = t.getStackTrace();
+for(StackTraceElement frame : frames)
+    analyze frame
+StackTraceElement类含有能够获得文件名和当前执行的代码行号的方法,同时,还含有能够获得类名和方法名的方法.toString方法将会产生一个字符串,其中包含所获得的信息.
+(3)静态的Thread.getAllStackTrace方法,它可以产生所有线程的堆栈轨迹.西面给出使用这个方法的具体法师:
+Map<Thread,StackTraceElement[]> map = Thread.getAllStackTrace();
+for(Thread t : map.keyset()) {
+    StackTraceElement[] frames = map.get(t);
+    analyze frames
+}
 
 #====================================================================
+6. 使用断言
+断言机制允许在测试期间向代码中插入一些检查语句.当代码发布时,这些插入的检测语句将会被自动地移走.
+Java语言引入了关键字assert.这个关键字有两种形式:
+(1)assert : 条件
+(2)assert 条件 : 表达式
+这两种形式都会对条件进行检测,如果结果为false,则抛出一个AssertionError异常.在第二种形式中,表达式将被传入AssertionError的构造器,并转换成一个消息字符串.
+注释:"表达式"部分的唯一目的是产生一个消息字符串.AssertionError对象并不存储表达式的值.因此,不可能在以后得到它.
 
+6.1 使用断言完成参数检查
+在Java语言中,给出了3种处理系统错误的机制:
+(1)抛出一个异常
+(2)日志
+(3)使用断言
+什么时候应该选择使用断言呢?请记住下面几点
+(1)断言失败是致命的,不可回复的错误
+(2)断言检查只用于开发和测试阶段
 
 #====================================================================
+第八章 泛型程序设计
+#====================================================================
+1. 定义简单泛型类
+一个泛型类就是具有一个或多个类型变量的类.
+泛型类可以有多个类型变量.例如,可以定义Pair类,其中第一个域和第二个域使用不同的类型:
+public class Pair<T,U>{...}
+注释:类型变量使用大写形式,且比较短,这是很罕见的.在Java中,使用变量E表示集合的元素类型,K和V分别表示表的关键字与值的类型.T(需要时还可以用临近的字母U和S)表示"任意类型"
 
+1.1 泛型方法
+实际上,还可以定义一个带有类型参数的简单方法
+class ArrayAlg {
+    public static <T> T getMiddle(T... a) {
+        return a[a.lenght/2];
+    }
+}
+泛型方法可以定义在普通类中,也可以定义在泛型类中.
+当调用一个泛型方法时,在方法名前的尖括号中放入具体的类型:
+String middle = ArrayAlg.<String>getMiddle("John","o","Public");
+在这种情况下,方法调用中可以省略<String>类型参数.编译器有足够的信息能够推断出所调用的方法.它用names的类型(即String[])与泛型类T[]进行匹配并推断出T一定是String.也就是说,可以调用:
+String middle = ArrayAlg.getMiddle("John","o","Public");
+几乎在大多数情况下,对于泛型方法的类型引用没有问题.偶尔,编译器也会提示错误,此时需要解释错误报告.
+
+1.2 类型变量的限定
+有时,类或方法需要对类型变量加以约束.下面是一个典型的例子.我们要计算数组中的最小元素:
+class ArrayAlg {
+    public static <T> T min(T[] a) {//almost correct 
+        if(a == null || a.lenght ==0) return null;
+        T smallest = a[0];
+        for (int i = 1; i < lenght; i++)
+            if(smallest.compareTo(a[i] > 0)) smallest = a[i];
+        return smallest;
+    }
+}
+怎么才能确信T所属的类有compareTo方法呢?
+解决这个问题的方案是将T限制为实现了Compareable接口的类.可以通过对类型变量T设置限定(bound)实现这一点:
+public static <T extends Comparable> T min(T[] a)....
+现在,泛型的min方法只能被实现了Comparable接口的类(如String,LocalDate)等的数组调用.由于Rectangle类没有实现Comparable接口,所以调用min将会产生一个编译错误.
+
+注释:为什么使用关键字extends而不是implements?毕竟Comparable是一个接口,下面的记法:
+<T extends BoundingType>
+表示T应该是绑定类型的子类型.T和绑定类型可以是类,也可以是接口.选择关键字extends的原因是更接近子类的概念,并且Java的设计者也不打算在语言中在添加一个新的关键字.
+一个类型变量或通配符可以有多个限定,例如:
+T extends Comparable & Serializeable
+限定类型用"&"分隔,而逗号用来分隔类型变量.在Java的继承中,可以根据需要拥有多个接口超类型,但限定中至多有一个类.如果用一个类作为限定,它必须是限定列表中的第一个
+
+1.3 翻译泛型表达式
+需要记住有关Java泛型转换的事实:
+(1)虚拟机中没有泛型,只有普通的类和方法
+(2)所有的类型参数都用它们的限定类型替换
+(3)桥方法被合成来保持多态
+(4)为保持类型安全性,必要时插入强制类型转换
 
 #====================================================================
+2. 约束与局限性
+2.1 不能用基本类型实例化类型参数
+不能用类型参数代替基本类型.因此,没有Pair<double>.只有Pair<Double>.当然,其原因是类型擦书.擦除之后,Pair类含有Object类型的域,而Object不能存储double值.
 
+2.2 不能创建参数化类型的数组
+例如:
+Pair<String>[] table = new Pair<String>[10]; //Error
+需要说明的是,只是不允许创建这些数组,而声明类型为Pair<String>[]的变量仍是合法的.不过不能用new Pair<String>[10]初始化这个变量.
+注释:可以声明通配类型的数组,然后进行类型转换:
+Pair<String>[] table = (Pair<String>[])new Pair<?>[10];
+结果将是不安全的.如果在table[0]中存储一个Pair<Employee>,然后对table[0].getFirst()调用一个String方法,会得到一个ClassCastException异常.
+提示:如果需要收集参数化类型对象,只有一种安全而有效的方法:使用ArrayList::ArrayList<Pair<String>>.
+
+2.3 Varargs警告
+Java不支持泛型类型的数组.这一节中我们再来讨论一个相关的问题:向参数个数可变的方法传递一个泛型类型的实例.
+考虑下面这个简单的方法,它的参数个数是可变的:
+public static <T> void addAll(Collection<T>,T... ts) {
+    for(t:ts)coll.add(t);
+}
+为了调用这个方法,Java虚拟机必须建立一个Pair<String>数组,这就违反了前面的规则.不过,对于这种情况,规则有所松动,你只会得到一个警告,而不是错误.
+可以采用两种方法来抑制这个警告.一种方法是为包含addAll调用的方法增加注解@SuppressWarning("unchecked").或者在JavaSE7中,还可以用@SafeVarargs直接标注addAll方法:
+
+2.4 不能实例化类型变量
+不能使用像 new T(...),new T[...]或 T.class这样的表达式中的类型变量.例如,下面的Pair<T>构造器就是非法的:
+public Pair() {
+    first = new T();
+    second = new T();//Error
+}
+类型擦除将T改变成Object,而且,本意肯定不希望调用new Object().在Java SE8之后,最好的解决办法是让调用者提供一个构造器表达式.例如:
+Pair<String> p = Pair,makePair(String::new);
+
+2.5 不能构造泛型数组
+就像不能实例化一个泛型实例一样们也不能实例化数组,不过原因有所不同,毕竟数组会填充null值,构造时看上去是安全的.不过,数组本身也有类型,用来监控存储在虚拟机中的数组.这个类型会被擦除.例如,考虑下面的例子:
+public static <T extends Comparable> T[] minmax(T[] a) {
+    T[] mm = new T[2];...
+}//Error
+
+2.6 泛型类的静态上下文中类型变量无效
+不能在静态域或方法中引用类型变量,例如:
+public class Singleton<T> {
+    private static T singleInstance; //Error
+
+    public static T getSingleInstance() {//Error
+        if(singleInstance == null) construction new instance of T
+        return singleInstance;
+    }
+}
+
+2.7 不能抛出或捕获泛型类的实例
+既不能抛出也不能捕获泛型类对象.实际上,真是泛型类扩展Throwable都是不合法的.
+例如:
+public class Problem<T> extends Exception{/** */}//Error--can not extend Throwable
+catch子句中不能使用类型变量.例如,以下方法将不能编译:
+public static <T extends Throwable> void doWork(Class<T> t) {
+    try {
+        do work
+    }
+    catch (T e) { //Error--can not catch type variable
+        Logger.global.info(...)
+    }
+}
+不过,在异常规范中使用类型变量是允许的.以下方法是合法的:
+public static <T extends Throwable>void doWork(T t) throws T { //OK 
+    try {
+        do work
+    } catch (Throwable realCause) {
+        t.initCause(realCause);
+        throw t;
+    }
+}
 
 #====================================================================
+3. 通配符类型
+3.1 通配符概念
+通配符类型中,允许类型参数变化.例如,通配符类型
+Pair<? extends Employee>
+表示任何泛型Pair类型,它的类型参数是Employee的子类,如Pair<Manager>,但不是Pair<String>.
+假设要编写一个打印雇员对的方法,像这样:
+public static void printBuddies(Pair<Employee> p) {}
+正如前面讲到的,不能将Pair<Manager>传递给这个方法.解决的方法很简单:使用通配符类型:
+public static void printBuddies(Pair<? extends Employee> p);
 
+3.2 通配符的超类型限定
+通配符限定与类型变量限定十分类似,但是,还有一个附加的能力,即可以指定一个超类型限定(supertype bound),如下所示:
+? super Manager
+这个通配符限制为Manager的所有超类型.
+示例:
+public static void minmaxBouns(Manager[] a, Pair<? super Manager> result) {}
+
+3.3 无限定通配符
+还可以使用无限定的通配符,例如,Pair<?>.
+Pair<?>和Pair本质的不同在于:可以用任意Object对象调用原始Pair类的setObject方法
 
 #====================================================================
+4. 反射和泛型
+4.1 虚拟机中的泛型类型信息
+可以使用反射API来确定:
+(1)这个泛型方法有一个叫做T的类型参数.
+(2)这个类型参数有一个子类型限定,其自身又是一个泛型类型
+(3)这个限定类型有一个通配符参数
+(4)这个通配符参数有一个超类型限定
+(5)这个泛型方法有一个泛型数组参数
+
+#====================================================================
+第九章 集合
+#====================================================================
+1. 如果需要一个循环数组队列,就可以使用ArrayDeque类.如果需要一个链表队列,就直接使用LinkedList类,这个类实现了Queue接口.
+
+1.1 Collection接口
+在Java类库中,集合类的基本接口是Collection接口.这个接口有两个基本方法:
+public interface Collection<E> {
+    boolean add(E element);
+    Iterator<E> iterator():
+    ...
+}
+
+1.2 迭代器
+Iterator接口包含4个方法
+public interface Iterator<E> {
+    E next():
+    boolean hasNext();
+    void remove();
+    default void forEachRemaining(Consumer<? super E> action);
+}
+Collection接口扩展了Iterable接口.因此,对于标准类库中的任何集合都可以使用"for each"循环.
+在Java SE8中,甚至不用写循环.可以调用forEachRemaining方法并提供一个lambda表达式.将对迭代器的每一个元素调用这个lambda表达式,直到在没有元素为止.
+iterator.forEachRemaining(elment->do something with element);
+元素被访问的顺序取决于集合类型.如果对ArrayList进行迭代,迭代器将从索引0开始,每迭代一次,索引值加1.然而,如果访问HashSet中的元素,每个元素将会按照某种随机的次序出现.虽然可以确定在迭代过程中能够遍历到集合中的所有元素,但却无法预知元素被访问的次序.
+
+#====================================================================
+2. Java库中的具体集合
+ArrayList       一种可以动态增长和缩减的索引序列
+LinkedList      一种可以在任何位置进行高效地插入和删除操作的有序序列
+ArrayDeque      一种用循环数组实现的双端队列
+HashSet         一种没有重复元素的无序集合
+TreeSet         一种有序集
+EnumSet         一种包含枚举类型值的集
+LinkedHashSet   一种可以记住元素插入次序的集
+PriorityQueue   一种允许搞笑删除最小元素的集合
+HashMap         一种存储键/值关联的数据结构
+TreeMap         一种键值有序排列的映射表
+EnumMap         一种键值属于枚举类型的映射表
+LinkedHashMap   一种可以记住键/值项添加次序的映射表
+WeakHashMap     一种其值无用武之地后可以被垃圾回收器回收的映射表
+IdenityHashMap  一种用==而不是用equals比较键值的映射表
+
+#====================================================================
+3. 数组列表
+对于一个经验丰富的Java程序员来说,在需要动态数组时,可能会使用Vector类.为什么要用ArrayList取代Vector呢?原因很简单:Vector类的所有方法都是同步的.可以由两个线程安全地访问一个Vector对象.但是,如果由一个线程访问Vector,代码要在同步操作上耗费大量的时间.这种情况还是很常见的.而ArrayList的方法不是同步的,因此,建议在不需要同步时使用ArrayList,而不要使用Vector.
+
+#====================================================================
+4. 散列集
+散列表可以用于实现几个重要的数据结构.其中最简单的是set类型.set是没有重复元素的元素集合.
+
+#====================================================================
+5. 树集
+TreeSet类与散列集十分类似,不过,它比散列集有所改进.树集是一个有序集合.可以以任意顺序将元素插入到集合中,在对集合进行遍历时,每个值将自动地按照排序后的顺序呈现.
+注释:要使用树集,必须能够比较元素.这些元素必须实现Comparable接口,或者构造集时必须提供一个Comparator.
+从JavaSE6起,TreeSet类实现了NavigableSet接口.这个接口增加了几个便于定位元素以及反向遍历的方法.
+
+#====================================================================
+6. 优先级队列
+优先级队列(priority queue)中的元素可以按照任意的顺序插入,却总是按照排序的顺序进行检索.也就是说,无论何时调用remove方法,总会获得当前优先级队列中最小的元素.然而,优先级队列并没有对所有的元素进行排序.如果用迭代的方式处理这些元素,并不需要对它们进行排序.优先级队列使用了一个优雅且高效的数据结构,称为堆(heap).堆是一个可以自我调整的二叉树,对树执行添加(add)和删除(remore)操作,可以让细小的元素移动到根,而不必花费时间对元素进行排序.
+与TreeSet一样,一个优先级队列既可以保存实现了Comparable接口的类对象,也可以保存在构造器中提供的Comparator对象.使用优先级队列的典型示例是任务调度.每一个任务有一个优先级,任务以随机顺序添加到队列中.每当启动一个新的任务时,都将优先级最高的任务从队列中删除.
+
+#====================================================================
+7. 映射
+Java类库为映射提供了两个通用的实现:HashMap和TreeMap.这两个类都实现了Map接口.散列映射对键进行散列,树映射用键的整体顺序对元素进行排序,并将其组织成搜索树.散列或比较函数只能作用于键.与键关联的值不能进行散列或比较.
+
 
 #====================================================================
 
