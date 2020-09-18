@@ -2,7 +2,10 @@ Linux Alsa Study
 #=======================================================================
 资料文档:
 (1)Alsa音频编程【精华】 https://www.cnblogs.com/cslunatic/p/3677729.html
-
+(2)ALSA开发详解 https://blog.csdn.net/haohenghai/article/details/22283491
+(3)ALSA之PCM分析 https://blog.csdn.net/azloong/article/details/6146378?utm_medium=distribute.pc_relevant_t0.none-task-blog-BlogCommendFromMachineLearnPai2-1.channel_param&depth_1-utm_source=distribute.pc_relevant_t0.none-task-blog-BlogCommendFromMachineLearnPai2-1.channel_param
+(4)ALSA分析 https://blog.csdn.net/zhang_danf/article/details/38824013?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-1.channel_param&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-1.channel_param
+(5)alsa frame period period_size buffer_size 等解释 https://blog.csdn.net/spark550/article/details/80441499
 
 #=======================================================================
 1.基本概念
@@ -19,10 +22,21 @@ Linux Alsa Study
 (8)比特率(Bits Per Second):比特率表示每秒的比特数,比特率=采样率*声道数*样本长度
 
 #=======================================================================
-
+2. ALSA基础
+ALSA由许多声卡的声卡驱动程序组成,同时它也提供一个称为libasound的API库
+应用程序开发者应该使用libasound而不是内核中的ALSA接口,因为libasound提供最高级并且变成方便的编程接口.并且提供一个设备逻辑命名功能,这样开发者甚至不需要知道类似设备文件这样的低层接口.
+相反,OSS/Free驱动是在内核系统调用级上变成,它要求开发者提供设备文件名并且利用ioctrl来实现相应的功能.
+ALSA包含插件功能,使用插件可以扩展新的声卡驱动,包括完全用软件实现的虚拟声卡
 
 #=======================================================================
-
+3. ALSA体系结构
+ALSA API可以分解成以下几个主要的接口:
+(1)控制接口:提供管理声卡注册和请求可用设备的通用功能
+(2)PCM接口:管理数字音频回放(playback)和录音(capture)的接口.
+(3)Raw MIDI接口:支持MIDI(Musical Instrument Digital Interface),标准的电子乐器.这些API提供对声卡上MIDI总线的访问.这个原始接口基于MIDI事件工作,由程序员负责管理协议以及时间处理.
+(4)定时器(Timer)接口:为同步音频时间提供对声卡上时间处理硬件的访问.
+(5)时序器(Sequencer)接口
+(6)混音器(Mixer)接口
 
 
 #=======================================================================
