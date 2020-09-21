@@ -1,11 +1,7 @@
 Linux Alsa Study
 #=======================================================================
 资料文档:
-(1)Alsa音频编程【精华】 https://www.cnblogs.com/cslunatic/p/3677729.html
-(2)ALSA开发详解 https://blog.csdn.net/haohenghai/article/details/22283491
-(3)ALSA之PCM分析 https://blog.csdn.net/azloong/article/details/6146378?utm_medium=distribute.pc_relevant_t0.none-task-blog-BlogCommendFromMachineLearnPai2-1.channel_param&depth_1-utm_source=distribute.pc_relevant_t0.none-task-blog-BlogCommendFromMachineLearnPai2-1.channel_param
-(4)ALSA分析 https://blog.csdn.net/zhang_danf/article/details/38824013?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-1.channel_param&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-1.channel_param
-(5)alsa frame period period_size buffer_size 等解释 https://blog.csdn.net/spark550/article/details/80441499
+Alsa音频编程【精华】 https://www.cnblogs.com/cslunatic/p/3677729.html
 
 #=======================================================================
 1.基本概念
@@ -13,7 +9,7 @@ Linux Alsa Study
 (2)通道数(channel):该参数1表示单声道,2则是立体声
 (3)帧(frame):帧记录了一个声音单元,其长度为样本长度与通道数的乘积,一段音频数据就是由若干帧组成的.
 (4)采样率(rate):每秒钟采样次数,该次数是针对帧而言的,常用的采样率如8KHz的人声,44.1KHz的mp3音乐,96KHz的蓝光音频.
-(5)周期(period):音频设备一次处理所需要的帧数,对于音频设备的数据访问以及音频数据的存储,都是一次为单位的.
+(5)周期(period):音频设备一次处理所需要的帧数,对于音频设备的数据访问以及音频数据的存储,都是一此为单位的.
 (6)交错模式(interleaved):是一种音频数据的记录方式
     (6.1)在交错模式下,数据以连续帧的形式存放,即首先记录完帧1的左声道样本和右声道样本(假设为立体声格式),再开始帧2的记录
     (6.2)而在非交错模式下,首先记录的是一个周期内所有帧的左声道样本,再记录右声道样本,数据是以连续通道的方式存储.
@@ -38,24 +34,99 @@ ALSA API可以分解成以下几个主要的接口:
 (5)时序器(Sequencer)接口
 (6)混音器(Mixer)接口
 
+#=======================================================================
+4. 设备命名
+API库使用逻辑设备名而不是设备文件.设备名字可以是真实的硬件名字也可以是插件名字.硬件名字使用hw:i,j这样的格式.其中i是卡号,j是这块声卡上的设备号
+第一个声音设备是hw:0,0这个别名默认引用第一块声音设备并且在文本示例中一直会被用到.
+插件使用另外的唯一名字,比如plughw:;表示一个插件,这个插件不提供对硬件设备的访问,而是提供像采样率转换这样的软件特性,硬件本身并不支持这样的特性.
 
 #=======================================================================
-
-
-#=======================================================================
-
-
-#=======================================================================
-
-
-#=======================================================================
-
-
-#=======================================================================
-
+5. 声音缓存和数据传输
+每个声卡都有一个硬件缓存区来保存记录下来的样本.
+当缓存区足够满时,声卡将产生一个中断.
+内核声卡驱动然后使用直接内存(DMA)访问通道将样本传送到内存中的应用程序缓存区.类似地,对于回放,任何应用程序使用DMA将自己的缓存区数据传送到声卡的硬件缓存区中.
+硬件缓存区是环缓存.也就是说当数据到达缓存区末尾时将重新回到缓存区的起始位置.
+ALSA维护一个指针来指向硬件缓存以及应用程序缓存区中数据操作的当前位置.
+应用程序缓存区的大小可以通过ALSA库函数调用来控制.
+缓存区可以很大,一次传输操作可能会导致不可接受的延迟,我们把它称为延时(latency).
+为了解决这个问题,ALSA将缓存区拆分成一些列周期(period)(OSS/Free中叫片段fragments).ALSA以period为单元来传送数据.
+一个周期(period)存储一些帧(frames).每一帧包含时间上一个点所抓取的样本.对于立体声设备,一个帧会包含两个信道上的样本.
+左右信道信息被交替地存储在一个帧内.这称为交错(interleaved)模式.
 
 #=======================================================================
+6. Over and Unfer Run
+当一个声卡活动时,数据总是连续地在硬件缓存区和应用程序缓存区间传输.
+但是也有例外
+(1)在录音例子中,如果应用程序读取数据不够快,循环缓存区将会被新的数据覆盖.这种数据的丢失被称为"over run".
+(2)在回放例子中,如果应用程序写入数据到缓存区中的速度不够快,缓存区将会"饿死".这样的错误被称为"under run"
 
+当用户空间由于系统繁忙等原因,导致under run时,缓冲区已空,内核这里有两种方案:
+(1)停止DMA传输,进入under run状态.这是内核默认的处理方法.继续播放缓冲区的音频数据或静音数据.
+用户空间配置stop_threshold可选择方案1或方案2,配置silence_threshold选择继续播放原有的音频数据还是静音数据.
+
+#=======================================================================
+7. 音频参数(ALSA用户空间之TinyAlsa)
+TinyAlsa是Android默认的alsalib,封装了内核ALSA的接口,用于简化用户空间的ALSA编程.
+合理的pcm_config可以做到更好的低时延和功耗,移动设备的开发尤为敏感
+struct pcm_config {
+    unsigned int channels;
+    unsigned int rate;
+    unsigned int period_size;
+    unsigned int period_count;
+    enum pcm_format format;
+    unsigned int start_threshold;
+    unsigned int stop_threshold;
+    unsigned int silence_threshold;
+    int avail_min;
+};
+解释一下结构中的各个参数,每个参数的单位都是frame(1帧=通道*采样位深):
+(1)period_size.每次传输的数据长度.值越小,时延越小,cpu占用就越高.
+(2)period_count.缓冲区period的个数.缓冲区越大,发生XRUN的机会就越少.
+(3)format.定义数据格式,如采样位,大小端.
+(4)start_threshold.缓冲区的数据超过该值时,硬件开始启动数据传输.如果太大,从开始播放到声音出来时延太长,甚至可导致太短促的声音根本播不出来;如果太小,又可能容易导致under run/over run
+(5)stop_threshold.缓冲区空闲区大于该值时,硬件停止传输.默认情况下,这个数为整个缓冲区的大小,即整个缓冲区空了,就停止传输.但偶尔的原因导致缓冲区空,如cpu忙.增大该值,继续播放缓冲区的历史数据,而不关闭在启动硬件传输,可以达到更好的体验
+(6)silence_threshold.这个值本来是配合stop_threshold使用,往缓冲区填充静音数据,这样就不会重播历史数据了.
+(7)avail_min.缓冲区空闲区大于该值时,pcm_mmap_write()才往缓冲写数据.这个值越大,往缓冲区写入数据的次数就越少,面临underrun/overrun的机会就越大.Android samsung tuna设备在screen_off时增大该值以减小功耗,在screen_on时减小该值以减小underrun/overrun的机会
+
+#=======================================================================
+文档资料
+linux-alsa详解1 基本知识 https://www.cnblogs.com/xinghuo123/p/13121108.html
+#=======================================================================
+1. linux内核中alsa的软件结构如下：
+APP1    APP2    APP3
+||      ||      ||
+\/      \/      \/           USER空间
+    alsa-lib
+---------------------------------------
+    alsa-soc
+    alsa-driver
+        ||                   Kernel空间
+        \/   
+---------------------------------------
+    Audio hardware           硬件
+
+用户空间的alsa-lib对应用程序提供统一的API接口,这样可以隐藏了驱动层的实现细节,简化了应用程序的实现难度,内核空间中,alsa-soc其实是对alsa-driver的进一步封装,他针对嵌入式设备提供了一系列增强的功能
+
+#=======================================================================
+2. alsa的设备文件结构
+$ cd /dev/Second
+$ ls -l
+crw-rw----+ 1 root audio 116, 8 2011-02-23 21:38 controlC0
+crw-rw----+ 1 root audio 116, 4 2011-02-23 21:38 midiC0D0
+crw-rw----+ 1 root audio 116, 7 2011-02-23 21:39 pcmC0D0c
+crw-rw----+ 1 root audio 116, 6 2011-02-23 21:56 pcmC0D0p
+crw-rw----+ 1 root audio 116, 5 2011-02-23 21:38 pcmC0D1p
+crw-rw----+ 1 root audio 116, 3 2011-02-23 21:38 seq
+crw-rw----+ 1 root audio 116, 2 2011-02-23 21:38 timer
+可以看到以下设备文件:
+(1) controlC0 --> 用于声卡的控制,例如通道选择,混音,麦克控制,音量加减,开关等
+(2) midiC0D0  --> 用于播放midi音频
+(3) pcmC0D0c  --> 用于录音的pcm设备
+(4) pcmC0D0P  --> 用于播放的pcm设备
+(5) seq       --> 音序器
+(6) timer     --> 定时器
+
+其中,C0D0代表的是声卡0中的设备0,pcmC0D0c最后一个c代表capture,pcmC0D0p最后一个p代表playback,这些都是alsa-driver中的命名规则,从上面的列表可以看出,我的声卡下挂了6个设备,根据声卡的实际能力,驱动实际上可以挂上更多种类的设备,在include/sound/core.h中,定义了以下设备类型，通常更关心的是pcm和control这两种设备.。
 
 #=======================================================================
 
