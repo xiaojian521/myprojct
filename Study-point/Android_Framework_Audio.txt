@@ -2,6 +2,8 @@ Android Framewokd Audio Study
 https://blog.csdn.net/qq_24451593/article/details/80325908
 https://blog.csdn.net/zyuanyun/article/details/60890534
 https://www.cnblogs.com/yangjies145/p/6883705.html
+https://developer.android.google.cn/guide/topics/media/volumeshaper.html?hl=zh-cn(volumeshaper音量控制)
+
 #====================================================================
 基本概念详解:
 帧(frame)的概念:帧表示一个完整的声音单元,所谓的声音单元是指一个采样样本;
