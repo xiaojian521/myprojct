@@ -3,7 +3,10 @@ https://blog.csdn.net/qq_24451593/article/details/80325908
 https://blog.csdn.net/zyuanyun/article/details/60890534
 https://www.cnblogs.com/yangjies145/p/6883705.html
 https://developer.android.google.cn/guide/topics/media/volumeshaper.html?hl=zh-cn(volumeshaper音量控制)
-
+Android Audio Architecture
+https://www.jianshu.com/p/a676d4d959ae
+Android AudioManager详解
+https://blog.csdn.net/h183288132/article/details/51151966
 #====================================================================
 基本概念详解:
 帧(frame)的概念:帧表示一个完整的声音单元,所谓的声音单元是指一个采样样本;
@@ -708,7 +711,7 @@ audio mode和电话的状态有直接关系
 (2)系统有两个核心处理器,一个是应用处理的核心,叫AP(Application Processor),可把它当做台式机上的CPU,在着上面可以运行操作系统.另一个和手机通信相关,一般叫BP(Baseband Porcessor基带处理器),可把它当做台式机上的"猫"
 (3)AP和BP都能向音频DSP发送数据,它们在硬件上通路上互不干扰.于是就出现一个问题,即如果两个P同时往DSP发送数据,而互相之间没有协调,就可能出现通话声和音乐声混杂的情况.
 (5)蓝牙没有像AP那样直接和音频DSP的相连,所以音频数据需要单独发给蓝牙设备.如果某种声音要同时从蓝牙和扬声器发出,亦即一份数据要往两个地方发送,便满足了AudioFlinger中DuplicatingThread出现的现实要求
-注意:蓝牙设备实际上会建立两条数据桐庐:SCO和A2DP.A2DP和高质量立体声有关,切必须由AudioFlinger向它发送数据.所以"音频数据需要单独发送给蓝牙设备",这个设备实际上是指蓝牙的A2DP设备.
+注意:蓝牙设备实际上会建立两条数据通路:SCO和A2DP.A2DP和高质量立体声有关,切必须由AudioFlinger向它发送数据.所以"音频数据需要单独发送给蓝牙设备",这个设备实际上是指蓝牙的A2DP设备.
 
 8.3.3 force use 和config(强制使用及配置)
 手机通话时可以选择扬声器输出,这就是强制使用的案例.Audio系统对此有很好的支持.它涉及到两个方面:
@@ -1299,5 +1302,11 @@ https://msd.misuland.com/pd/4146263742822225278
 通过CarAudioService,AudioControl,AudioPolicy(audio_policy_configuration.xml)三者相互配合,最终构成从usage到bus的映射关系.
 这里需要说明的是,usage到context是多对一关系(多个usage可以对应一个context类型,但是反过来不行一个context不能对应多个usage),context到bus也是多对一关系,bus到output还是多对一关系
 
+
+#====================================================================
+15 Android Audio延迟(latency)
+https://blog.csdn.net/iteye_17686/article/details/82339247
+AUDIO latency
+https://blog.csdn.net/weixin_33831673/article/details/93427873?utm_medium=distribute.pc_relevant_t0.none-task-blog-searchFromBaidu-1.control&depth_1-utm_source=distribute.pc_relevant_t0.none-task-blog-searchFromBaidu-1.control
 
 #====================================================================

@@ -1,0 +1,94 @@
+Android Framewokd Car Study
+Android车载嵌入式操作系统(Android Automotive)
+https://blog.csdn.net/tklwj/article/details/90755797
+
+#====================================================================
+一. 概述
+Android Automative是在原先Android的系统架构上增加了一些与车相关的模块
+1. Car App：包括OEM和第三方开发的App
+2. Car API：提供给汽车App特有的接口
+3. Car Service：系统中与车相关的服务
+4. Vehicle Network Service：汽车的网络服务
+5. Vehicle HAL：汽车的硬件抽象层描述
+
+#====================================================================
+二. Car App
+packages/services/Car/car_product/build/car.mk 这个文件中列出了汽车系统中专有的模块：
+这些App的源码都位于packages/services/Car目录下
+
+#====================================================================
+三. Car API
+源码：packages/services/Car/car-lib
+开发汽车专有的App自然需要专有的API。这些API对于其他平台(例如手机和平板)通常是没有意义的，所以这些API没有包含在Android Framework SDK中
+图详见网页图片
+从这个图中我们可以看到CarAPI主要包括：
+(1)android.car:包含了与车相关的基本API。例如：车辆后视镜，门，座位，窗口等。
+    (1.1)annotation:包含两个注解。
+    (1.2)app
+        (1.2.1)menu:车辆应用菜单相关API
+    (1.3)cluster:仪表盘相关API
+        (1.3.1)render:渲染相关API
+    (1.4)content
+        (1.4.1)pm:应用包相关API
+    (1.5)hardware:车辆硬件相关API
+        (1.5.1)cabin:座舱相关API
+        (1.5.2)hvac:通风空调相关API.
+        (1.5.3)property:属性相关API
+        (1.5.4)radio:收音机相关API
+    (1.6)input:输入相关API
+    (1.7)media:多媒体先关API
+    (1.8)navigation:导航相关API
+    (1.9)settings:设置相关API
+    (2.0)vms:汽车监测相关API,见下文
+
+#====================================================================
+四. Car Service
+Android Automative中的Car Service集中在一个App中.可以想象,这个App需要非常高的权限,所以这是一个系统App.
+Car Service并非是一个服务,而是一些列的服务.这些服务都在ICarImpl.java构造函数中列了出来.详细见代码
+
+#====================================================================
+五. VMS
+VMS全程是Vehicle Monitor Service.正如其名称所示,这个服务用来监测其他进程.在运行时,这个服务是一个独立的进程,在init.car.rc中有关于它的配置:
+这是一个Binder服务,并提供了C++和Java的Binder接口用来工其他模块使用.
+
+#====================================================================
+六. EVS
+Android8.0包含一个汽车HIDL硬件抽象层(HAL),可用于在Android启动过程的初期提供图像捕获和显示,并在系统启动后继续运行直到系统终止.HAL包含外部视景系统(Exterior View System,简称EVS)堆栈,通常用于在具有车载信息娱乐(IVI)系统(基于Android)的车辆中支持后视摄像头和环绕视图显示.EVS还支持在用户应用中实现高级功能.
+
+#====================================================================
+七. ODB2
+ODB全称是On-Board Diagnostics.这是一种装置于车中用以监控车辆运行状态和回报异常的系统,可用于车辆的子系统出现问题时,产生故障代码和提醒讯号通知车主和车厂诊断维修.
+AOSP中ODB2库是以一个Java静态库的形式存在的
+
+#====================================================================
+八. Vehicle Network Service
+Vehicle Network Service的结构和VMS的结构是类似的，也是一个可执行文件(vehicle_network_service)加一个库(libvehiclenetwork)的形式
+libvehiclenetwork中既包含了C++的库，也包含了Java语言的库。对于需要跨语言访问的数据结构，使用Protocal Budders
+Protocol Buffers是Google开发的另外一个工具。它语言中立，平台中立，具有可扩展的机制，用于序列化结构化数据。类似XML，但更小，更快，更简单。
+vehicle Network Service的主要作用是通过它来设置HAL属性(见下文HAL)。这些属性在VehicleNetworkConsts.java中已经全部列出.
+当然,并非所有模块都有权限设置这些HAL属性.所以这里需要权限的控制.
+对于这一点,通过vns_policy.xml来控制.
+这个文件中定义了每个属性允许哪个角色访问,以及访问权限是只读(r)还是可读可写(rw).
+
+#====================================================================
+九.HAL
+车载HAL(Hardware Abstract Layer,硬件抽象层)接口会定义OEM可以实现的属性,并会包含属性元数据(例如,属性是否为int以及允许使用哪些更改模式).车载HAL接口是以对属性(特定功能的抽象标识)的访问(读写,写入,订阅)为基础
+HAL接口
+车载HAL使用以下接口：
+
+vehicle_prop_config_t const *(*list_properties)(..., int* num_properties) 列出车载 HAL 所支持的所有属性的配置。车辆网络服务只会使用受支持的属性。
+(*get)(..., vehicle_prop_value_t *data) 读取属性的当前值。对于区域属性，每个区域都可能具有不同的值。
+(*set)(..., const vehicle_prop_value_t *data) 为属性写入相应值。写入的结果是按属性进行定义。
+(*subscribe)(..., int32_t prop, float sample_rate, int32_t zones) 监视属性值的变化，回调见下文。
+(*release_memory_from_get)(struct vehicle_hw_device* device, vehicle_prop_value_t *data) 释放从 get 调用分配的内存。
+车载HAL使用以下回调接口：
+
+(*vehicle_event_callback_fn)(const vehicle_prop_value_t *event_data) 通知车辆属性值的变化。
+(*vehicle_error_callback_fn)(int32_t error_code, int32_t property, int32_t operation) 返回全局车载 HAL级错误或每个属性的错误。全局错误会导致HAL重新启动，这可能导致包括应用在内的其他组件重新启动
+
+#====================================================================
+十. 属性与区域
+每个属性都由int32键唯一标识,且具有预定义的类型(value_type):INT32(和数组),INT64,BOOLEAN,FLOAT(和数组),字符串,字节
+
+
+#====================================================================

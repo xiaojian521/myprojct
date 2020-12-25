@@ -1,0 +1,69 @@
+Android Framework Volume Study
+Android AudioManager详解
+https://blog.csdn.net/h183288132/article/details/51151966
+
+Android 拨号音之 DTMF
+https://blog.csdn.net/ch853199769/article/details/79901786
+#====================================================================
+AudioService流程分析：
+1.创建AudioService
+2.updateStreamVolumeAlias()设置streamtype映射表并根据系统状态设置参数
+3.createStreamStates()
+    3.1获取当前音频流数量,创建VolumeStreamState数组
+    3.2遍历音频流数量，并对每个音频类型创建一个VolumeStreamState
+    3.3通过AudioSystem.initStreamVolume将此种streamtype的最大最小音量设置到AudioPolicyManager侧
+    3.4进入VolumeStreamState.readSettings()
+        3.4.1如果是STREAM_SYSTEM和STREAM_SYSTEM_ENFORCED则将默认值放入并保存
+        3.4.2遍历所有设备并从AudioSystem侧获取设备名称
+        3.4.3getSettingNameForDevice()从AudioSystem.java侧获取对应的设备名称，返回VOLUME_SETTINGS_INT+devicename
+        3.4.4保存此Streamtype下每个device的声音大小
+        3.5.4将default设备的音量都保存在mIndexMap中。
+    3.5.checkAllFixedVolumeDevices() 如果是固定设备并且index原本不等于0则music映射的设备全部都设置成最大值
+    3.6.checkAllAliasStreamVolumes()
+        3.6.1.setAllIndexes() //将同一个组的所有StreamState的mIndexMap支持设备的音量值都统一成一样的
+        3.6.2.applyAllVolumes() //将此所有StreamSate支持设备的index值设置到AudioPolicy中
+AudioService类保存信息
+//将AudioManager中的各种streamtype映射分类成唯一类型
+protected static int[] mStreamVolumeAlias = STREAM_VOLUME_ALIAS_DEFAULT;
+
+Settins.java类保存信息
+public static final String[] VOLUME_SETTINGS_INT = {
+    VOLUME_VOICE, VOLUME_SYSTEM, VOLUME_RING, VOLUME_MUSIC,
+    VOLUME_ALARM, VOLUME_NOTIFICATION, VOLUME_BLUETOOTH_SCO,
+    "" /*STREAM_SYSTEM_ENFORCED, no setting for this stream*/,
+    "" /*STREAM_DTMF, no setting for this stream*/,
+    "" /*STREAM_TTS, no setting for this stream*/,
+    VOLUME_ACCESSIBILITY
+};
+public static final String VOLUME_RING = "volume_ring";
+public static final String VOLUME_SYSTEM = "volume_system";
+public static final String VOLUME_VOICE = "volume_voice";
+public static final String VOLUME_MUSIC = "volume_music";
+public static final String VOLUME_ALARM = "volume_alarm";
+public static final String VOLUME_NOTIFICATION = "volume_notification";
+public static final String VOLUME_BLUETOOTH_SCO = "volume_bluetooth_sco";
+public static final String VOLUME_ACCESSIBILITY = "volume_a11y";
+public static final String VOLUME_MASTER = "volume_master";
+
+
+VolumeStreamState类保存信息
+//AudioManager侧对应streamtype类型
+private final int mStreamType;
+//此种streamtype对应的最小音量
+private final int mIndexMin;
+//此种streamtype对应的最大音量
+private final int mIndexMax;
+//当前streamtype是否处于静音状态
+private boolean mIsMuted;
+
+private String mVolumeIndexSettingName;
+
+private int mObservedDevices;
+//每个设备对应的音量值都存入这个map
+private final SparseIntArray mIndexMap = new SparseIntArray(8);
+
+private final Intent mVolumeChanged;
+private final Intent mStreamDevicesChanged;
+
+
+#====================================================================
