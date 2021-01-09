@@ -17,7 +17,7 @@ AudioService流程分析：
         3.4.2遍历所有设备并从AudioSystem侧获取设备名称
         3.4.3getSettingNameForDevice()从AudioSystem.java侧获取对应的设备名称，返回VOLUME_SETTINGS_INT+devicename
         3.4.4保存此Streamtype下每个device的声音大小
-        3.5.4将default设备的音量都保存在mIndexMap中。
+        3.5.5将default设备的音量都保存在mIndexMap中。
     3.5.checkAllFixedVolumeDevices() 如果是固定设备并且index原本不等于0则music映射的设备全部都设置成最大值
     3.6.checkAllAliasStreamVolumes()
         3.6.1.setAllIndexes() //将同一个组的所有StreamState的mIndexMap支持设备的音量值都统一成一样的
@@ -67,3 +67,7 @@ private final Intent mStreamDevicesChanged;
 
 
 #====================================================================
+哪些情况会将上层音量值设置到AudioPolicy侧
+1.createStreamStates()->VolumeStreamState()->readSettings() //fse  set volume to AudioPolicy
+2.createStreamStates()->checkAllFixedVolumeDevices()->checkFixedVolumeDevices()->applyDeviceVolume_syncVSS() //android set volume to AudioPolicy
+3.createStreamStates()->checkAllAliasStreamVolumes()->applyAllVolumes() //android set volume to AudioPolicy

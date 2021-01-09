@@ -1,0 +1,58 @@
+AudioPolicyManager构造函数流程详解：
+#================================================================================
+1.解析audio_policy_configuration.xml文件
+#ifdef USE_XML_AUDIO_POLICY_CONF
+    AudioPolicyConfig config(mHwModules, mAvailableOutputDevices, mAvailableInputDevices,
+                             mDefaultOutputDevice, speakerDrcEnabled,
+                             static_cast<VolumeCurvesCollection *>(mVolumeCurves));
+    if (deserializeAudioPolicyXmlConfig(config) != NO_ERROR) {
+#else
+#================================================================================
+2.创建volume管理器
+mVolumeCurves = new VolumeCurvesCollection();
+mVolumeCurves->initializeVolumeCurves(speakerDrcEnabled);
+#================================================================================
+3.创建EngineInstance引擎类
+    // Retrieve the Policy Manager Interface
+mEngine = engineInstance->queryInterface<AudioPolicyManagerInterface>();
+#================================================================================
+4.获取mAvailableOutputDevices和mAvailableInputDevices所支持的设备
+audio_devices_t outputDeviceTypes = mAvailableOutputDevices.types();
+audio_devices_t inputDeviceTypes = mAvailableInputDevices.types();
+#================================================================================
+5.遍历所有module，并调用到AudioFlinger侧loadModule返回moudle的唯一id
+mHwModules[i]->mHandle = mpClientInterface->loadHwModule(mHwModules[i]->getName());
+5.1 调用到Audioflinger侧loadHwModule(char* name);
+eg:name = ["primary", "a2dp", "usb_accessory"...]
+    5.1 DevicesFactoryHalInterface()->openDevice(sp<DeviceHalInterface> dev)
+    5.2 DevicesFactoryHalLocal::openDevice() //返回audio_hw_device_t结构体，是audio_hw.c侧的函数指针结构体如 int (*open_output_stream)()等函数
+        5.2.1 harware.c->hw_get_module_by_class() //加载动态库并对hw_module_t进行赋值
+        5.2.2 audio_hw.c->adev_open(); //audio_hw_device_t进行赋值
+            5.2.2.1 platform_init() //解析mixer_path.xml 打开声卡设备通路
+5.2 将每个moudle对应的信息存入mAudioHwDevs数组中
+
+#================================================================================
+6.遍历所有source类型的<mixport>节点,根据规则选择是否创建output线程
+    规则：1.如果是flag是AUDIO_OUTPUT_FLAG_DIRECT的不创建output线程
+         2.如果<mixport>经过rout后的设备集合和<attachedDevices>的设备集合没有交集，则不创建output线程
+6.1 调用到Audioflinger侧openOutput_l()
+    6.1.1 调用到AudioHwDevice::openOutputStream()
+        6.1.1.1 创建AudioStreamOut对象，用来保存hal层的输入输出流
+        6.1.1.2 调用Audiostreamout::open()
+        6.1.1.3 调用DeviceHalLocal::openOutputStream()函数，如果打开成功则创建StreamOutHalLocal对象保存audio_stream_out_t函数指针结构体可以调用到hal层
+        6.1.1.4 调用audio_hw::adev_open_output_stream()函数，根据device类型和flag类型设置不同的usage根据此usage到mixer_path中匹配相应的声卡参数
+6.2 根据flag创建不同的PlaybackThread
+
+#================================================================================
+7. 播放音频时，pcm设备的选择
+7.1 audio_hw::start_output_stream();
+7.2 audio_hw::select_devices();
+7.3 audio_hw::enable_audio_route();
+7.4 audio_route::audio_route_apply_and_update_path();//根据参数打开调用mixer.c中的函数设置声卡参数
+7.2 platform::platform_get_pcm_device_id() //根据usage选择设备pcm设备
+
+#================================================================================
+创建output线程的时候，解析mixer_path.xml，并设置usage等参数，启动线程的时候会根据usage等参数打开声卡，并设置设置声卡参数
+
+
+

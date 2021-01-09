@@ -1,0 +1,173 @@
+深入理解Android内核设计思想
+#====================================================================
+第一篇 Android编译篇
+#====================================================================
+第2章Android源码下载及编译
+2.5 Android系统映像文件 
+Image                           DeviceDescription
+boot.img                        包含内核启动参数，内核等多个元素
+ramdisk.img                     一个小型的文件系统，是Android系统启动的关键
+system.img                      Android系统的运行程序包(framework就在这里)，将被挂在到设备中的/system节点下
+userdata.img                    各程序的数据存储所在，将被挂在到/data目录下
+recovery.img                    设备进入"恢复模式"时所需要的映像包
+misc.img                        即"miscellaneous"，包含各种杂项资源
+cache.img                       缓冲区，将被挂在到/cache节点中
+
+2.5.1 boot.img
+理解boot.img的最好方法就是学习它的制作工具--mkbootimg，源码路径在system/core/mkbootimg中。
+
+2.5.2 ramdisk.img
+ramdisk.img解压命令
+mv ramdisk.img ramdisk.img.gz && gzip -d ramdisk.img.gz
+cpio -i -F ramdisk.img
+这样就解压出了各种文件和文件夹，系统启动过程中运行的第一个程序等文件都包含在ramdisk.img中
+
+2.5.3 system.img
+使用Android工具simg2img(源码目录system/extras/ext4_utils)
+system.img解压命令
+./simg2img system.img system.img.setp1
+mkdir system_extrackted
+sudo mount -o loop system.img.step1 system_extrackted
+
+
+#====================================================================
+2.6 ODEX流程
+ODEX是Optimized Dalvik Executable的缩写，从字面意思上理解，就是经过优化的Dalvik可执行文件。Dalvik是Android系统(目前已经切换到Art虚拟机)中采用的一种虚拟机。
+Android系统中不少代码是使用Java语言编写的。编译系统首先会将一个Java文件编译成class的形式，进而再通过一个名未dx的工具来转换成dex文件，最后将dex和资源等文件压缩成zip格式的APK文件.当应用程序启动时，系统需要提供dex(如果之前没有做过ODEX优化的话，或者/data/dalvik-cache中没有对应的ODEX缓存),然后才能执行加载动作，而ODEX则是预先将DEX提取出来，并针对当前具体设备做了优化工作后的产物，这样做出了能提高加载速度外，还有如下几个优势：
+(1)加大了破解程序的难度
+ODEX实在dex基础上针对当前具体设备做的优化，因而它和生成时所处的具体设备有很大关联。换句话说，除非破界者能提供与ODEX生成时相匹配的环境文件(比如core.jar,ext.jar,framework.jar,service.jar等)
+(2)节省了存储空间
+按照Android系统以前的做法，不仅APK中需要存放一个dex文件，而且/data/dalvik-cache目录下也会有一个dex文件，这样显然会浪费一定的存储空间。相比之下，ODEX只有一份，而且它比dex所占的体积更小，因而自然可以为系统节省更多的存储空间
+
+#====================================================================
+2.7 OTA系统升级
+前面我们讨论了系统包烧录的几种传统方法，而Android系统其实还提供了另一种全新的升级方案，即OTA(Over the Air).OTA非常灵活，它既可以实现完整的版本升级，也可以做到增量升级。另外，用户即可以选择通过SD卡来做本地升级，也可以直接采用网络在线升级。
+不论是那种升级形式，都可以总结为3各阶段:
+    (1)生成升级包
+    (2)获取升级包
+    (3)执行升级过程
+
+2.7.1 生成升级包
+如果想生成完整的升级包，具体命令如下:
+make otapackage
+最终生成以下文件:
+out/target/product/YOUR_PRODUCT_NAME/[YOUR_PRODUCT_NAME]-ota-eng.[UID].zip
+生成差分包的流程详见P39
+
+2.7.2 获取升级包
+有两种常见的渠道可以获取到OTA升级包，分别是在线升级和本地升级
+
+2.7.3 OTA升级---Recovery模式
+Recovery相关的源码主要在工程项目的如下目录中:
+\bootable\recovery
+如下两种情况下设备会进入还原模式
+(1)开机过程中检测到Recoverykey按下
+很多Android设备的Recoverykey都是电源和Volume+的组合键，因为这两个案件在大部分设备上都是存在的
+(2)系统指定进入RecoveryMode
+
+#====================================================================
+2.8 Android 反编译
+目前已经有不少研究项目在分析Android的逆向工程，其中最著名的就是smali/baksmali.可以在这里下载到它的最新版本:
+源代码路径
+https://github.com/JesusFreke/smali
+工具路径
+https://bitbucket.org/JesusFreke/smali/downloads/
+eg: 如果是要反编译系统包中的odex(如service.odex),请参考一下命令
+$java -Xmx512m -jar baksmali-1.4.1.jar -a 16 -c:core.jar:bouncycastle.jar:ext.jar:framework.jar:android.policy.jar:services.jar:core-junit.jar -d framework/ -x services.odex
+执行结果会被保存在一个out目录中，里面包含了与odex相应的所有源码，只不过由smali语法描述。，可以阅读一下文档来了解smali语法:
+如果想反编译出最原始的Java语言文件，此时就要在将smali文件转换成dex文件。具体命令如下:
+$java -jar smali-1.4.1.jar out/ -o service.dex
+前面我们已经成功将odex"去优化"成dex了，离胜利还有一步之遥---将dex转化成jar文件.目前比较流行的工具是dex2jar，可以在这里下载到它的最新版本:
+http://code.google.com/p/dex2jar/downloads/list
+
+#====================================================================
+2.9 NDK Build
+我们知道Android系统下的应用程序主要是由Java语言开发的，但这并不代表它不支持其他语言，比如C++和C。事实上，不同类型的应用程序对编码语言的诉求是有区别的---普通的Application的UI界面基本上是静态的，所以，利用Java开发更有优势；而游戏程序，以及其他需要鲫鱼OpenGL(或鲫鱼各种Game Engine)来回执动态界面的应用程序则更适合采用C或C++语言。
+伴随着Android系统的不断发展，开发者对于C/C++语言的需求越来越多，也使得Goole需要不断完善它所提供的NDK工具链。NDK的全称是Native Development Kit，可以有效支撑Android系统中使用C/C++等Native语言进行开发，从而可以让开发者:
+    (1)提高程序运行效率
+    (2)复用一有的C和C++库
+
+#====================================================================
+第3章 Android编译系统
+
+3.1 Makefile入门
+MakeFile提供了一种机制让，使用者可以有效地组织"工作"，MakeFile并不一定是用来完成编译工作，事实上它本身只是一种"规则"的执行者，和shell，python等累死，Makefile也是一个脚本，由make程序来解析。目前软件行业有多款优秀的make解析程序，如GNU make(Android中采用的)，Visual Studio中的nmake等。尽管在表现形式上会有些差异，但"玩遍不离其宗"，他们都是通过一下基础规则扩展起来的:
+TARGET : PREREQUISITES
+    COMMANDS
+注意:每个COMMAND钱都必须有一个TAB制表符
+在Makefile规则中，TARGET是需要生成的目标文件，PREREQUISITES达标目标所依赖的所有文件。当PREREQUISITES文件中有任何一个比TARGET新时，那么哦都会出发下面COMMAND命令的执行。COMMAND的具体内容取决于使用者的需求，如调用GCC编译器，生成某个文档等。
+
+#====================================================================
+3.2 Android编译系统
+事实上Android编译系统也是经过了数次不断地迭代演进，才成长为今天大家所看到的。特别是在Google收购Android系统不久后的2006年，他们曾对编译系统动过一次"打手术"。核心目标有两个:
+(1)让依赖关系分析更为可靠，以保证可以正确判断出需要被编译的模块
+(2)让不必要被编译的模块也可以被准确判断出来，以提高编译效率
+
+3.2.1 Makefile依赖树的概念
+            TestMakefile
+            /           \
+        main.o          utilty.o
+        /    \          /       \
+    main.c utility.h  utility.c utility.h
+
+3.2.2 Android编译系统抽象模型
+我们对Android编译系统进行抽象，其顶层模型如图
+初始化环境--->构建依赖树--->执行编译流程--->打包
+因为是基于Makefile实现的，所以，整个编译系统的核心仍然是如何有效地构建出依赖树。编译的执行过程本质上和传统的Make实现没有太大差异。编译系统的另一个重要任务则是打包，包括system.img,boot.img,userdata.img等。
+
+3.2.3 树根节点droid
+我们需要对Make的工作原理有一定程序的理解。所需知识点总结如下:
+(1)需要强调的是，编译系统中往往有不止一颗依赖树存在。比如我们在Android系统下使用"make"命令和"make sdk"的编译结果会迥然不同，这是因为他们分别执行了两颗不同的依赖树
+在没有显示指定编译目标的情况下，那么第一个符合要求的目标会被Make作为默认的依赖树根节点，这条规则也同样提醒我们在书写Makefile时一定要注意各Target的排放顺序。
+
+3.2.4 main.mk解析
+讲解doridcore和dist_files之前，我们先完整分析下main.mk脚本文件的架构。除了构建droid等依赖树外，main.mk有一大半的内容是为了完成一下几点:
+(1)对编译环境的检测
+比如Java版本是否符合要求，当前机器上的make环境必须高于特定版本等。如果这些检查没有通过，一般情况下系统会终止编译
+(2)进行一些必要的前期处理
+比如整个项目工程是否需要先进行清理工作，部分工具的安装等
+(3)引用其他Makefile文件
+这点在真个main.mk中处处可见，如引用config.mk,cleanbuild.mk等
+(4)设置全局变量
+这些全局变量决定了编译的具体实现过程
+(5)各种函数的实现
+Android编译系统中定义了不少函数，它们提供了各种问题的同意解决方案。比如print-vars函数用于打印一串变量列表，my-dir可以知道当前所处的路径的那个。这些函数对我们自己编写Makefile文件也有一定的指导意义
+
+根据前一张节内容的讲解，为Android系统添加一款定制设备需要涉及如下几个脚本文件
+vendorsetup.sh
+AndroidProducts.mk
+BoradConfig.mk
+Android.mk
+其中vendorsetup.mk实在envsetup.sh中被调用的，其他几个Makefile的调用的时序图及相关调用详见P56图3-4,Android.mk是最后才被main.mk调用的。换句话说，前面步骤都在决定选择"什么产品"以及"产品属性"，而最后才是开吕该产品的零件
+整个编译过程中起主导作用的是main.mk，我们从它的文件名就可以看出来，和main.mk同样重要的还有config.mk，这个专职"配置"的脚本可以说是"产品设计师"----除了BoardConfig.mk和AndroidProducts.mk这两个"定制设备"必备的文件外，其他注入javac.mk(用于选取合适的java编译器)，envsetup.sh(负责环境变量的定义)等Makefile也都属于其管辖范围。另外，BUILD系列变量即BUILD_HOST_STATIC_LIBRARY,BUILD_STATIC_LIBRARY也是在这里赋值的。
+Android编译系统中涉及的主要Makefile文件的统一解释
+main.mk : 整个编译系统的主导文件
+config.mk : 产品配置的主导文件
+base_rules.mk : 编译系统需要准许的基础规则定义。其中最重要的变量之一是ALL_MODULES,它负责将各Android.mk种的LOCAL——MODULE添加到全局依赖树中，从而保证所有的模块都参与到整个系统的编译中
+build_id.mk : 版本id号的定义
+cleanbuild.mk : clean操作的定义
+clear_vars.mk : 清空以LOCAL开头相关系统变量
+definitions.mk : 提供了大量实用函数的定义
+envsetup.mk : 配置编译时的环境变量，注意要与envesetup.sh区分开
+executable.mk : 负责BUILD_EXECUTABLE的具体实现
+java.mk 负责与java语言相关的编译实现，是java_library.mk的基础
+host_executable.mk : 负责BUILD_HOST_EXECUTABLE的具体实现
+host_static_library.mk : 负责BUILD_HOST_STATIC_LIBRARY的具体实现
+product_config.mk : 产品级别的配置,属于config的一部分
+version_defaults.mk : 负责生成版本信息,默认格式为BUILD_NUMBER := eng.$(shell echo $${USER:0:6}).$(shell $(DATE) +%Y%m%d.%H%M%S)
+
+
+#====================================================================
+
+
+
+
+#====================================================================
+
+
+
+#====================================================================
+
+
+
+#====================================================================
