@@ -1,0 +1,198 @@
+Android性能命令详解
+#====================================================================
+CPU占用率命令
+1. top 命令
+https://blog.csdn.net/zhangbijun1230/article/details/79740439
+Usage: top [ -m max_procs ] [ -n iterations ] [ -d delay ] [ -s sort_column ] [ -t ] [ -h ]
+
+-m : 显示的最多进程数,做优化时一般只关心CPU占用率最高的几个进程,那么只需要"top -m 3" 或 "top -m 5" 就好了
+-n : 显示n次top的结果后命令就会退出
+-d : 更新的时间间隔,默认是每隔3s更新下状态, top -d 0时会持续地输出,不过很占CPU
+-s : 选择根据某项(cpu,vss,rss,thr)来排序
+-t : 显示线程而非进程
+
+Tasks:375 total,  1 running,        373 sleeping,    0 stopped,       0 zombie
+"总的进程数"       "正在运行的进程数"   "挂起的进程数"      "停止的进程数"    "僵尸进程数"
+Mem: 4893996k total,    3716960k used,        1177036k free,   197624k buffers
+"物理总内存"              "已使用的物理内存"      "空闲内存量"       "缓冲区内存总量"
+Swap: 0k total,   0k used,           0k free,            1402116k cached
+"交换区总量"       "已使用交换区总量"    "空闲交换区总量"      "缓冲的交换区总量"
+400%cpu          1%user                  0%nice                                   8%sys                 389%idle
+"cpu总百分比"     "用户空间占用CPU百分比"    "用户空间内改变过优先级的进程占用cpu的百分比"   "内核空间占用CPU百分比"  "空闲CPU百分比"
+1%iow                 1%irq                            1%sirq                            0%host
+"等待输入输出CPU百分比"  "CPU服务与硬件终端所耗费CPU百分比"   "CPU服务与软件终端所耗费CPU百分比"    "Steal Time"
+PID      USER         PR      NI       VIRT                  RES                        SHR
+"进程ID" "进程所有者"   "优先级" "nice值" "进程使用的虚拟内存总量"  "进程使用的未被换出的物理内存"  "共享内存大小"  "进程状态"
+S          [%CPU]             %MEM           TIME+ ARGS
+"进程状态"  "进程使用CPU总时间"  "物理内存百分比"  "命令行"
+PID     USER     PR  NI  VIRT   RES   SHR   S   [%CPU]  %MEM    TIME+     ARGS
+18798   root     20  0      0     0     0   S    0.0     0.0    0:00.76   [kworker/u8:1]
+14751   root     20  0      0     0     0   S    0.0     0.0    0:00.01   [kworker/1:1]
+23134   u0_a2    20  0   4.1G   35M   22M   S    0.0     0.7    0:00.20   com.android.defcontainer
+23106   root     20  0      0     0     0   S    0.0     0.0    0:00.01   [kworker/0:1]
+13328   root     20  0      0     0     0   S    0.0     0.0    0:00.10   [kworker/1:0]
+10439   u0_a28   20  0   1.6G   50M   37M   S    0.0     1.0    1:45.77   com.tencent.tmgp.sgame:xg_vip_service
+10364   u0_a28   20  0   2.4G 3 29M 1 60M   S    0.0     6.8    6:03.01   com.tencent.tmgp.sgame
+ 4203   system   20  0   1.6G   60M   40M   S    0.0     1.2    0:00.75   com.hht.screensaver
+
+#====================================================================
+2. Android查看内存情况
+https://blog.csdn.net/small_lee/article/details/50731446
+
+2.1 dumpsys meminfo
+用以下命令可以查看程序的内存使用情况：
+adb shell dumpsys meminfo $package_name or $pid    //使用程序的包名或者进程id
+
+2.1.1 内存信息概念
+VSS - Virtual Set Size虚拟耗用内存(包含共享库占用的内存)
+RSS - Resident Set Size 实际使用物理内存(包含共享库占用的内存)
+PSS - Proportional Set Size 实际使用的物理内存(比例分配共享库占用的内存)
+USS - Unique Set Size进程独自占用的物理内存(不包含共享库占用的内存)
+一般来说内存占用大小有如下规律: VSS >= RSS >= PSS >= USS
+android程序内存被分为2部分: native和dalvik，dalvik就是我们平常说的java堆，我们创建的对象是在这里面分配的，而bitmap是直接在native上分配的，对于内存的限制是native+dalvik不能超过最大限制。
+
+2.1.2 信息字段解析
+Uptime : 表示启动到现在的时长，不包含休眠的时间，单位毫秒(ms)
+Realtime : 表示启动到现在的时长，包含休眠的时间，单位毫秒(ms)
+Native Heap : 指c中malloc出来的空间
+扩展:c++申请的内存为native process，java申请的内存：java process
+Dalvik Heap : 指java中new出来的java堆空间
+Pss Total : 指占用了真实的物理内存的空间
+private dirty : 指私有驻留内存
+扩展:进程内存空间是虚拟内存，区分于物理内存，进程无法直接操作物理内存RAM.必要时,操作系统对其进行映射，使进程能应用到物理内存
+Heap Size : 指占用总内存(Heap 堆)
+Heap Alloc : 指在虚拟地址中分配了这么多空间
+Heap Free : 空闲内存
+注：因为Android系统对dalvik的vm heapsize作了硬性限制，当java进程申请的java空间超过阀值时，就会抛出OOM异常。
+查看耽搁应用最大内存限制，输入命令：getprop|grep heapgrowthlimit 得到结果该机型为256M。dalvik process 超过就会抛OOM异常
+
+
+gin:/ # dumpsys meminfo com.hht.audiobook
+Applications Memory Usage (in Kilobytes):
+Uptime: 100388791 Realtime: 100388791
+示例:
+** MEMINFO in pid 2665 [com.hht.audiobook] **
+                   Pss  Private  Private  SwapPss     Heap     Heap     Heap
+                 Total    Dirty    Clean    Dirty     Size    Alloc     Free
+                ------   ------   ------   ------   ------   ------   ------
+  Native Heap     2230     2096        0        0     8192     4047     4144
+  Dalvik Heap     1431     1320        0        0     2098      578     1520
+ Dalvik Other     1393     1320        0        0                           
+        Stack       36       36        0        0                           
+    Other dev       16        0       16        0                           
+     .so mmap      697       84       36        0                           
+    .jar mmap        0        0        0        0                           
+    .apk mmap      375        0      360        0                           
+    .dex mmap     1777        4     1116        0                           
+    .oat mmap      825        0       32        0                           
+    .art mmap      468      300        4        0                           
+   Other mmap        8        4        0        0                           
+      Unknown      632      616        0        0                           
+        TOTAL     9888     5780     1564        0    10290     4625     5664
+ 
+ App Summary
+                       Pss(KB)
+                        ------
+           Java Heap:     1624
+         Native Heap:     2096
+                Code:     1632
+               Stack:       36
+            Graphics:        0
+       Private Other:     1956
+              System:     2544
+ 
+               TOTAL:     9888       TOTAL SWAP PSS:        0
+ 
+ Objects
+               Views:        0         ViewRootImpl:        0
+         AppContexts:        3           Activities:        0
+              Assets:        2        AssetManagers:        2
+       Local Binders:       14        Proxy Binders:       14
+       Parcel memory:        3         Parcel count:       14
+    Death Recipients:        2      OpenSSL Sockets:        0
+            WebViews:        0
+ 
+ SQL
+         MEMORY_USED:        0
+  PAGECACHE_OVERFLOW:        0          MALLOC_SIZE:        0
+
+
+2.2 procrank查看所有进程内存信息情况
+示例:
+PID       Vss      Rss      Pss      Uss  cmdline
+10364  2531884K  342628K  292542K  284764K  com.tencent.tmgp.sgame
+  749  4565800K  160600K  105553K   92856K  system_server
+ 1624  1751336K  111356K   67677K   63456K  com.hht.settinghmi
+ 1550  1785904K  114400K   65241K   58268K  com.hht.screenprojection
+ 1136  4425768K   88752K   44006K   37424K  com.hht.maininteraction
+
+#====================================================================
+Android内存优化—dumpsys meminfo详解
+https://blog.csdn.net/jiangguangchao/article/details/85232761
+dumpsys 查看android 常用的service
+https://www.it610.com/article/4598151.htm
+常用dumpsys命令如下：
+1、包信息查询
+子命令格式：adb shell dumpsys package [-h] [-f] [—checkin] [cmd]…
+
+2、activity信息查询
+子命令格式：adb shell dumpsys activity [-a] [-c]…
+
+3、网络信息查询
+网络连接 adb shell dumpsys connectivity
+
+网络策略 adb shell dumpsys netpolicy
+
+网络状态adb shell dumpsys netstats
+
+网络管理adb shell dumpsys network_management
+
+4、其他常用服务信息查询
+内存 adn shell dumpsys meminfo
+CPU adn shell dumpsys cpuinfo
+帧率 adn shell dumpsys gfxinfo
+显示 adn shell dumpsys display
+电源 adn shell dumpsys power
+电池状态 adn shell dumpsys batterystats
+电池 adn shell dumpsys battery
+闹钟 adn shell dumpsys alarm
+位置 adn shell dumpsys location
+
+#====================================================================
+
+
+
+
+
+
+
+#====================================================================
+
+
+
+
+
+
+
+
+#====================================================================
+
+
+
+
+
+
+
+
+
+#====================================================================
+
+
+
+
+
+
+
+
+
+#====================================================================

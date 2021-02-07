@@ -7,12 +7,14 @@ Android Audio Architecture
 https://www.jianshu.com/p/a676d4d959ae
 Android AudioManager详解
 https://blog.csdn.net/h183288132/article/details/51151966
+生产者与消费者之Android audio/audiotrack的write流程(mode_stream)
+https://zhuanlan.zhihu.com/p/43491126 /**/ http://thinks.me/2016/03/18/audiotrack_write/
 #====================================================================
 基本概念详解:
 帧(frame)的概念:帧表示一个完整的声音单元,所谓的声音单元是指一个采样样本;
 如果是双声道,那么一个完整的声音单元就是2个样本,如果是5.1声道,那么一个完整的声音单元就是6个样本了.;帧的大小(一个完整的声音单元的数据量)等于声道数乘以采样深度,即frameSize = channelCount * bytesPerSample.帧的概念非常重要,无论是框架层还是内核层,都是以帧为单位去管理音频数据缓冲区的.
 其次还得了解传输延迟(latency)的概念:传输延迟表示一个周期的音频数据的传输时间.我们再次引入周期(period)的概念:
-Linux ALSA把数据缓冲区划分为若干个快,dma每传输完一个块上的数据即发出一个硬件中断,cpu收到中断信号后,在配置dma去传输下一个块上的数据;一个块即一个周期,周期大小(perodSize)即是一个数据块的帧数.
+Linux ALSA把数据缓冲区划分为若干个快,dma每传输完一个块上的数据即发出一个硬件中断,cpu收到中断信号后,在配置dma去传输下一个块上的数据;一个块即一个周期,周期大小(periodSize)即是一个数据块的帧数.
 在回到传输延迟(latency),传输延迟等于周期大小除以采样率,即latency = periodSize/sampleRate.
 音频重采样:把一个采样率的数据转换为另一个采样率的数据.Android原生系统上,音频硬件设备一般都工作在一个固定的采样率上(如48Hz),因此所有音轨数据都需要重采样
 
@@ -163,8 +165,8 @@ AudioTrackJniStorage用到了Android对共享内存机制的封装类。
 #====================================================================
 2.8 AudioTrack(java端) write()分析
 (1) Java层的write函数有两个
-    ·  一个是用来写PCM16数据的，它对应的一个采样点的数据量是两个字节。
-    ·  另外一个用来写PCM8数据的，它对应的一个采样点的数据量是一个字节
+       一个是用来写PCM16数据的，它对应的一个采样点的数据量是两个字节。
+       另外一个用来写PCM8数据的，它对应的一个采样点的数据量是一个字节
     我们分析PCM16数据的调用
 (2) 判断参数及状态是否正常
 (3) 调用native_write_short(),返回读取数据字节数
@@ -1308,5 +1310,338 @@ https://msd.misuland.com/pd/4146263742822225278
 https://blog.csdn.net/iteye_17686/article/details/82339247
 AUDIO latency
 https://blog.csdn.net/weixin_33831673/article/details/93427873?utm_medium=distribute.pc_relevant_t0.none-task-blog-searchFromBaidu-1.control&depth_1-utm_source=distribute.pc_relevant_t0.none-task-blog-searchFromBaidu-1.control
+
+#====================================================================
+OpenSL详解
+官方文档目录位于源代码下：frameworks/wilhelm/doc/OpenSL_ES_Specification_1.0.1.pdf
+https://www.cnblogs.com/yongdaimi/p/11097909.html
+1. OpenSL ES(Open Sound Library for Embedded Systems)是无授权费,跨平台,针对嵌入式系统进行优化的硬件音频加速API.它为嵌入式移动多媒体设备上的本地应用程序开发者提供标准化,高性能,低响应时间的音频功能实现方法,并实现软/硬件音频性能的直接跨平台不熟,降低执行难度,促进高级音频市场的发展.简单来说OpenSL ES是一个嵌入式跨平台免费的音频处理库
+
+2. OpenSL ES的特性以及优劣势
+特性：
+(1)C语言接口,兼容C++,需要在NDK下开发,能更好地集成在native应用中
+(2)运行于native层,需要自己管理资源的申请与释放,没有Dalvik虚拟机的垃圾回收机制
+(3)支持PCM数据的采集,支持的配置:16 bit位宽,16000 Hz采样率,单通道.(其他配置不能保证兼容所有平台)
+(4)支持PCM数据的播放,支持的配置:8bit/16bit位宽,单通道/双通道,小端模式,采样率(8000,11025,16000,22050,24000,32000,44100,48000)
+(5)支持播放的音频数据来源:res文件夹下的音频,assets文件夹下的音频,sdcard目录下的音频,在线网络音频,代码中定义的音频二进制数据等等
+优势:
+(1)避免音频数据频繁在native层和Java层拷贝,提高效率
+(2)相比于Java API,可以更灵活地控制参数
+(3)由于是C代码,因此可以做深度优化,比如采用NEON优化
+(4)代码细节更难被反编译
+劣势:
+(1)不支持版本低于Android2.3(API 9)的设备
+(2)没有全部实现OpenSL ES定义的特性和功能
+(3)不支持MIDI
+(4)不支持直接播放DRM或者加密的内容
+(5)不支持音频数据的编解码,如需编解码,需要使用Mediacodec API或者第三方库
+(6)在音频延时方面,相比于上层API,并没有特别明显地改进
+
+3.OpenSL ES的一些基本概念
+Objects和Interfaces
+
+OpenSL ES 有两个必须理解的概念，就是 Object 和 Interface，Object 可以想象成 Java 的 Object 类，Interface 可以想象成 Java 的 Interface，但它们并不完全相同，下面进一步解释他们的关系：
+（1） 每个 Object 可能会存在一个或者多个 Interface，官方为每一种 Object 都定义了一系列的 Interface
+（2）每个 Object 对象都提供了一些最基础的操作，比如：Realize，Resume，GetState，Destroy 等等，如果希望使用该对象支持的功能函数，则必须通过其 GetInterface 函数拿到 Interface 接口，然后通过 Interface 来访问功能函数
+（3）并不是每个系统上都实现了 OpenSL ES 为 Object 定义的所有 Interface，所以在获取 Interface 的时候需要做一些选择和判断
+
+所有的Object在OpenSL里面我们拿到的都是一个SLObjectItf：
+这里的SLObjectItf是一个二级指针，它指向的是一个结构体指针。任何创建出来的Object都必须调用 Realize 方法做初始化，在不需要的时候可以使用 Destroy 方法来释放资源。
+
+Interface则是方法的集合,例如SLRecordItf里面包含了和录音相关的方法,SLPlayItf包含了和播放相关的方法。我们功能都是通过调用Interfaces的方法去实现的，如 SLEngineItf 这个interface,我们可以通过它去创建各种Object,例如播放器、录音器、混音器的Object,然后在用这些Object去获取各种Interface去实现各种功能。
+
+4.OpenSL ES的状态机制
+任何一个OpenSL ES的对象,创建成功后，都进入SL_OBJECT_STATE_UNREALIZED状态,这种状态下,系统不回为它分配任何资源,直到调用Readlize函数为止
+Realize后的对象,就会进入SL_OBJECT_STATE_REALIZED状态,这是一种"可用"的状态,只有在这种状态下,对象的各个功能和资源才能正常地访问
+当一些系统事件发生后,比如出现错误或者Audio设备被其他应用抢占,OpenSL ES对象会进入SL_OBJECT_STATE_SUSPENED状态,如果希望回复正常使用,需要调用Resume函数
+当调用对象的Destroy函数后,则会释放资源,并回到SL_OBJECT_STATE_UNREALIZED状态
+
+4.1 Data Source 和 Data Sink
+OpenSL ES 里面，这两个结构体均是作为创建 Media Object 对象时的参数而存在的，data source 代表着输入源的信息，即数据从哪儿来、输入的数据参数是怎样的；而 data sink 则代表着输出的信息，即数据输出到哪儿、以什么样的参数来输出。
+typedef struct SLDataSource_ {
+    void *pLocator;
+    void *pFormat;
+} SLDataSource;
+typedef struct SLDataSink_ {
+    void *pLocator;
+    void *pFormat;
+} SLDataSink;
+其中，pLocator 主要有如下几种：
+SLDataLocator_Address
+SLDataLocator_BufferQueue
+SLDataLocator_IODevice
+SLDataLocator_MIDIBufferQueue
+SLDataLocator_URI
+也就是说，Audio Object 对象的输入源/输出源，既可以是 URL，也可以 Device，或者来自于缓冲区队列等等，完全是由 Audio Object 对象的具体类型和应用场景来配置。
+
+5. OpenSL ES的基本开发流程
+这里以使用OpenSL ES来播放一个PCM文件为例，主要包括：
+1.创建接口对象
+2.设置混音器
+3.创建播放器(录音器)
+4.设置缓冲队列和回调函数
+5.设置播放状态
+6.启动回调函数
+
+问题整理：
+问题1：  AudioTrack AUDIO_OUTPUT_FLAG_FAST来源?
+步骤流程：
+AudioPlayer_to_android.cpp中
+1.初始化player对象过程中调用checkAndSetPerformanceModePre设置flag
+2.设置规则根据，如果客户端不指定的话(audioPlayer_setPerformanceMode)，默认是ANDROID_PERFORMANCE_MODE_LATENCY属性对应flag=AUDIO_OUTPUT_FLAG_FAST | AUDIO_OUTPUT_FLAG_RAW
+
+#====================================================================
+各层dump数据代码位置
+1.Bluetooth dump音频位置：
+system/bt/audio_a2dp_hw.cc->out_write(); //AudioFlinger处理完数据传入位置
+
+#====================================================================
+Android 7.0 Audio的Resample过程详解
+http://blog.chinaunix.net/uid-31390529-id-5760167.html
+
+#====================================================================
+ExoPlayer的使用介绍
+https://www.jianshu.com/p/628481250b59?from=timeline
+
+Github源码
+https://github.com/google/ExoPlayer
+
+官方开发文档
+https://exoplayer.dev/hello-world.html
+
+ExopPlayer Demo
+https://github.com/songwenju/UseExoPlayer
+
+#====================================================================
+杂项问题整理：
+(1)创建AudioFlinger侧Client对象时,会直接创建4M的共享内存
+size_t heapSize = property_get_int32("ro.af.client_heap_size_kbyte", 0);
+heapSize *= 1024;
+if (!heapSize) {
+    heapSize = kClientSharedHeapSizeBytes;
+    // Increase heap size on non low ram devices to limit risk of reconnection failure for
+    // invalidated tracks
+    if (!audioFlinger->isLowRamDevice()) {
+        heapSize *= kClientSharedHeapSizeMultiplier;
+    }
+}
+当前进程创建多个Track分配pcm数据共享内存时会从此4M空间中分配，如果超过4M则创建AudioTrack会失败
+
+(2)每个Track创建时，分配共享空间大小计算
+分配空间大小受创建AudioTrack时的参数影响
+frameCount即客户端创建Audiotrack传入的buffer大小。roudup向上取2的整数倍(比如3就取4,18就取32),在计算出byte个数加上首各对象大小.
+最主要还是受客户端传递的buffer大小,Samplerate,Channel数影响
+
+size_t minBufferSize = buffer == NULL ? roundup(frameCount) : frameCount;
+
+mFrameSize(audio_has_proportional_frames(format) ?
+                mChannelCount * audio_bytes_per_sample(format) : sizeof(int8_t))
+
+minBufferSize *= mFrameSize;
+
+size_t size = sizeof(audio_track_cblk_t);
+if (buffer == NULL && alloc == ALLOC_CBLK) {
+   size += bufferSize;
+}
+
+(3)HAL层FrameCount以及Thread中的FrameCount计算及大小
+调用函数Threads.cpp->void AudioFlinger::PlaybackThread::readOutputParameters_l()
+1.1 mFrameSize = mOutput->getFrameSize(); //获取hal层的每个帧的大小，单位:byte
+1.2 mOutput->stream->getBufferSize(&mBufferSize) //获取hal层buffer大小
+    1.2.1 audio_hw.c out_get_buffer_size() {out->config.period_size * audio_stream_out_frame_size((const struct audio_stream_out *)stream);} //period_size就是创建线程时设置的结构体信息，period_size未使用设置的参数，而是在代码中根据系统属性从新设置成192
+1.3 mFrameCount = mBufferSize / mFrameSize; //hal层帧数大小
+1.4 size_t minNormalFrameCount = (kMinNormalSinkBufferSizeMs * mSampleRate) / 1000; //20ms需要的帧数
+    size_t maxNormalFrameCount = (kMaxNormalSinkBufferSizeMs * mSampleRate) / 1000;//24ms需要的帧数
+    multiplier = (double) minNormalFrameCount / (double) mFrameCount; //需要的最小帧数/hal层缓存大小 算出一个系数
+    mNormalFrameCount = multiplier * mFrameCount; // 系数*hal层缓存大小就= output缓存大小，这个mNormalFrameCount相当于Output的缓存数(通过对mNormalFrameCount的计算得出)
+
+(4)Output线程中创建buffer的使用
+4.1 SinkBuffer
+ 4.1.1 创建流程void AudioFlinger::PlaybackThread::readOutputParameters_l();
+        const size_t sinkBufferSize = mNormalFrameCount * mFrameSize;
+        (void)posix_memalign(&mSinkBuffer, 32, sinkBufferSize);
+ 4.1.2 赋值给AudioMixer，AudioMixer进行混音，混音后判断是否存在FastMixer，如果存在则继续写入FastMixer
+
+4.2 MixerBuffer
+ 4.1.1 创建流程void AudioFlinger::PlaybackThread::readOutputParameters_l();
+    if (mMixerBufferEnabled) {
+       mMixerBufferFormat = AUDIO_FORMAT_PCM_FLOAT; // also valid: AUDIO_FORMAT_PCM_16_BIT.
+       mMixerBufferSize = mNormalFrameCount * mChannelCount
+               * audio_bytes_per_sample(mMixerBufferFormat);
+       (void)posix_memalign(&mMixerBuffer, 32, mMixerBufferSize);
+    }
+ 4.1.2 作用没搞懂
+
+#====================================================================
+函数分析：AudioFlinger::MixerThread::prepareTracks_l()
+
+在这里消费者是AudioFlinger threadLooper.中MixerThreadLoop。这里不考虑Fast ，重采样，效果链，这样分析比较简单。
+大致过程：
+对应的track被添加到active list，可以检索到了，会去判断当前的track的状态，以及是否上次循环已经有mixed过了，来决定它的填充帧数的要求；
+判断是否ready了，第一次的填充需要将app申请缓冲区都填满，之后就会将mFillingUpStatus设置为filled，那之后这边就直接pass了
+判断暂停、停止、终止等状态
+如果以上都pass的话，那就会开始进行audiomixer的设置，包括音量，缓冲区，格式等一系列可能需要在mixer中完成的参数告诉它，因为可能牵扯到downmix、reformat、resampler等等。并且使能audiomixer ，更新下mMixerStatus和mMixerStatusIgnoringFastTracks 如果有效果的话，则对缓冲区进行相关清理等工作。
+在Loop 中比较重要的两个函数prepareTracks_l和进行分析。
+
+ AudioFlinger::MixerThread::prepareTracks_l(Vector< sp > *tracksToRemove)
+{
+..
+    mixer_state mixerStatus = MIXER_IDLE;
+    // 看有多少个track需要被处理的
+    size_t count = mActiveTracks.size();
+    size_t mixedTracks = 0;
+    size_t tracksWithEffect = 0;
+针对tracklist ,x
+
+    mMixerBufferValid = false;  // 有使用mixerbuffer的tracks被找到并且有数据会被置为true
+    mEffectBufferValid = false; // 有使用mixerbuffer的tracks被找到并且有数据会被置为true
+
+    for (size_t i=0 ; i<count ; i++) {
+        const sp t = mActiveTracks[i].promote();
+        if (t == 0) {
+            continue;
+        }
+
+        Track* const track = t.get();
+
+        {   // local variable scope to avoid goto warning
+
+        audio_track_cblk_t* cblk = track->cblk();
+
+        // 对于第一次被添加进来的track，我们会等待它把buffer都填充满才来处理的。
+        int name = track->name();
+        // 为了防止用户在结束的时候没有通过调用stop函数来终止播放，而是依赖underrun来结束，添加了变量
+        // mMixerStatus来记录上一次的track的mix的情况。
+        // mMixerStatus == MIXER_TRACKS_READY意味着上一次的循环，track已经被mixed过了。
+        // 也侧面反映了，上一次还是有数据的，如果上一次没有被mixed过的话，那我们就直接采用最小的来帮忙
+        // 将剩下的数据排空
+        size_t desiredFrames;
+        const uint32_t sampleRate = track->mAudioTrackServerProxy->getSampleRate();
+        AudioPlaybackRate playbackRate = track->mAudioTrackServerProxy->getPlaybackRate();
+        // 确保有足够的数据来填充满hal层的一个buffer
+        // 计算hal层buffer映射到当前速率，采样率下是多少帧
+        desiredFrames = sourceFramesNeededWithTimestretch(
+                sampleRate, mNormalFrameCount, mSampleRate, playbackRate.mSpeed);
+        // 数据已经被AudioMixer获取，但是尚未release，所以需要加上这个部分，因为此时client还没呈现
+        // 出来变化
+        desiredFrames += mAudioMixer->getUnreleasedFrames(track->name());
+
+        uint32_t minFrames = 1;
+        // minFrames需要AudioMixer在上一轮的操作中已经被enable了，并且track的需要满足下面条件
+        // 才会被设置为desiredFrames，为什么pausing的时候，也不给机会呢，这个时候缓冲区的数据可能
+        // 没办法完全满足desiredFrames，但是我们依然要制造volume ramp，所以只能这么做了。
+        if ((track->sharedBuffer() == 0) && !track->isStopped() && !track->isPausing() &&
+                (mMixerStatusIgnoringFastTracks == MIXER_TRACKS_READY)) {
+            minFrames = desiredFrames;
+        }
+
+        size_t framesReady = track->framesReady();
+        // 对于pause的场景，是会直接戛然而止，而不会将app写进去尚未消费的数据用掉
+        // 对于stop的场景， 是会将数据都用光的。
+        if ((framesReady >= minFrames) && track->isReady() &&
+                !track->isPaused() && !track->isTerminated())
+        {
+            mixedTracks++;
+
+            chain.clear();
+            if (track->mainBuffer() != mSinkBuffer &&
+                    track->mainBuffer() != mMixerBuffer) {
+                if (mEffectBufferEnabled) {
+                    mEffectBufferValid = true; // Later can set directly.
+                }
+                // 能进入到这边，说明这个track关联到了一个效果链中。
+                chain = getEffectChain_l(track->sessionId());
+                if (chain != 0) {
+                    tracksWithEffect++;
+                } else {
+                }
+            }
+
+            int param = AudioMixer::VOLUME;
+            if (track->mFillingUpStatus == Track::FS_FILLED) {
+                // no ramp for the first volume setting
+                // 对于第一次的音量设置，不采用ramp volume，一旦进来就被设置为FS_ACTIVE了。
+                track->mFillingUpStatus = Track::FS_ACTIVE;
+                // RESUMING只有pausing或者PAUSED才可能触发。
+                // 可以想到的场景就是，start了之后数据尚未满足ready，然后就被pause，然后再被start。
+                if (track->mState == TrackBase::RESUMING) {
+                    track->mState = TrackBase::ACTIVE;
+                    param = AudioMixer::RAP_MVOLUME;
+                }
+          ....(音量，效果链等.).
+
+            // 如果上一次没有ready，这次只要有一个track已经ready，则为ready
+            if (mMixerStatusIgnoringFastTracks != MIXER_TRACKS_READY ||
+                    mixerStatus != MIXER_TRACKS_ENABLED) {
+                mixerStatus = MIXER_TRACKS_READY;
+            }
+        } else {
+            if (framesReady < desiredFrames && !track->isStopped() && !track->isPaused()) {
+                track->mAudioTrackServerProxy->tallyUnderrunFrames(desiredFrames);
+            }
+            // clear effect chain input buffer if an active track underruns to avoid sending
+            // previous audio buffer again to effects
+            chain = getEffectChain_l(track->sessionId());
+            if (chain != 0) {
+                chain->clearInputBuffer();
+            }
+            // 如果track是使用共享内存，或者已经终止、停止、暂停，则会进入下面逻辑。 
+            if ((track->sharedBuffer() != 0) || track->isTerminated() ||
+                    track->isStopped() || track->isPaused()) {
+                // 会在继续填充latency的时间长度的空白数据，这个有优化空间
+                size_t audioHALFrames = (latency_l() * mSampleRate) / 1000;
+                size_t framesWritten = mBytesWritten / mFrameSize;
+                if (mStandby || track->presentationComplete(framesWritten, audioHALFrames)) {
+                    // 如果track是stopped状态，则重置track。
+                    if (track->isStopped()) {
+                        track->reset();
+                    }
+                    // 加入到移除队列
+                    tracksToRemove->add(track);
+                }
+            } else {
+                // 如果不是共享内存，并且当前状态不是终止、停止、暂停，就说明肯定就是数据给的不够。
+                // 这个时候会给它50次的机会进行填充，如果还不满足就移掉active list了。
+                if (--(track->mRetryCount) <= 0) {
+                    tracksToRemove->add(track);
+                    // 告诉app的track由于underrun被disable，如果数据够，会自动调用start()方法
+                    android_atomic_or(CBLK_DISABLED, &cblk->mFlags);
+                // 只要有一个active track尚未ready，那就标志mixer states为not ready
+                // 但是这边有个例外的，上一次已经设置为enable，并且有两个track，一个ready，另外
+                // 一个not ready，则这次的mixer states会被设置为READY
+                } else if (mMixerStatusIgnoringFastTracks == MIXER_TRACKS_READY ||
+                                mixerStatus != MIXER_TRACKS_READY) {
+                    mixerStatus = MIXER_TRACKS_ENABLED;
+                }
+            }
+          ...
+code 太长，逻辑太多就比较复杂。
+
+#====================================================================
+
+
+
+#====================================================================
+
+
+
+#====================================================================
+
+
+
+#====================================================================
+
+
+
+#====================================================================
+
+
+
+#====================================================================
+
+
+
+#====================================================================
+
 
 #====================================================================

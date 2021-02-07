@@ -81,7 +81,9 @@ https://source.android.google.cn/setup/build/downloading
 12.java反射机制
    https://www.cnblogs.com/ysocean/p/6516248.html
    https://www.cnblogs.com/yrstudy/p/6500982.html
-   一个类在 JVM 中只会有一个 Class 实例,
+  【JavaSE 反射】反射（使用层面：很简单基础性的东西）
+   https://www.huaweicloud.com/articles/49d11fab9385a57083179c7f04badc13.html
+注：一个类在 JVM 中只会有一个 Class 实例
 
 #====================================================================
 13.Android组件系列----Intent详解

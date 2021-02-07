@@ -82,7 +82,7 @@ http://code.google.com/p/dex2jar/downloads/list
 
 #====================================================================
 2.9 NDK Build
-我们知道Android系统下的应用程序主要是由Java语言开发的，但这并不代表它不支持其他语言，比如C++和C。事实上，不同类型的应用程序对编码语言的诉求是有区别的---普通的Application的UI界面基本上是静态的，所以，利用Java开发更有优势；而游戏程序，以及其他需要鲫鱼OpenGL(或鲫鱼各种Game Engine)来回执动态界面的应用程序则更适合采用C或C++语言。
+我们知道Android系统下的应用程序主要是由Java语言开发的，但这并不代表它不支持其他语言，比如C++和C。事实上，不同类型的应用程序对编码语言的诉求是有区别的---普通的Application的UI界面基本上是静态的，所以，利用Java开发更有优势；而游戏程序，以及其他需要基于OpenGL(或基于各种Game Engine)来回执动态界面的应用程序则更适合采用C或C++语言。
 伴随着Android系统的不断发展，开发者对于C/C++语言的需求越来越多，也使得Goole需要不断完善它所提供的NDK工具链。NDK的全称是Native Development Kit，可以有效支撑Android系统中使用C/C++等Native语言进行开发，从而可以让开发者:
     (1)提高程序运行效率
     (2)复用一有的C和C++库
@@ -91,11 +91,11 @@ http://code.google.com/p/dex2jar/downloads/list
 第3章 Android编译系统
 
 3.1 Makefile入门
-MakeFile提供了一种机制让，使用者可以有效地组织"工作"，MakeFile并不一定是用来完成编译工作，事实上它本身只是一种"规则"的执行者，和shell，python等累死，Makefile也是一个脚本，由make程序来解析。目前软件行业有多款优秀的make解析程序，如GNU make(Android中采用的)，Visual Studio中的nmake等。尽管在表现形式上会有些差异，但"玩遍不离其宗"，他们都是通过一下基础规则扩展起来的:
+MakeFile提供了一种机制让，使用者可以有效地组织"工作"，MakeFile并不一定是用来完成编译工作，事实上它本身只是一种"规则"的执行者，和shell，python等类似，Makefile也是一个脚本，由make程序来解析。目前软件行业有多款优秀的make解析程序，如GNU make(Android中采用的)，Visual Studio中的nmake等。尽管在表现形式上会有些差异，但"万变不离其宗"，他们都是通过一下基础规则扩展起来的:
 TARGET : PREREQUISITES
     COMMANDS
-注意:每个COMMAND钱都必须有一个TAB制表符
-在Makefile规则中，TARGET是需要生成的目标文件，PREREQUISITES达标目标所依赖的所有文件。当PREREQUISITES文件中有任何一个比TARGET新时，那么哦都会出发下面COMMAND命令的执行。COMMAND的具体内容取决于使用者的需求，如调用GCC编译器，生成某个文档等。
+注意:每个COMMAND前都必须有一个TAB制表符
+在Makefile规则中，TARGET是需要生成的目标文件，PREREQUISITES达标目标所依赖的所有文件。当PREREQUISITES文件中有任何一个比TARGET新时，那么都会出发下面COMMAND命令的执行。COMMAND的具体内容取决于使用者的需求，如调用GCC编译器，生成某个文档等。
 
 #====================================================================
 3.2 Android编译系统
@@ -156,6 +156,613 @@ host_static_library.mk : 负责BUILD_HOST_STATIC_LIBRARY的具体实现
 product_config.mk : 产品级别的配置,属于config的一部分
 version_defaults.mk : 负责生成版本信息,默认格式为BUILD_NUMBER := eng.$(shell echo $${USER:0:6}).$(shell $(DATE) +%Y%m%d.%H%M%S)
 
+3.2.7 Android.mk的编写规则
+host的意义是指程序将运行或被使用在开发环境所处的机器上，如在widows操作系统中Eclipse集成开发环境中开展产品研发，那么host程序就运行在windows中
+
+#====================================================================
+3.3 Jack Toolchain
+从6.0版本开始，Android编译系统中一个比较大的变化是采用了全新的Java编译链，即Jack(Java Android Complier kit)
+Jack的主要任务是取代以前版本中的javac，Proguard，jarjar，dx等诸多工具，以一种全新的方式来将Java源文件编译成Android的Dex字节码.它的优势在于可以加快编译速度，具有内建的shrinking，obfuscation，repackaging和multidex等功能，并且完全开源
+
+Jack可以加快编译速度的一个重要原因是提供了一个能随时待命的Server，与遗忘的JRE JVM相比，这种凡事显然可以节省启动和初始化的时间(这有点类似于Gradle的做法)。当然，如果一直没有新的编译任务到达，一定时长后，JackServer也会自动关闭，以避免对系统资源的无端消耗。
+JackServer对应的配置文件是$HOME/.jack
+
+由于Jack是一项experimental的特性，或多或少都存在着一些bug，所以，大家在开发过程中，(包括应用程序和系统开发)如果遇到了确实是由于Jack所引发的问题，而且这个问题暂时还无法得到解决的话，那么可以选择不用Jack来进行编译(注意：并不是所有情况下都适用，比如存在其他依赖关系的时候)。具体做法是在Android.mk中添加如下语句：
+LOCAL_JACK_ENABLED := disabled
+
+#====================================================================
+3.4 SDK的编译过程
+简单来说，SDK是Android系统提供给开发人员的一个"工具集"。
+
+3.4.1 envsetup.sh
+大家都知道在编译Android系统之前，首先需要执行build目录下的envsetup.sh。这个脚本中除了包含后续步骤所需的函数定义外，还会做很多准备工作。
+从脚本function hmm函数可以大概看出envsetup.sh所提供的功能
+croot : 回到树的根位置，即AOSP工程的根目录
+m : 从树根节点开始执行make
+mm : make当前目录下的所有模块，但是不包括它们的依赖
+mmm : make指定目录下的模块，但是不包括他们的依赖
+mma : make当前目录下的所有模块，以及他们的依赖
+mmma : make指定目录下的模块，以及他们的依赖
+cgrep : 只针对所有C/C++文件执行grep命令
+ggrep : 只针对gradle文件执行grep命令
+jgrep : 只针对所有Java文件执行grep命令
+resgrep : 只针对所有"res/*.xml"文件执行grep命令
+mangrep : 只针对所有AndroidManifest.xml文件执行grep命令
+sepgrep : 只针对所有sepolicy文件执行grep命令
+sgrep : 针对所有源代码文件执行grep命令
+godir : 转到包含执行文件的目录下
+除了提供很多实用的函数外，envsetup.sh在文件的最后还会扫描和加载device和vendor目录下的vendorsetup.sh文件
+需要特别注意的是，上述脚本对vendorsetup.sh文件的扫描深度为4，vendorsetup.sh会通过add_lunch_combo命令来未lunch添加一条加载项
+
+3.4.3 make sdk
+SDK包含的东西比较多，除了各种文档和framework中间件(android.jar)外，还有平台工具，字体，以及各种image文件(如system/userdata，这些都是模拟器运行所必须的)等
+
+#====================================================================
+3.5 Android系统GDB调试
+详见P35页
+
+#====================================================================
+第2篇 Android原理篇
+第4中 操作系统基础
+4.1.1 冯.诺依曼结构
+他提出了两个对计算机领域产生了深远影响的观点
+(1)采用二进制,抛弃十进制
+(2)程序存储,具体而言,程序指令和数据都存放在同一内存储器中,因此他们的宽度是一样的.
+
+4.1.2 哈佛结构
+哈佛结构是对冯诺依曼结构的改进和完善，这意味着:
+(1)指令与数据可以有不同的数据宽度;
+(2)执行速度快
+哈佛结构的缺点在于架构复杂且需要两个存储器,因而通常会被运用在对速度有特殊需求且成本预算相对较高的场合.
+不论是何种结构,它们所包含的基本元素都是不变的,即:
+(1)CPU(中央处理器);
+(2)内存储器;
+(3)输入设备;
+(4)输出设备
+其中输入和输出设备一般会统称为I/O设备(外存储器实际上也归于这一类).因而,最后可以把计算机结构简化为:
+(1)中央处理器
+(2)内存储器
+(3)I/O设备
+
+#====================================================================
+4.2 什么是操作系统
+计算机操作系统是负责管理系统硬件，并未上层应用提供稳定编程借口和人机交互界面的软件集合
+
+#====================================================================
+4.3 进程间通信的经典实现
+IPC中参与通信的进程既可运行在同一台机器上，也允许他们存在各自的设备环境中(RPC).如果进程是跨机器运行的,则通常由网络连接在一起。
+
+4.3.1 共享内存(Shared Memory)
+共享内存是一种常用的进程间通信机制.由于两个进程可以直接共享访问同一块内存区域,减少了数据的赋值操作,因而速度上的优势比较明显.实现内存共享的步骤如下:
+(1)创建内存共享区
+进程1首先通过操作系统提供的API从内存中申请一块共享内存区域---比如Linux环境中可以通过shmget函数来实现.生成的共享内存快将与某个特定的key(既shmget的第一个参数)进行绑定
+(2)Step2.映射内存共享区
+成功创建了内存共享区后,我们需要将它映射到进程1的空间中才能进一步操作.在Linux环境下,这一步可以通过shmat来实现
+(3)访问内存共享区
+进程1已经创建了内存共享区,进程2利用第一步中的key.通过shmget,并传入同一个key值即可,然后进程2执行shmat,将这块内存映射到它的空间中.
+(4)进程间通信
+共享内存的各个进程实现了内存映射后,便可以利用该区域进行信息交换.由于内存共享本身并没有同步的机制,所以参与通信的诸进程需要自己协商处理
+(5)撤销内存映射区
+完成了进程间通信后,各个进程都需要撤销之前的映射操作.在Linux中，这一步可以通过shmdt来实现。
+(6)删除内存共享区
+最后必须删除共享区域,以便回收内存.在Linux环境中,可以通过shctl函数来实现
+
+4.3.2 管道(Pipe)
+管道也是操作系统中常见的一种进程间通信方式，它适用于所有POSIX系统以及Windows系列产品
+Pipe进程A与进程B进行通信:
+(1)分立管道的两边,进行数据的传输通信
+(2)管道是单向的,意味着一个进程中如果既要"读"也要"写"的话,那么就得建立两根管道.
+(3)一根管道同时具有"读取"端(read end)和"写入"端(write end).比如进程A从write end写入数据,那么进程B就可以从read end读取到数据
+(4)管道有容量限制.即当pipe满时,写操作(write)将阻塞;反之,读操作(read)也会阻塞
+示例详见P96页
+
+4.3.3 UNIX Domain Socket
+基于TCP/IP协议的Socket通信被称为Network Socket.对于运行在同一机器内的进程间通信,Network Socket也完全能够胜任,只不过执行效率未必让人满意
+UNIX Domain Socket(UDS)是专门针对单机内的进程间通信提出来的.两者虽然在使用方法上类似,但内部实现原理却有着很大却被,Network Socket是以TCP/IP协议栈未基础的,需要分包,重组等一系列操作.而UDS因为是本机内的"安全可靠操作",实现机制上并不依赖于这些协议
+Android中使用最多的一种IPC机制是Binder，其次就是UDS.相关资料显示,2.2版本以前的Android系统,曾使用Binder作为整个GUI架构中的进程间通信基础.后来因某些原因不得不弃之而用UDS。UDS的基本流程与传统Socket一致,只是参数上有所区分。
+示例详见P97页
+建立一个Unix Domain Socket的过程还是相对繁琐的,特别是服务器端进程.考虑到这一点,UDS特别提供了一个便捷的函数,即socketpair()--它可以大大简化通信双方的工作
+
+4.3.4 RPC(Remote Procedure Calls)
+从名称上可以看出,RPC涉及的通信双方通常运行于两台不同的机器中.
+一般而言,一个完整的RPC通信需要一下几个步骤:
+(1)客户端进程调用Stub接口
+(2)Stub根据操作系统的要求进行打包,并执行相应的系统调用
+(3)由内核来完成与服务器端的具体交互,它负责将客户端的数据包分发给服务端的内核
+(4)服务端Stub解包并调用与数据包匹配的进程
+(5)进程执行操作
+(6)服务器以上述步骤的逆向过程将结果返回给客户端
+
+#====================================================================
+4.4 同步机制的经典实现
+
+4.4.1 信号量(Senaphore)
+
+4.4.2 Mutex
+
+4.4.3 管程(Monitor)
+管程(Monitor)是可以被多个进程/线程安全访问的对象或模块,管程中的方法都是受mutual exclusion保护的,意味着在同一时刻只允许有一个访问者使用他们.另外,管程还具备如下属性:
+(1)安全性
+(2)互斥性
+(3)共享性
+很多流行的变成语言中都实现了管程机制,如Delphi,Java,Python,Ruby,C#等
+
+4.4.4 Linux Futex
+Futex(Fast Userspace muTEXes)它的核心优势已经体现在其名称中了，既"Fast".Futext的快主要体现于它在应用程序空间中就可以应对大多数的同步场景(只有当需要冲裁时才回进入内核空间),这样一来节省了不少系统调用和上下文切换的时间。
+Futex在Android中的一个重要应用场景是ART虚拟机.如果Android版本中开启了ART_USE_FUTEXES宏,那么ART虚拟中的同步机制就会以Futex为基石来实现.
+对于不存在竞争的情况下,采用futex机制在用户态就可以完成锁的获取,而不需要通过系统调用进入内核态,从而提高了效率.
+
+4.4.5 同步范例
+详见P103页
+
+#====================================================================
+4.5 Android中的同步机制
+目前Android封装的同步累包括:
+(1)Mutex
+    Android中的Mutex只是对pthread提供的API的简单再封装,所以函数声明和实现体都放在同一个文件中,方便了调用者的操作
+    另外,Mutex中好包含一个AutoLock的嵌套类,它是利用变量声明周期特点而设计的一个辅助类
+(2)Condition
+Condition是"条件变量"在Android系统中的实现类,后面的分析中我们将看到它是依赖Mutex来完成的
+(3)Barrier
+Barrier是同时基于Mutex和Condition实现的一个模型,本书在AudioFlinger和SurfaceFlinger这两个章节都会碰到它的实用场景.
+
+4.5.1 进程间同步---Mutex
+我们先来看Mutex类中的一个enum定义。如下所示:
+class Mutex {
+public:
+    enum {
+        PRIVATE = 0;//只限同一进程间的同步
+        SHARED = 1;//支持跨进程间的同步
+    }
+}
+Mutex还特别提供了一个tryLock()来满足程序的多样化需求。这个函数仅会"试探性"地查询资源锁是否可用---如果答案是肯定的就获取它,然后成功返回(返回值为0),从这一点看它和lock()的表现是一样的;但在资源暂不可用的情况下,它并不会进入等待,而同样是立即返回,只是返回值不为0;
+
+4.5.2 条件判断---Condition
+Condition,它的核心思想是判断"条件是否已经满足"----满足的话马上返回,继续执行未完成的动作;否则就进入休眠状态,直到条件满足时有人唤醒它
+
+4.5.3 "栅栏"---Barrier
+Conditon表示"条件",而Barrier表示"栅栏".后者是对前者的一个应用,即Barrier是填充了"具体条件"的Condition.
+顺便提一下,Barrier类是专门为SurfaceFlinger而设计的,并不像Mutex,Condition一样作为常用的Utility提供给整个Android系统使用.
+
+4.5.5 读写锁----ReaderWriteMutex
+Android Art虚拟机中用到互斥和锁操作的地方非常多,为此它实现了一套自己的mutex机制，这种锁的特点是允许有多个对象共享Read锁，但同时却只能有唯一一个对象拥有write锁。ReaderWriteMutex的内部实现并不复杂，它的基础仍然是普通的mutex，并且根据系统是否启用Futex在实现上会有所差异
+
+#====================================================================
+4.6 操作系统内存管理基础
+内存管理(Memory Management)旨在为系统中的所有Task提供稳定可靠的内存分配，释放与保护机制。需要重点理解一下几个核心：
+(1)虚拟内存
+(2)内存分配与回收
+(3)内存保护
+
+4.6.1 虚拟内存(Virtual Memory)虚拟内存的出现未大体积程序的运行提供了可能。它的基本思想是
+(1)将外存储器的部分空间作为内存的扩展，如从硬盘划分出4GB大小
+(2)当内存资源不足时,系统将按照一定算法自动挑选优先级低的数据块，并把他们存储在硬盘中
+(3)后续如果需要用到硬盘中的这些数据块，系统将产生"缺页"指令,然后把他们交换回内存中
+(4)这些操作都是由操作系统内核自动完成的,对上层应用"完全透明"。
+理解虚拟内存机制，首先需要学习3种不同的地址空间
+1.逻辑地址(Logical Address)
+详见P110
+2.线性地址(Linear Address)
+详见P111
+3物理地址(Physical Address)
+物理地址空间很好理解,它是指机器真实的屋里内存所能表示的地址空间范围.比如对于只有64KB内存的系统来说,其物理地址范围是0x0000~0xFFFF.任何操作系统,最终都需要通过真实的屋里地址来访问内存
+
+4.6.2 内存保护(Memory Protection)
+任何进程都没有办法访问到它管辖范围外的内存空间--即便刻意产生的内存越界与非法访问，操作系统也会马上阻止并强行关闭程序，从而有力地保障应用程序和操作系统的安全和稳定
+
+4.6.3 内存分配与回收
+Linux Kernel所面对的核心问题包括但不限于：
+1. 保证硬件无关性
+每个硬件平台的物理内存型号,大小甚至架构(比如不同的体系结构)等都可能是不一样的.这种差异绝对不能体现在应用程序上,操作系统应尽可能实现向上的"透明"
+2. 动态分配内存和回收
+需要考虑的问题很多,如何为内存划分不同的使用区域;分配的粒度问题,即分配的最小单位;如何管理和区别已经使用和未使用的内存;如何回收和在利用等
+3. 内存碎片
+和磁盘管理一样,内存也一样会有碎片的问题
+
+4.6.4 进程间通信---mIndexMap它是兼容POSIX协议的一个系统调用.Linux Kernel和Android系统都频繁使用到了这个函数.比如上层应用在使用Binder驱动前,就必须通过mmap()来为其正常工作提供环境
+正如其名所示(Memry Map),mmap可以将某个设备或者文件映射到应用进程的内存空间中,这样访问这块内存就相当于对设备/文件进行读写,而不需要在通过read(),write()了.有次课件,理论上mmap也可以用于进程间通信,即通过映射同一块物理内存来共享内存.这种方式应为减少了数据赋值的次数,在一定程度上能提高进程间通信的效率
+
+4.6.5 写时拷贝技术(Copy on Write)
+COW(Copy on Write)是Linux中一个非常关键的技术.它的基本思想用一句话来概括,就是多个对象在起始时共享某些资源(如代码段,数据段),直到某个对象需要修改该资源时才拥有自己的一份拷贝.从这个描述不难发现,COW完全可以呗用到虚拟内存管理之外的其他地方--只要它符合COW的预设场景
+
+#====================================================================
+4.7 Android中的Low Memory Killer
+Android系统对于已经启动过一次的Android程序,在一次启动所花的时间明显减少了.原因就在于Android系统并不马上清理那些已经"淡出视野"的程序.换句话说,它们在一定的时间里仍然驻留在内存中.这样做的好处是明显的,即下一次启动不需要在为程序重新创建一个进程;坏处也同样存在,那就是加大了内存OOM(Out Of Memory)的概率
+
+我们先来了解下Linux Kernel中的OOM Killer.内核所管理的进程都有一个衡量其oom权重的值,存储在/proc/<PID>/oom_score中.基于Linux内核OOM Killer的核心思想,Android系统扩展出来自己的内存监控体系.因为Linux下的"内存杀手"要等到系统资源"濒临绝境"的情况下才回产生效果。
+Androi系统为此开发了一个专门的驱动,名未Low Memory Killer(LMK).源代码路径在kernel/msm-4.4/drivers/staging/android/lowmemorykiller.c中
+lowmemkiller中会涉及到几个重要的概念：
+/sys/module/lowmemorykiller/parameters/minfree：里面是以”,”分割的一组数，每个数字代表一个内存级别
+/sys/module/lowmemorykiller/parameters/adj：对应上面的一组数，每个数组代表一个进程优先级级别
+举个例子：
+/sys/module/lowmemorykiller/parameters/minfree：18432,23040,27648,32256,55296,80640
+/sys/module/lowmemorykiller/parameters/adj：0,100,200,300,900,906
+代表的意思：两组数一一对应，当手机内存低于80640时，就去杀掉优先级906以及以上几杯的进程，当内存低于55296时，就去杀掉优先级900以及以上的进程
+对每个进程来说：
+/proc/pid/oom_adj:代表当前进程的优先级，这个优先级是kernel中的优先级，这个优先级与上层的优先级之间有一个换算
+/proc/pid/oom_score_adj:上层优先级，跟ProcessList中的优先级对应
+
+lowmemorykiller.c中的两个数组(lowmem_adj和lowmem_adj_size)只是系统的预定义值,我们还可以根据项目的实际需求来做定制.Android系统提供了相应的文件来供我们修改这两组值
+路径如下:
+/sys/module/lowmemorykiller/parameters/adj
+/sys/module/lowmemorykiller/parameters/minfree
+ActivityManagerService中有一个名未updateOomLevels的函数，其内部实现原理也是通过写上面两个文件来实现的。此外，AMS在运行时还会根据系统的当前配置自动修改adj和minfree，以尽可能适配不同的硬件
+
+4.7.1 对于某些非常重要的应用程序，我们不希望它们被系统杀死。一个最简单的方法就是在它的AndroidManifest.xml文件中给"application"标签添加"android::persistent"属性.不过将应用程序设置未常驻内存要特别慎重
+
+#====================================================================
+4.8 Android匿名共享内存(Anonymous Shared Memory)
+Anonymous Shared Memory(简称Ashmeme)是Android特有的内存共享机制，它可以将指定的屋里内存分别映射到各个进程自己的虚拟地址空间中，从而便捷地实现进程间的内存共享
+详见P119
+
+#====================================================================
+4.9 JNI
+JNI(Java Native Interface)这一概念.它是一种允许运行于JVM的Java程序去调用(反向依然)本地代码(通常JNI面向的本地代码是用C,C++以及会变语言编写的)的编程框架.
+通常有一下3中情况需要用到JNI
+(1)应用程序需要一些平台相关的feature的支持,而Java无法满足
+(2)兼容以前的用其他语言书写的代码库.使用JNI技术可以让Java层的代码访问到这些旧库,实现一定程度的代码复用
+(3)应用程序的某些关键操作对运行速度要求较高。这部分代码可以用底层语言如汇编来编写，在通过JNI向Java层提供访问接口
+
+
+#====================================================================
+4.10 Java中的反射机制
+Java中创建一个Class类最常见的方式如下：
+FileOutputStream fout = new FileOutputStream();
+这种情况意味着我们在编译期便可以确定Class类型。此时编译器可以对new关键字做出很多优化工作，所以这种场景下的运行效率通常是最好的，是开发人员的首选方式.
+而对于那些无法在编译阶段就得到确定的Class类的情况,我们希望有一种技术可以在程序运行过程中去动态创建一个对象---这就是反射机制.反射机制能够富裕程序检查和修正运行时行为的能力
+
+#====================================================================
+4.11 学习Android系统的两条线索
+概述详见P133
+
+#====================================================================
+第5章 Android 进程/线程和程序内存优化
+
+5.1 Android进程和线程
+Android还提供了特殊的方式让不是同一个包里的组件也可以运行于相同的进程中.优势就是,它们可以非常方便地进行资源共享,而不用经过费时费力的进程间通信.分为两种情况:
+(1)针对个别组件
+可以在AndroidManifes.xml文件中的<activity>,<service>,<reciever>和<provider>标签中加入android:process属性来表明这一组件想要运行在哪个进程空间中
+(2)针对整个程序包
+可以直接在<application>标签中加入android:process属性来指明想要依存的进程环境
+
+小结:
+(1)四大组件并不是程序(进程)的全部,而只是它的"零件"
+(2)应用程序启动后,将创建ActivityThread主线程
+(3)同一个包中的组件将运行在相同的进程空间中
+(4)不同包中的组建可以通过一定的方式运行在一个进程空间中
+(5)一个Activity应用启动后至少会有3个线程:即一个主线程和两个Binder线程
+
+#====================================================================
+5.2 Handler，MessageQueue，Runnable与Looper
+详见P146
+
+#====================================================================
+5.3 UI主线程--Activitythread
+AciticytyThread它是Actcity所属的线程，也就是大家熟悉的UI主线程
+(1)UI线程Main Thread, 它使用的是prepareMainLooper(),这个函数将通过prepare()为线程生成一个ThreadLocal的Looper对象,并让smainLooper指向它.这样做的目的就是其他线程如果要获取主线程的Looper,只需要调用getMainLooper即可
+(2)作为普通线程,它调用的是prepare();同时也生成了一个ThreadLocal的Looper对象,只不过这个对象只能在线程内通过myLooper()访问.当然,主线程内部也可以通过这个函数访问它的Looper对象
+
+#====================================================================
+5.4 Thread类
+首先，提醒大家要正确地区分线程和线程类的概念,线程是操作系统CPU资源分配的调度单元,属于抽象的范涛;而线程类的本质仍是可执行代码,在Java中当然也就对应一个类.从这一点上看Thread和其他类并没有任何区别,只不过Thread的属性和方法仅用于完成"线程管理"这个任务而已
+
+5.4.2 Thread休眠和唤醒
+1. wait和 notify/notifyAll
+wait(timeout)
+(1)timeout大于0,说明调用者希望是有条件限制的等待,即当超过timeout时会被认为出错,直接返回.这样做的目的是避免异常情况下的"死等待"
+(2)timeout为0
+无限期等待,直到有人来唤醒它.
+值得特别注意的是，调用者只有称为Object的monitor后，才能调用它的wait方法.而成为一个对象的monitor有以下3种途径.
+(1)执行这个object的synchronized方法
+(2)执行一段synchronized代码,并且是基于这个object做的同步
+(3)如果object是Class类,可以执行它的synchronized static方法
+
+2. interrupt
+如果说wait是一种"自愿"的行为,那么interrupt就是"被迫"的了.调用一个线程的interrupt的目的和这个单词的字面意思一样，就是"中断"它的执行过程.此时有一下3种可能性
+(1)如果Thread正被blocked在某个object的wait上,或者join(),sleep()方法中,那么会被唤醒,终端状态会被清除并接收到InterruotedException
+(2)如果Thread被blocked在InterruptibleChannel的I/O操作中，那么中断状态会被置位，并接收到ClosedByInterruptException，此时channel会被关闭
+(3)如果Thread被blocked在Selector中，那么终端状态会被置位并且马上返回，不会收到任何exception
+
+#====================================================================
+5.5 Android应用程序如何利用CPU的多核处理能力
+就是针对Java-Based的并行编程技术，听起来有点复杂,但实际上大部分人都已经接触过了.第一种方式就是前面小节我们所提到的Java线程,它在Android系统中同样使用.
+另一种可选的并行编程方法是AsyncTask，它是Android开发的专门用于简化多线程实现的Helper类型的类.优点很明显,就是可以不需要通过繁琐的Looper,Handle等机制来与UI线程通信.AsyncTask在设计时的目标是针对比较短时间的后台操作,换句话说,如果你需要在后台长时间执行某事务的话,我们建议你还是使用java.util.concurrent包所提供的Executor,ThreadPoolExecutor和FutureTask等其他API接口
+第三种比较常用的"工作线程"实现模型是IntentService.大家应该已经猜到了.它是四大组件之一Service的子类,区别就在于IntentService可以帮助开发人员以相当简介的语句(只需要实现onHanleIntent接口)来对Service进行后台处理,而无需理会其中各种琐屑的中间过程.
+
+#====================================================================
+5.6 Android应用程序的典型启动流程
+加入即将启动的Activity所属的进程并不存在，那么AMS还需要先把它启动起来.这一步由Process.start实现,它的第一个入参是"android.app.ActivityThread",也就是应用程序的主线程,然后调用它的main函数.ActivityThread启动并做好相应初始化工作后，需要调用attachApplication来通知AMS，后者才能继续执行未完成的startActivity流程。具体而言,AMS通过Applicationthread.scheduleLauncheactivity请求应用程序来启动一个指定的Activity.之后的一系列工作就要依靠应用进程自己来完成,如Activity创建Window,ViewRootimpl,遍历ViewTree等.
+
+#====================================================================
+5.7 Android程序的内存管理与优化
+Android虚拟机系统允许单个进程所能使用的HeapSize的上限也在呈现上升趋势。具体来说，这个值是由特定的系统属性"dalvik.vm.heapsize"决定的,一旦进程申请的heap空间超过系统的
+阀值，就会引发OutOfMemory(OOM)的错误。不过发生这种情况通常只能说明个体情况的"违规",而不是设备真地已经没有任何可用的内存空间了。
+值得一提的是,Android系统允许开发人员在AndroidManifest.xml的<application>中将android:largheap赋值为true,以便获取更大的HeapSize.LargeHeapSize的具体值可以通过getLargeMemeoryClass()来活的.
+
+5.7.1 Android中的内存泄露与内存监测
+
+#====================================================================
+第六章 进程间通信---Binder
+详见P168
+
+6.1 智能指针
+C/C++项目中常见的指针问题可以归纳为
+(1)指针没有初始化
+对指针初始化是程序员必须养成的良好习惯，也是指针问题中最容易解决和控制的一个
+(2)new了对象后没有及时delete
+动态分配的内存对象，其生命周期控制不当尝尝会引来不少麻烦
+(3)野指针
+我们new了一个对象A，并将指针ptr指向这个新对象(即ptr = new A).当对A的使用结束后,我们注定delete了它,但是没有见ptr指针置空,就会出现野指针问题
+
+6.1.2 强指针sp
+详见P172
+
+6.1.3 弱指针wp
+可以想象这样一个场景:A对象parent指向B对象child，然后B对象又指向A对象，这就存在了循环引用的现象.这有点类似于从左系统中的死锁--因为内存回收者发现两者都是处于"被需要"的状态,当然不能释放,从而形成了恶性循环.解决这个矛盾的有效方法是采用"弱引用".
+和sp相比,wp在类定义上有如下重要区别
+(1)除了指向目标对象的m_ptr外,wp另外有一个m_refs指针,类型未weakref_type
+(2)没有重载->,*等运算符
+(3)有一个prmote方法来将wp提升为sp
+(4)目标对象的傅雷不是LightRefbase,而是RefBase
+
+到此我们就分析完Android系统中的智能指针，小结如下：
+(1)智能指针分为强指针sp和弱指针wp两种
+(2)通常情况下目标对象的父类是RefBase---这个基类提供了一个wekref_impl类型的引用计数器，可以同时进行强弱引用的控制(内部由mstrong和mWeak提供计数)
+(3)当incStrong增加强引用的,也会增加弱引用
+(4)当incWweak时只增加弱引用计数
+(5)使用者可以通过extendObjectLifetime设置引用计数器的规则,不同规则下对删除目标对象的时机判断也是不一样的
+(6)使用者可以根据程序需求来选择合适的智能指针类型和计数器规则
+
+#====================================================================
+6.2 进程间的数据传递再提---Parcel
+同一进程间的对象传递都是通过引用来做的，因为本质上就是传递了一个内存地址.这种方式在跨进程的情况下就无能为力了.由于采用了虚拟内存机制,两个进程都有自己独立的内存地址空间,所以跨进程传递的地址值都是无效的
+Parcel是一种数据的载体,用于承载希望通过IBinder发送的相关信息(包括数据和对象引用)
+注意:如果写入数据时系统发现已经超出了Parcel的存储能力,它会自动申请所需内存空间,并扩展dataCapacity.
+
+6.2.1 Parcelables
+遵循Parcelables协议的对象可以通过Parcel来存取,如开发人员经常用到的bundle就是继承Parcelable的.
+
+6.2.2 Active Objects
+Parcel的另一个强大武器就是读写Active Objects.什么事Active Objects呢?通常我们存入Parcel的是对象的内存，而Active Objects写入的则是他们的特殊标志引用。所以在从Parcel中读取这些对象时,大家看到的并不是重新创建的对象实例,而是原来那个被写入的实例.
+目前主要有两类:
+(1)Binder.Binde一方面Android系统IPC通信的核心机制之一，另一方面也是一个对象.利用Oarcel将Binder对象写入,读取时就能得到原始的Binder对象,或者是它的特殊代理实现(最终操作的还是原始Binder对象)
+(2)FileDescriptor.FileDescriptor是Linux中的文件描述符,可以通过Parcel的如下方法进行传递.因为传递后的对象仍然会基于和原对象相同的文件流进行操作,因而可以认为是ActiveObject的一种
+
+6.2.3 Untyped Containers
+Parcel的JNI层实现在/frameworks/base/core/jni中，实际上Parcel.java只是一个简单的中介，最终所有类型的读写操作都是通过本地代码实现的
+
+#====================================================================
+6.3 Binder驱动与协议
+Android系统是基于Linux内核的，因而它所依赖的Binder驱动也必须是一个标准的Linux驱动.具体而言,Binder Driver会将自己注册成一个misc device,并向上层提供一个/dev/binder节点---值得一提的是Binder节点并不对应真实的硬件设备.Binder驱动运行于内核态,可以提供open(),ioctl(),mmap()等常用的文件操作
+
+#====================================================================
+6.4 "DNS"服务器---Servicemanager[Binder Server]
+详见P193
+
+#====================================================================
+6.5 匿名Binder Server
+Android系统中还存在着另一种BinderServer,它们并不在Service Manager中注册--我们称之为"匿名"的BinderServer.匿名性带来的好处是安全系数的提高,如某个应用程序提供了某种Server服务,但并不希望面向公众开放.
+最后小结一下:一个匿名BinderServer与实名Server的差异主要就在于后者是通过Service Manager来获得对它的引用;而前者则是以其他实名Server为中介来传递这一医用信息,仅此而已.另外,对于Binder驱动而言,只要是"路过"它且以前没有出现过的Binder对象,都会被记录下来.所以:
+(1)实名BinderServer :通过addService把Server添加到SM时是它第一次"路过"驱动,因而会被记录到binder_node中,并在SM的进程信息中添加binder_ref引用.这样后面有客户端需要查询时,SM就能准确得出这一Server所在的binder_node位置了
+(2)匿名Binder Server
+这个场景中,IWindowsession是靠WMS来传递的;并且要等到BinderClient调用openSession时才真正地生成一个Session对象----这个对象作为reply结果值时会第一次"路过"Binder驱动---此时就会被记录到系统服务进程的proc->nodes中,并且target_proc(也就是ViewRootImpl所在进程)会有一个binder_ref指向这一binder_node节点
+
+#====================================================================
+第七章 Android启动过程
+7.1 第一个系统进程init
+Android设备的启动必须经历3各阶段，即BootLoader,LinuxKernel和Android系统服务,默认情况下他们都有各自的启动界面.
+作为Android中第一个被启动的进程,init的PID值为0.它通过解析init.rc脚本来构建出系统的初始运行状态---其他Android系统服务程序大多是在这个"rc"脚本中描述并被相继启动的.
+一个完整的init.rc脚本由4种类型的声明组成,即:
+(1)Action(动作);
+一个Action其实就是相应某事件的过程，即当<trigger>所描述的出发事件产生时，一次执行各种command(同一事件可以对应多个命令);
+(2)Commands(命令);
+命令将在所属事件发生时被一个个地执行
+(3)Services(服务);
+Services其实是可执行程序,它们在特定选项的约束下会被init程序运行或者重启(Service可以在配置中指定是否需要退出时重启,这样当Service出现异常crash时就可以有机会复原)
+(4)Options(选项);
+限制执行条件
+
+
+#====================================================================
+7.2 系统关键服务的启动简析
+7.2.1 Android的"DNS服务器"--ServiceManager
+ServiceManager是Binder机制中的"DNS服务器",负责域名(某Binder服务在ServiceManager注册时提供的名称)到IP地址(由底层Binder驱动分配的值)得解析
+
+7.2.2 "孕育"新的线程和进程---Zygote
+详见P261
+
+7.2.3 Android的"系统服务"---SystemServer
+SystemServer是Android进入Launcher前的最后准备,它提供了众多由Java语言编写的"系统服务"
+一旦我们在init.rc中未Zygote指定了启动参数--start-system-server那么Zygoteinit就会调用startSystemServer来进入SystemServer.而且系统服务又飞别分为Java层和本底层两类.其中Native层服务实现体在android_servers中,需要在run@SystemServer中首先通过System.loadLibrary("android_servers")加载到内存中才能使用
+Java层系统服务，从代码中可以看到，这部分Service可细分为3类，如下所示：
+(1)Bootstrap Service 
+Bootstrap的原意"引导程序",用在这里则代表系统服务中最核心的那一部分.另外,这些Services间仙湖的依赖关系比较浅,因而需要在一起统一管理启动,具体对应的是startBootstraoServices这个函数.按照Android的建议,如果你自己添加的系统服务和它们也有较强的依赖,那么可以与这类系统服务同一放置,否则就应该考虑下面所述的另两类服务
+(2)Core Services
+Core Services相对于BootStrap的优先级略低，主要包括LED和背光管理器，电池电量管理器，应用程序使用情况(Usage Status)管理器等
+(3)Other Services
+这部分服务在3类Service中优先级最低，但数量却最多.比如AccountManagerService,MountService,UsbService等.这些服务全面构筑起Android系统这座"参天大厦",为其他进程,用用程序的正常运行奠定了基础
+
+最后.SystemServer通过Looper.loop()进入长循环中,并一坨onzygouteInit中启动的Binder服务接受和处理外界的请求
+
+7.2.4 Vold和External Storage存储设备
+Android系统支持多种存储设备,包括外置的SDCARD,U盘等,Android系统中的内/外存储设备定义如下:
+(1)Internal Storage
+按照Andrid的设计理念,Internal Storage代表的是/data存储目录.所以目前不少文件管理器事实上混淆了
+(2)External Storage
+所有除Internal Storage之外的可存储区域,从物理设备的角度来看,External Storage由如下几种类型组成:
+(2.1)Emulated Storage
+Android设备中存在的一个典型做法,是从Internal Storage(如Flash)中划分一定的区域(如1GB)来作为外部存储设备,称为Emulated Storage
+(2.2)SDCARD/USB Devices
+通过扩展卡槽或者USB端口来扩展设备的存储能力,也是Android设备中的常见情况
+
+Android系统中的外部存储设备由Vold和Mount Service来统一管理.Vold在启动以后,会通过NETLINK和内核取得联系,并根据后者提供的event来构建存储设备管理系统
+
+不同于以往Install Time Permissions(应用程序所需的权限是在安装或者版本升级过程中赋予的)这种"一刀切"的管理方式,Runtime permission允许用户在程序运行到某些特别功能时再动态决定是否赋予程序相应的权限.这样带来的好处是用户可以更清楚地直到应用程序需要(或者已经授予了)哪些权限,以实现更为"透明"的管理.不过Runtime Permission只对那些系统认为危险的权限进行保护,可以利用如下命令获取详细的权限列表:
+adb shell pm list Permissions -g -d
+
+Runtime Permission权限管理方式的一种很重要的特性就是要求应用程序的权限可以在运行过程中进行动态调整,而且不能导致应用程序的重启.这其中就涉及Package Manager Service,Activity Manager Service,Zygote等多个系统服务.
+
+#====================================================================
+7.3 多用户管理
+多用户管理意味着我们可以在同一台设备中支持多个使用者。Android中的用户也是分类型的,具体如下所示:
+(1)Primary
+这是设备的第一个同时也是首选的用户,类似于Windows中的Administrator.Primary User是不能被删除的,而且会一直处于运行状态.另外,它拥有一些特殊的权限和设置项
+(2)Secondary
+这是被添加到设备中除primary user外的其他用户。它可以被移出,并且不能影响设备中的其他用户
+(3)Guest
+临时性的secondary user，系统中同时只能有一个Guest user
+
+用户类型也直接决定了它们的权限范围，例如只有primary user才拥有对phone call和texts的完全控制权，而secondary默认情况下之只能接听电话，而无拨打或者操作短信功能.淡然,这也取决于Setrtings->Users中针对secondary user的授权情况
+用户安装的程序虽然都在/data/app目录下,但实际它们的数据存储位置则有所差异.具体来说,/data/data目录下保存的是Primary User的数据,而其他用户的数据则被放置于/data/user/<uid>中(/data/user/0和/data/data中的内容是一致的);
+不过从Android5.0开始，多用户的特性默认情况下是被关闭的.我们需要修改以下配置文件来打开:
+frameworks/base/core/res/res/values/config.xml
+<!--  Maximum number of supported users -->
+<integer name="config_multiuserMaximumUsers">1</integer>
+
+#====================================================================
+第八章 管理Activity和组件运行状态的系统进程---ActivityManagerService(AMS)
+
+8.1 AMS功能描述
+和WMS一样，AMS也是寄存于systemServer中的,它会在系统启动时,创建一个线程来循环处理客户的请求.值得一提的是,AMS会向Servicemanager登记多种Binder Server如"activity","meminfo","cpuinfo"等--不过只有第一个"activity"才是AMS的主业，并由ActivityManagerService实现；剩余服务的功能则是由其他类提供的
+将AMS注册到ServiceManager很简单，唯一要注意的是它不只注册了自己一个Server，而是一系列与进程管理相关的服务.要了解AMS提供的功能,最好的方法就是查看IActivityManager.java.此处不一行行列出,而是直接对它进行分类描述
+1.组件状态管理
+这里的组件不仅仅指Activity,而是所有四大组件.状态管理包括组件的开启,关闭等一系列操作,如startActivity,startActivityAndWait,activityPaused,startService,stopService,
+2.组件状态查询
+这类函数用于查询组件当前的运行情况，如getCallingActivity，getServices等
+3.Task相关
+Task相关的函数包括removeSubTask，removeTask，movetaskBackwards，moveTaskToFront等
+4.其他
+处理上述类型的函数外，AMS还提供了不少辅助功能，如系统运行时信息的查询(getMemoryInfo，setDebugApp等)
+
+#====================================================================
+8.2 管理当前系统中Activity状态----ActivityStack
+ActivityStack是管理当前系统中所有Activity状态的一个数据结构,一下数据结构是从ActivityStack.java中提取出来的
+1. ActivityState
+描述了一个Activity所可能经历的所有状态.
+2. 除了状态管理外,ActivityStack中还有一系列不同功能的ArrayList成员变量.它们的共同点在于列表元素都是ActivityRecord---这个类负责记录每个Activity的运行时信息.
+3. 记录特殊状态下的Activity
+除了上面的ArrayList用来描述各种状态下的Activity集合外，ActivityStack还通过多个变量来专门记录一些特殊状态下的Activity实例
+
+AMS是通过ActivityStack(和其他数据结构)来记录，管理系统中的Activity(和其他组件)状态。包含了一下几个重点
+(1) AMS的主要工作就是管理,记录,查询
+(2) AMS是系统进程的一部分(确切地说它运行于一个独立的线程中)
+从内核的角度来说,AMS其实也是普通进程中的一部分,只不过它提供的是全局性的系统服务.值得一提的是,AMS的任务只是负责保管Activity(及其他组件)的状态信息,而像Activity中描述的UI界面如何在物理屏幕上显示等工作则是由WindowManagerService和SurfaceFlinger来完成的
+
+#====================================================================
+8.3 startActivity流程
+先大致降级一下startActivity()所经历的函数调用流程，从调用放(Activity1)开始:Activity1->startActivity@Contextimpl.java->execstartActivity@Instrumentation.java->startActivity@ActivityManagerService.java
+首先来辨别下AMS中5个"长相"类似的startActivity函数
+(1)startActivity@ActivityManagerService.java
+(2)startActivityAsUser@ActivityManagerService.java
+(3)startActivityMayWait@ActivityStack.java
+(4)startActivityLocked@ActivityStack.java
+(5)startActivityUncheckedLocked@ActivityStack.java
+这5个函数存在先后调用的关系
+
+#====================================================================
+8.4 完成同一任务的"集合"---Activity Task
+
+8.4.1 "后劲先出"
+ActivityTask并不能算是严格意义的Stack--它在默认情况下和栈是一致的,但是比栈提供了更多的操作方式,因而可以理解为"栈的一种变异"
+
+8.4.2 管理Activity Task
+详将P299
+
+#====================================================================
+8.5 Instrumentation机制
+谈及"Instrumentation",第一印象可能是自动化测试.这确实是它在Android开发中的一个典型应用场景,不过Instrumentation还有其他不少强大的功能.合理利用Instrumentation又是可以产生意想不到的效果--譬如迫使两个APK运行于同一个进程中,从而达到资源共享的目的
+
+#====================================================================
+第9章 GUI系统--SurfaceFlinger
+GUI(Graphical User Interface)即"图形用户界面",可以说在任何Operating System中都占据着非常重要的位置,因为它是用户对操作系统最直接的"感官"体验.一款优秀的图形界面系统至少要满足一下几个条件:
+(1)流畅性
+(2)友好性
+(3)可扩展行
+
+9.1 OpenGL ES与EGL
+我们按照由"底层到上层"的吮吸来逐步分析阐述架构
+(1)Linux内核提供了统一的framebuffer显示驱动.设备几点/dev/graphics/fb*或者/dev/fb*其中fb0表示第一个Monitor,当前系统实现中只用到了一个显示屏
+(2)Android的HAL层提供了Gralloc,包括fb和gralloc两个设备.前者负责打开内核中的framebuffer,初始化配置,并提供了post,setSwapInterval等操作借口;后者则管理帧缓冲区的分配和释放.这就意味着上层元素只能通过Gralloc来间接访问帧缓冲区,从而保证了系统对framebuffer的有序使用和统一管理。
+另外，HAL层的另一种药模块是"Composer"----如其名所示,它为厂商自定孩子"UI合成"提供了接口.Composer的直接使用者是SurfaceFlinger中的HWComposer(有两个HWComposer)---后者除了管理Composer的HAL模块外,还负责VSync信号的产生和控制.VSync则是"Prohect Butter"工程中加入的一种同步机制,它既可以由硬件产生,也可以通过软件来模拟(VsyncThread)
+(3)由于OpenGL ES是一个通用的函数库,在不同的平台系统上需要被"本地化"把它与具体平台中的窗口系统建立起关联,这样才能保证正常工作.从FramebufferNativeWindow这个名称就能判断出来,它就是负责OpenGL ES在Android平台上本地化的中介之一.后面我们还会看到Android应用程序中所使用的另一个"本地窗口".为OpenGL ES配置本地窗口的是EGL
+(4)OpenGL或者OpenGL ES更多的知识一个借口协议，具体实现既可以采用软件，也可以依托于硬件。OpenGL ES在动态运行时是如何取舍的呢？这也是EGL的作用之一。它会去读取egl.cfg这个配置文件，然后根据用户的设定来动态加载libagl(软件实现)或者libhgl(硬件实现)
+(5)SurfaceFlinger中持有一个成员数组mdisplays来描述系统中支持的各种"显示设备"---具体有哪些Display是由SurfaceFlinger在readyToRun中判断并赋值的;并且DisplayDevice在初始化时海景调用eglGetDisplay,eglCreateWindowSurface等接口,并利用EGL来完成对OpenGL ES环境的搭建
+(6)很多模块都可以调用OpenGL ES提供的API(这些接口以"gl"为前缀,如glViewport,glClear,glMatrixMode,glLoadIdentity等),包括SurfaceFlinger,DisplayDevice等
+(7)于OpenGL ES相关的模块可以分为如下几类
+    (1)配置类
+    (2)依赖类:也就是OpenGL ES要正常运行起来所依赖的"本地化"的东西
+
+#====================================================================
+9.2 Android的硬件接口---HAL
+对于Android中很多子系统来说(如显示系统，音频系统等),HAL都是必不可少的组成部分---HAL是这些子系统与Linux Kernel驱动之间通信的统一接口
+HAL需要解决如下问题点:
+(1)硬件接口抽象
+    HAL并不是专门针对某个特定的硬件设备来设计的,因而如何从众多类型的设备中提取出它们的共同属性并付诸软件实现是一个关键
+(2)接口的稳定性
+    可想而知，HAL层借口是不允许频繁更懂的,否则就失去了意义
+(3)灵活的使用方法
+    除了上面两点外,HAL还需要提供一套灵活的使用方法,以供硬件开发商以及上层使用者定制他们的需求
+
+9.2.1 硬件接口抽象
+面向对象的涉及思想告诉我们，这里的"抽象"涉及了继承关系---"抽象的硬件"是父类,而"具体的硬件"则是子类.这在C++中很容易实现,但是HAL多数是由C语言实现的,怎么办呢?
+其实很简单,只要让子类数据结构的第一个成员变量是父类结构即可.举个audio的例子,定义如下:
+/**
+ * Every hardware module must have a data structure named HAL_MODULE_INFO_SYM
+ * and the fields of this data structure must begin with hw_module_t
+ * followed by module specific information.
+ */
+struct audio_module {
+    struct hw_module_t common;
+};
+首先,每一个硬件模块都必须有一个名称为HAL_MODULE_INFO_SYM的变量。比如audio_hw.c中的实现：
+struct audio_module HAL_MODULE_INFO_SYM = {
+    .common = {
+        .tag = HARDWARE_MODULE_TAG,
+        .module_api_version = AUDIO_MODULE_API_VERSION_0_1,
+        .hal_api_version = HARDWARE_HAL_API_VERSION,
+        .id = AUDIO_HARDWARE_MODULE_ID,
+        .name = "QCOM Audio HAL",
+        .author = "The Linux Foundation",
+        .methods = &hal_module_methods,
+    },
+};
+其次，此变量的数据结构要以hw_module_t(即前面所说的父类)开头,其后的内容才是各硬件模块特有的部分(即子类).从效果来看,上面的实现就体现了继承关系.
+
+2. 接口的稳定性
+对于某一类硬件设备来说,它所提供的HAL接口必须是稳定不变的---Android系统已经预先定义好了这些接口,硬件设备商只需要按照要求来"填空"即可.HAL各硬件接口的定义统一放置在工程源码中:hardware/libhardware/include/hardware
+
+#====================================================================
+9.3 Android终端显示设备的"化身"---Gralloc与Framebuffer
+相信做过Linux开发的人对Framebuffer都不会太陌生,它是内核系统提供的图形硬件的抽象描述.之所以称为buffer,是因为它也占用了系统存储空间的一部分,是一块包含屏幕显示信息的缓冲区.由此可见,在"一切皆文件"的Linux系统中,Framebuffer被看成了终端显示设备的"化身"
+另外，Framebuffer借住于Linux文件系统向上层应用提供了统一而高效的操作接口,从而让用户空间中运行的程序可以在不做太多修改的情况下去适配多种显示设备。
+Android的各个子系统通常不会直接使用内核驱动,而是由HAL层来简介引用底层架构.显示系统中也同样如此--它借助于HAL层来操作帧缓冲区,而完成这一中介任务的就是Gralloc
+详见P309
+
+#====================================================================
+9.4 Android中的本地窗口
+在OpenGL的学习过程中，我们不断提及"本地窗口"(Native Window)这一概念.简单而言,NativeWindow为OpenGL与本地窗口系统之间搭建了"桥梁",所以称为OpenGL能否兼容多种系统(如Windows,Android)的关键.
+根据整个Android系统的GUI设计理念,我们不难猜想到至少需要两种本地窗口
+(1)面向管理者(Surfaceflinger)
+既然SurfaceFlinger扮演了系统中所有UI界面的管理者,那么它无可厚非需要直接或间接地持有"本地窗口".我们知道,这个窗口就是FramebufferNativeWindow
+(2)面向应用程序
+这类本地窗口是Surface
+一个系统设备中显然只会有一个帧缓冲区Framebuffer，而按照"理想窗口系统"的设计,每个应用程序都需要各自使用和管理Framebuffer---其结果就会像"幼儿园"的几个小朋友共用一块画板来涂鸦一样.
+如图P314 图9-8
+在这个改进的窗口系统中,我们有了两类本地窗口,即NativeWindow-1和Nativewindow-2.第一类窗口是能直接显示在终端屏幕上的---它使用了帧缓冲区;而后一类本地窗口实际上是从内存缓冲区中分配的空间.
+当系统中存在多个需要显示UI的应用程序时,一方面这种改进设计保证了它们都能获得一个"本地窗口";另一方面这些"本地窗口"也都可以被有序地显示到终端屏幕上---因为SurfaceFlinger会收集所有程序的显示需求,对它们进行统一的图像混合操作,然后输出到自己的NativeWindow-1上.
+当然,这个改进的窗口系统有一个前提,即应用程序与SurfaceFlinger都是基于OpenGL ES来实现的.有没有其他选择呢?答案是肯定的.比如应用程序完全可以采用Skia等第三方的图形库,只要它们与SurfaceFlinge间的"协议"保持不变即可.
+从理论上,上述两类改进的窗口系统都是可行的.不过对于开发人员,特别是没有OpenGL ES项目经验的人而言,前一类改进方案的门开新队较高.而事实上,Android系统同时提供了这两种方案来供上层选择.正常情况下我们按照SDK向导生成的APK应用程序,属于后面的情况;而对于希望使用OpenGL ES来完成复杂界面渲染的应用开发者来说,也可以使用Android系统封装的GLSurfaceView(或其他方式)来达成目标
+
+9.4.1 FramebufferNativeWindow
+详见P315
+
+9.4.2 应用程序端的本地窗口---Surface
+
+
+
+#====================================================================
+
+
 
 #====================================================================
 
@@ -163,6 +770,27 @@ version_defaults.mk : 负责生成版本信息,默认格式为BUILD_NUMBER := en
 
 
 #====================================================================
+
+
+
+
+#====================================================================
+
+
+
+
+#====================================================================
+
+
+
+
+#====================================================================
+
+
+
+
+#====================================================================
+
 
 
 

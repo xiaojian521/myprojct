@@ -67,7 +67,158 @@ private final Intent mStreamDevicesChanged;
 
 
 #====================================================================
-哪些情况会将上层音量值设置到AudioPolicy侧
-1.createStreamStates()->VolumeStreamState()->readSettings() //fse  set volume to AudioPolicy
-2.createStreamStates()->checkAllFixedVolumeDevices()->checkFixedVolumeDevices()->applyDeviceVolume_syncVSS() //android set volume to AudioPolicy
-3.createStreamStates()->checkAllAliasStreamVolumes()->applyAllVolumes() //android set volume to AudioPolicy
+1. 哪些情况会将上层音量值设置到AudioPolicy侧
+1.1 createStreamStates()->VolumeStreamState()->readSettings() //fse  set volume to AudioPolicy
+1.2 createStreamStates()->checkAllFixedVolumeDevices()->checkFixedVolumeDevices()->applyDeviceVolume_syncVSS() //android set volume to AudioPolicy
+1.3 createStreamStates()->checkAllAliasStreamVolumes()->applyAllVolumes() //android set volume to AudioPolicy
+
+#====================================================================
+2. 修改Android对应Streamtype最大音量
+修改STREAM_MUSIC影响：
+2.1 修改Audioservice.java中MAX_STREAM_VOLUME默认值
+   /** Maximum volume index values for audio streams */
+    private static int[] MAX_STREAM_VOLUME = new int[] {
+        5,  // STREAM_VOICE_CALL
+        7,  // STREAM_SYSTEM
+        7,  // STREAM_RING
+        15, // STREAM_MUSIC
+        7,  // STREAM_ALARM
+        7,  // STREAM_NOTIFICATION
+        15, // STREAM_BLUETOOTH_SCO
+        7,  // STREAM_SYSTEM_ENFORCED
+        15, // STREAM_DTMF
+        15, // STREAM_TTS
+        15  // STREAM_ACCESSIBILITY
+    };
+    
+2.2 Java层及客户端影响:
+1.在创建VolumeStreamState对象时，最大值通过获取MAX_STREAM_VOLUME数组中的音量赋值.
+2.Audioservice中的计算都是基于VolumeStreamState.getMaxIndex()计算的，没有使用固定值计算
+3.AudioSystem.java中DEFAULT_STREAM_VOLUME是否也要按比例增大
+
+2.3 AudioPolicy侧影响
+1.java端通过AudioSystem.setStreamVolumeIndex()设置到AudioPolicy侧
+2.AudioPolicy侧保存设置信息，并设置到AudioFlinger
+3.AudioFlinger侧如果音量不为0,则默认是最大音量
+
+2.4 Setting侧影响：
+setting中默认音量是不是应该按比例增大。
+
+#====================================================================
+3. Usage和ContentType的区别和关系
+3.1 官方注释
+(1)Usage. Specifies why the source is playing and controls routing, focus, and volume decisions.
+Usage specifies the context in which the stream is used, providing information about why the sound is playing and what the sound is used for. Usage information is more expressive than a stream type and allows platforms or routing policies to refine volume or routing decisions.
+
+(2)Content type. Specifies what the source is playing (music, movie, speech, sonification, unknown).
+Content type defines what the sound is and expresses the general category of the content such as movie, speech, or beep/ringtone. The audio framework uses content type information to selectively configure audio post-processing blocks. While supplying the content type is optional, you should include type information whenever the content type is known, such as using CONTENT_TYPE_MOVIE for a movie streaming service or CONTENT_TYPE_MUSIC for a music playback application.
+
+3.2 代码注释
+Usage:
+ * <li>usage: "why" you are playing a sound, what is this sound used for. This is achieved with
+ *     the "usage" information. Examples of usage are {@link #USAGE_MEDIA} and {@link #USAGE_ALARM}.
+ *     These two examples are the closest to stream types, but more detailed use cases are
+ *     available. Usage information is more expressive than a stream type, and allows certain
+ *     platforms or routing policies to use this information for more refined volume or routing
+ *     decisions. Usage is the most important information to supply in <code>AudioAttributes</code>
+ *     and it is recommended to build any instance with this information supplied, see
+ *     {@link AudioAttributes.Builder} for exceptions.</li>
+ 
+ContentType:
+ * <li>content type: "what" you are playing. The content type expresses the general category of
+ *     the content. This information is optional. But in case it is known (for instance
+ *     {@link #CONTENT_TYPE_MOVIE} for a movie streaming service or {@link #CONTENT_TYPE_MUSIC} for
+ *     a music playback application) this information might be used by the audio framework to
+ *     selectively configure some audio post-processing blocks.</li>
+ 
+
+3.3 Streamtype和Usage，ContentType的关系
+(1)多个Usage可以对应同一个StreamType
+(2)多个ContenType可以对应同一个StreamType
+(3)Usage和ContentType代码中没有对应关系
+(4)可以通过Usage获取StreamType.代码在AudioAttributes.java toVolumeStreamType()中
+
+3.4 作用
+(1)Usage用于AudioPolicyService侧路由策略选择
+(2)Contenttype,我看代码在MediaFocusControl中有使用
+
+
+#====================================================================
+4. AudioService中蓝牙连接断开通知
+4.1 蓝牙连接成功
+调用函数makeA2dpDeviceAvailable(),会调用到AudioSystem.setDeviceConnectionState();
+
+4.2 蓝牙断开连接
+(1)调用checkSendBecomingNoisyIntent()计算delay时长，详见以下网址
+[Android6.0] AUDIO_BECOMING_NOISY作用
+https://blog.csdn.net/kris_fei/article/details/77853584
+(2)调用函数makeA2dpDeviceUnavailableLater()转线程继续调用,会有700ms的延迟时间
+    (2.1)checkSendBecomingNoisyIntent()//延迟时间额度计算
+(3)makeA2dpDeviceUnavailableNow()->AudioSystem.setDeviceConnectionState()到AudioPolicy侧
+
+4.3 蓝牙模块发送广播代码
+BluetoothManagerService.java 
+(1)sendBleStateChanged(int prevState, int newState);
+(2)void bluetoothStateChangeHandler(int prevState, int newState);
+
+#====================================================================
+5. audio_policy_volumes.xml和default_volume_tables.xml配置文件对音量的影响
+在上层设置音量到下层的过程中,会调用到volIndexToDb()此函数,次函数的作用就是读取配置文件中的内容,然后计算出分贝值传递到AudioFlinger侧.设置output线程中的对应StreamType的音量系数
+
+VolumeCurve.cpp->volIndexToDb()
+函数流程：
+1.size_t nbCurvePoints = mCurvePoints.size();
+计算出数组中数据个数
+2.int nbSteps = 1 + mCurvePoints[nbCurvePoints - 1].mIndex - mCurvePoints[0].mIndex;
+计算出总共分多少档音量
+3.int volIdx = (nbSteps * (indexInUi - volIndexMin)) / (volIndexMax - volIndexMin);
+计算出当前更新音量占总档初中的第几档
+4.如果是最大值或者最小值，则使用第一个和最后一个的值或返回默认值
+5.float decibels = (mCurvePoints[indexInUiPosition - 1].mAttenuationInMb / 100.0f) +
+            ((float)(volIdx - mCurvePoints[indexInUiPosition - 1].mIndex)) *
+                ( ((mCurvePoints[indexInUiPosition].mAttenuationInMb / 100.0f) -
+                        (mCurvePoints[indexInUiPosition - 1].mAttenuationInMb / 100.0f)) /
+                    ((float)(mCurvePoints[indexInUiPosition].mIndex -
+                            mCurvePoints[indexInUiPosition - 1].mIndex)) );
+6.计算最终分贝值
+decibels = 上一个分贝值+（当前音量档位-上一个音量档位）*（ （下一个音量分贝 - 上一个音量分贝）/ （下一个档位 - 上一个档位））
+
+
+7.修改audio_policy_volume.xml
+    <volume stream="AUDIO_STREAM_MUSIC" deviceCategory="DEVICE_CATEGORY_HEADSET">
+        <point>1,-5800</point>
+        <point>20,-4000</point>
+        <point>60,-1700</point>
+        <point>100,600</point>
+    </volume>
+此时在60-100档时调节音量范围增系数增加到1.995259
+
+#====================================================================
+
+
+
+#====================================================================
+
+
+
+#====================================================================
+
+
+
+
+#====================================================================
+
+
+
+
+#====================================================================
+
+
+
+
+#====================================================================
+
+
+
+
+#====================================================================
