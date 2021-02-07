@@ -160,6 +160,9 @@ https://blog.csdn.net/kris_fei/article/details/77853584
 BluetoothManagerService.java 
 (1)sendBleStateChanged(int prevState, int newState);
 (2)void bluetoothStateChangeHandler(int prevState, int newState);
+Android默认当低功耗蓝牙(STATE_BLE_ON)状态on的时候则，代表蓝牙设备断开连接(STATE_OFF).此时会发送广播。
+如果想等到真正的蓝牙设备断开连接在发送广播则需要修改bluetoothStateChangeHandler中的逻辑
+
 
 #====================================================================
 5. audio_policy_volumes.xml和default_volume_tables.xml配置文件对音量的影响
