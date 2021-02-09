@@ -925,6 +925,8 @@ https://blog.csdn.net/WAN8180192/article/details/50705897?locationNum=5&fps=1
 https://www.cnblogs.com/TaigaCon/p/4844919.html
 https://blog.csdn.net/vviccc/article/details/105341277
 https://msd.misuland.com/pd/3181438578597037046
+Android多媒体：AudioMixer
+https://blog.csdn.net/ffmpeg4976/article/details/46939487
 
 9.7 FadeIn和FadeOut
 donghaocheng: 
@@ -1428,7 +1430,7 @@ if (!heapSize) {
 当前进程创建多个Track分配pcm数据共享内存时会从此4M空间中分配，如果超过4M则创建AudioTrack会失败
 
 (2)每个Track创建时，分配共享空间大小计算
-分配空间大小受创建AudioTrack时的参数影响
+分配空间大小受创建java端或C++端AudioTrack时的参数影响
 frameCount即客户端创建Audiotrack传入的buffer大小。roudup向上取2的整数倍(比如3就取4,18就取32),在计算出byte个数加上首各对象大小.
 最主要还是受客户端传递的buffer大小,Samplerate,Channel数影响
 
